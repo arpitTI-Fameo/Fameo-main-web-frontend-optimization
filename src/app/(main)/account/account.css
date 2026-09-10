@@ -1,0 +1,101 @@
+/* app/(main)/account/account.css
+   ────────────────────────────────────────────────────────────────────────────
+   Layout shell for the account section. Component styling lives inline in
+   components/account/AccountUI.js — this file only handles the page grid,
+   the fonts and the shared keyframes.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600&family=DM+Sans:wght@400;500;600&display=swap');
+
+body {
+  margin: 0;
+}
+
+.fa-page{
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+  background-color: var(--bg);
+}
+.fa-wrap {
+  
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+
+  gap: 32px;
+  background-color: beige;
+  /* max-width: 1180px;
+  margin: 0 auto;
+  padding: 36px 32px; */
+    min-height: 100vh;
+  align-items: start;
+  padding-top: 80px;
+}
+
+.fa-side {
+  border-right: 1.5px solid #ece8de;
+  padding-right: 20px;
+}
+
+.fa-body { min-width: 0; }
+
+/* Existing pages set their own max-width and padding; neutralise it so the
+   grid controls the layout consistently. */
+.fa-body > div[style] { max-width: none; }
+
+/* Shared shimmer for skeleton loaders. */
+@keyframes fa-shimmer {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* Modal overlay fade. */
+@keyframes fa-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Grids used by the account pages. */
+.fa-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+.fa-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+.fa-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .fa-wrap {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 24px 20px;
+  }
+  .fa-side {
+    border-right: none;
+    border-bottom: 1.5px solid #ece8de;
+    padding-right: 0;
+    padding-bottom: 16px;
+  }
+  /* Sidebar becomes a horizontal scroller on mobile. */
+  .fa-side nav > div:last-child {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 6px;
+    scrollbar-width: none;
+  }
+  .fa-side nav > div:last-child::-webkit-scrollbar { display: none; }
+  .fa-side nav > div:last-child a { white-space: nowrap; }
+}
+
+@media (max-width: 560px) {
+  .fa-wrap { padding: 20px 16px; }
+}

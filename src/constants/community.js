@@ -1,0 +1,591 @@
+// // constants/community.js
+
+// export const COMMUNITY_ROUTES = {
+//   home: '/community',
+//   spaces: '/community/spaces',
+//   feedback: '/community/feedback',
+//   events: '/community/events',
+//   safety: '/community/safety',
+//   profile: (id) => `/community/profile/${id}`,
+// };
+
+// export const SPACES = [
+//   { id: 'fashion', name: 'Fashion Creators', color: '#e0488a', members: 1240, joined: true },
+//   { id: 'tech', name: 'Tech Creators', color: '#22d3ee', members: 980, joined: true },
+//   { id: 'instagram', name: 'Instagram Creators', color: '#0fd97a', members: 2100, joined: false },
+//   { id: 'general', name: 'General Creator Space', color: '#ec4899', members: 3400, joined: false },
+//   { id: 'youtube', name: 'YouTube Creators', color: '#f5a020', members: 1560, joined: false },
+//   { id: 'fitness', name: 'Fitness & Wellness', color: '#a855f7', members: 820, joined: false },
+// ];
+
+// export const NICHE_OPTIONS = [
+//   { id: 'fashion', label: '👗 Fashion & Style' },
+//   { id: 'tech', label: '💻 Tech & Gadgets' },
+//   { id: 'beauty', label: '💄 Beauty & Skincare' },
+//   { id: 'fitness', label: '🏋️ Fitness & Health' },
+//   { id: 'food', label: '🍳 Food & Recipes' },
+//   { id: 'travel', label: '✈️ Travel & Lifestyle' },
+//   { id: 'finance', label: '💰 Finance & Business' },
+//   { id: 'gaming', label: '🎮 Gaming & Esports' },
+//   { id: 'education', label: '📚 Education & Coaching' },
+//   { id: 'comedy', label: '😂 Comedy & Entertainment' },
+// ];
+
+// export const FEED_TABS = [
+//   { id: 'foryou', label: '✦ For You' },
+//   { id: 'following', label: '👥 Following' },
+//   { id: 'latest', label: '🕐 Latest' },
+//   { id: 'trending', label: '🔥 Trending' },
+// ];
+
+// export const FEEDBACK_TABS = [
+//   { id: 'reel', label: '🎥 Reel Drafts', count: 12 },
+//   { id: 'thumbnail', label: '🖼️ Thumbnails', count: 8 },
+//   { id: 'script', label: '📝 Scripts', count: 5 },
+//   { id: 'brand', label: '🏷️ Brand Readiness', count: 3 },
+//   { id: 'mine', label: '📂 My Submissions', count: null },
+// ];
+
+// export const REPORT_REASONS = [
+//   'Spam or self-promotion',
+//   'Harassment or bullying',
+//   'Misinformation or false claims',
+//   'Adult or inappropriate content',
+//   'Vulgarity or hate speech',
+//   'Undisclosed paid promotion',
+//   'Copyright violation',
+//   'Other',
+// ];
+
+// export const MOCK_POSTS = [
+//   {
+//     id: 'p1',
+//     authorName: 'Priya Sharma',
+//     authorInitial: 'P',
+//     authorGradient: 'linear-gradient(135deg,#e0488a,#a855f7)',
+//     authorNiche: 'Fashion · 48K followers',
+//     authorId: 'priya_sharma',
+//     spaceLabel: '👗 Fashion',
+//     spaceColor: '#e0488a',
+//     title: 'Best ring light setups for reels under ₹5,000 — my honest breakdown after testing 6',
+//     preview: 'After spending 3 months testing different lighting setups, I\'ve narrowed it down to what actually works for Indian skin tones and budget constraints. The Godox SL60 is overpriced for what it does...',
+//     tags: ['Reels', 'Lighting', 'Budget Setup'],
+//     likes: 142,
+//     replies: 38,
+//     saves: 24,
+//     liked: false,
+//     saved: false,
+//     timeAgo: '2 hours ago',
+//   },
+//   {
+//     id: 'p2',
+//     authorName: 'Rohan Verma',
+//     authorInitial: 'R',
+//     authorGradient: 'linear-gradient(135deg,#22d3ee,#6366f1)',
+//     authorNiche: 'Tech · 156K followers',
+//     authorId: 'rohan_verma',
+//     spaceLabel: '💻 Tech',
+//     spaceColor: '#22d3ee',
+//     title: 'I got my first ₹25,000 brand deal at 10K followers — here\'s every step',
+//     preview: 'Everyone says you need 100K followers to get brand deals. That\'s wrong. I landed ₹25K for a 30-second reel at exactly 10,241 followers. The secret is your engagement rate and how you pitch...',
+//     tags: ['Brand Deals', 'Monetization', 'Nano Creator'],
+//     likes: 289,
+//     replies: 67,
+//     saves: 91,
+//     liked: true,
+//     saved: false,
+//     timeAgo: '5 hours ago',
+//   },
+//   {
+//     id: 'p3',
+//     authorName: 'Zara Khan',
+//     authorInitial: 'Z',
+//     authorGradient: 'linear-gradient(135deg,#ec4899,#f59e0b)',
+//     authorNiche: 'Fashion · 92K followers',
+//     authorId: 'zara_khan',
+//     spaceLabel: '👗 Fashion',
+//     spaceColor: '#e0488a',
+//     title: 'Why the Instagram algorithm punished my account for 3 weeks — and what reversed it',
+//     preview: 'In February I went from 40K reach per reel to under 3K overnight. No shadowban warning, no violation notice. Just silence. After deep-diving into every post I\'ve ever made...',
+//     tags: ['Algorithm', 'Instagram', 'Growth'],
+//     likes: 418,
+//     replies: 112,
+//     saves: 156,
+//     liked: false,
+//     saved: true,
+//     timeAgo: '1 day ago',
+//   },
+//   {
+//     id: 'p4',
+//     authorName: 'Ananya Singh',
+//     authorInitial: 'A',
+//     authorGradient: 'linear-gradient(135deg,#0fd97a,#22d3ee)',
+//     authorNiche: 'Beauty · 62K followers',
+//     authorId: 'ananya_singh',
+//     spaceLabel: '💄 Beauty',
+//     spaceColor: '#ec4899',
+//     title: 'Hook formulas that stop the scroll — 12 templates I\'ve personally tested',
+//     preview: 'I\'ve been obsessively A/B testing hooks for 6 months. The data is clear: curiosity gaps work better than shock value for Indian beauty content. Here are the 12 formats...',
+//     tags: ['Hooks', 'Content Strategy', 'Templates'],
+//     likes: 203,
+//     replies: 45,
+//     saves: 78,
+//     liked: false,
+//     saved: false,
+//     timeAgo: '2 days ago',
+//   },
+// ];
+
+// export const MOCK_EVENTS = [
+//   {
+//     id: 'ev1',
+//     status: 'live',
+//     title: 'Brand Deals Masterclass: How to pitch yourself to 10x your brand partnerships',
+//     host: { name: 'Arjun Mehta', initial: 'A', gradient: 'linear-gradient(135deg,#f59e0b,#ef4444)' },
+//     speakers: [
+//       { name: 'Neha Gupta', initial: 'N', gradient: 'linear-gradient(135deg,#6366f1,#a855f7)', muted: true },
+//       { name: 'Rohan Verma', initial: 'R', gradient: 'linear-gradient(135deg,#0fd97a,#22d3ee)', muted: true },
+//     ],
+//     listenerCount: 540,
+//     elapsed: '38 min elapsed',
+//     access: 'free',
+//     cover: null,
+//     coverGradient: 'linear-gradient(135deg,#1a0533,#0a1628)',
+//   },
+//   {
+//     id: 'ev2',
+//     status: 'upcoming',
+//     title: 'Instagram Algorithm Decoded — What Actually Works in 2025',
+//     host: { name: 'Neha Gupta', initial: 'N', gradient: 'linear-gradient(135deg,#6366f1,#a855f7)' },
+//     dateLabel: 'Tomorrow · 7:00 PM IST',
+//     rsvpCount: 234,
+//     access: 'free',
+//     cover: null,
+//     coverGradient: 'linear-gradient(135deg,#0a2040,#1a0533)',
+//   },
+//   {
+//     id: 'ev3',
+//     status: 'upcoming',
+//     title: 'How to Write Hooks That Stop the Scroll',
+//     host: { name: 'Sameer Joshi', initial: 'S', gradient: 'linear-gradient(135deg,#0fd97a,#22d3ee)' },
+//     dateLabel: 'Thu, Apr 10 · 6:00 PM IST',
+//     rsvpCount: 89,
+//     access: 'premium',
+//     cover: null,
+//     coverGradient: 'linear-gradient(135deg,#0a2018,#1a2008)',
+//   },
+//   {
+//     id: 'ev4',
+//     status: 'upcoming',
+//     title: 'From 0 to First Brand Deal — Complete Creator Roadmap',
+//     host: { name: 'Kavya Reddy', initial: 'K', gradient: 'linear-gradient(135deg,#e0488a,#f59e0b)' },
+//     dateLabel: 'Sat, Apr 12 · 5:00 PM IST',
+//     rsvpCount: 341,
+//     access: 'free',
+//     cover: null,
+//     coverGradient: 'linear-gradient(135deg,#280a18,#0a1028)',
+//   },
+//   {
+//     id: 'ev5',
+//     status: 'ended',
+//     title: 'Reel Strategy Masterclass: 30-Day Content Calendar',
+//     host: { name: 'Arjun Mehta', initial: 'A', gradient: 'linear-gradient(135deg,#f59e0b,#ef4444)' },
+//     dateLabel: 'Mar 28, 2025',
+//     replayCount: 1240,
+//     duration: '1h 12m',
+//     access: 'free',
+//     replay_url: 'https://example.com/replay/ev5',
+//     cover: null,
+//     coverGradient: 'linear-gradient(135deg,#1a1040,#0a0a28)',
+//     takeaways: [
+//       'Post at 7 PM IST Monday–Friday for maximum reach on Indian audience',
+//       'Use 3 niche + 2 trending hashtags — not 30 random ones',
+//       'The first 3 seconds determine 80% of your completion rate',
+//       'Carousel posts get 3x more saves than single image posts on average',
+//     ],
+//     highlights: [
+//       '"Your content calendar is your business plan. Treat it that way."',
+//       '"Stop chasing trends. Start setting them within your niche."',
+//     ],
+//   },
+// ];
+
+// export const MOCK_NOTIFICATIONS = [
+//   {
+//     id: 'n1', unread: true, icon: '🎙️',
+//     body: '<strong>Brand Deals Masterclass</strong> is live now — 540 listening',
+//     time: '2 min ago',
+//   },
+//   {
+//     id: 'n2', unread: true, icon: '💬',
+//     body: 'Rohan Verma replied to your discussion: "Great point about engagement rates..."',
+//     time: '15 min ago',
+//   },
+//   {
+//     id: 'n3', unread: true, icon: '◎',
+//     body: 'Your reel draft received <strong>3 new feedback</strong> responses — including mentor review',
+//     time: '1 hour ago',
+//   },
+//   {
+//     id: 'n4', unread: false, icon: '📅',
+//     body: 'Reminder: <strong>Instagram Algorithm Decoded</strong> starts in 24 hours',
+//     time: 'Yesterday',
+//   },
+// ];
+
+// export const MOCK_FEEDBACK_SUBMISSIONS = [
+//   {
+//     id: 'fs1',
+//     authorName: 'Priya Sharma',
+//     authorInitial: 'P',
+//     authorGradient: 'linear-gradient(135deg,#e0488a,#a855f7)',
+//     authorNiche: 'Fashion Creator · 2 hours ago',
+//     authorId: 'priya_sharma',
+//     contentType: 'reel',
+//     contentTypeLabel: '🎥 Reel Draft',
+//     contentTypeColor: 'var(--cm-red)',
+//     status: 'needs_feedback',
+//     statusLabel: '🔴 Needs Feedback',
+//     statusBg: 'var(--cm-red-soft)',
+//     statusColor: 'var(--cm-red)',
+//     title: '"Outfits for ₹500 — Day 5 of 30 Days Challenge"',
+//     objective: 'Does the transition at 0:12 feel too abrupt? Is the hook strong enough to stop the scroll?',
+//     peerReviewCount: 3,
+//     mentorAssigned: 'Kavya Reddy',
+//     mentorInitial: 'K',
+//     mentorGradient: 'linear-gradient(135deg,#6366f1,#a855f7)',
+//     checklist: { hook: true, pacing: true, audio: false, captions: false, visualQuality: true },
+//     comments: [
+//       { authorName: 'Rohan Verma', authorInitial: 'R', authorGradient: 'linear-gradient(135deg,#22d3ee,#6366f1)', text: 'Transition at 0:12 is jarring — try a jump cut instead. Hook is solid though.', time: '1h ago', likes: 8, isMentor: false },
+//       { authorName: 'Kavya Reddy', authorInitial: 'K', authorGradient: 'linear-gradient(135deg,#6366f1,#a855f7)', text: 'Great foundation. Two things: (1) Caption font is too small for mobile — increase by 20%. (2) The closing shot lingers 2 seconds too long, loses momentum. Fix these and this is brand-ready.', time: '45min ago', likes: 28, isMentor: true },
+//     ],
+//     brandReadiness: null,
+//   },
+//   {
+//     id: 'fs2',
+//     authorName: 'Rohan Verma',
+//     authorInitial: 'R',
+//     authorGradient: 'linear-gradient(135deg,#22d3ee,#6366f1)',
+//     authorNiche: 'Tech Creator · 5 hours ago',
+//     authorId: 'rohan_verma',
+//     contentType: 'brand',
+//     contentTypeLabel: '🏷️ Brand Readiness',
+//     contentTypeColor: 'var(--cm-purple)',
+//     status: 'brand_ready',
+//     statusLabel: '✨ Brand Ready',
+//     statusBg: 'var(--cm-gold-soft)',
+//     statusColor: 'var(--cm-gold)',
+//     title: 'Tech Unboxing Series — 3 Episodes reviewed by Kavya Reddy',
+//     objective: 'Is this series ready to pitch to smartphone and accessory brands?',
+//     peerReviewCount: 7,
+//     mentorAssigned: 'Kavya Reddy',
+//     mentorInitial: 'K',
+//     mentorGradient: 'linear-gradient(135deg,#6366f1,#a855f7)',
+//     checklist: { hook: true, pacing: true, audio: true, captions: true, visualQuality: true },
+//     comments: [],
+//     brandReadiness: {
+//       brandSafeScore: 87,
+//       visualQualityScore: 91,
+//       readyToPitch: true,
+//     },
+//   },
+//   {
+//     id: 'fs3',
+//     authorName: 'Ananya Singh',
+//     authorInitial: 'A',
+//     authorGradient: 'linear-gradient(135deg,#0fd97a,#22d3ee)',
+//     authorNiche: 'Beauty Creator · Yesterday',
+//     authorId: 'ananya_singh',
+//     contentType: 'script',
+//     contentTypeLabel: '📝 Script',
+//     contentTypeColor: 'var(--cm-green)',
+//     status: 'mentor_review',
+//     statusLabel: '👨‍🏫 Mentor Review',
+//     statusBg: 'var(--cm-purple-soft)',
+//     statusColor: 'var(--cm-purple)',
+//     title: '"Stop buying wrong skincare" — Skincare Series Hook Script',
+//     objective: 'Does the hook feel too promotional? Is the transition from hook to product reveal smooth enough for the beauty niche?',
+//     peerReviewCount: 2,
+//     mentorAssigned: null,
+//     scriptExcerpt: 'HOOK: "Stop buying the wrong skincare. I spent ₹12,000 so you don\'t have to."\n[cut to product shelf]\nNARRATION: "After testing 23 products in 6 months, here\'s the truth about what Indian skin actually needs..."',
+//     checklist: { hook: false, pacing: false, audio: false, captions: false, visualQuality: false },
+//     comments: [],
+//     brandReadiness: null,
+//   },
+// ];
+
+// export const MOCK_REPORT_CARDS = [
+//   {
+//     id: 'r1',
+//     type: 'Post',
+//     reason: 'Spam / promotional links',
+//     severity: 'medium',
+//     reportedBy: 'Anonymous',
+//     timeAgo: '12 min ago',
+//     preview: '"Check out my Instagram @priya.creator for more tips! Follow for follow back!"',
+//     authorName: 'Unknown User',
+//   },
+//   {
+//     id: 'r2',
+//     type: 'Comment',
+//     reason: 'Adult or inappropriate content',
+//     severity: 'high',
+//     reportedBy: '2 users',
+//     timeAgo: '34 min ago',
+//     preview: '[content hidden for review]',
+//     authorName: 'Anonymous',
+//   },
+//   {
+//     id: 'r3',
+//     type: 'Profile',
+//     reason: 'Misinformation / false claims',
+//     severity: 'medium',
+//     reportedBy: '1 user',
+//     timeAgo: '1 hour ago',
+//     preview: '"I guarantee 10,000 followers in 7 days using my secret method — DM me for paid training"',
+//     authorName: 'Creator XYZ',
+//   },
+// ];
+
+// constants/community.js
+
+export const SPACES_DATA = {
+  general:  { id:'general',  name:'✦ General Creator Space',        desc:'Open discussions, announcements, and platform updates for all creators', color:'#6366f1', members:'4,832', type:'general',  joined: true  },
+  fashion:  { id:'fashion',  name:'✦ Fashion Creators',             desc:'Style, aesthetics, trends, brand collabs, and fashion content strategy', color:'#ec4899', members:'1,248', type:'niche',    joined: true  },
+  tech:     { id:'tech',     name:'✦ Tech Creators',                desc:'Tech reviews, gadgets, software, and digital product creation',          color:'#06b6d4', members:'2,140', type:'niche',    joined: false },
+  gaming:   { id:'gaming',   name:'✦ Gaming Creators',              desc:'Gaming content, streaming, esports, and gaming monetization strategies', color:'#8b5cf6', members:'3,401', type:'niche',    joined: false },
+  finance:  { id:'finance',  name:'✦ Finance Creators',             desc:'Personal finance content, investing, and financial literacy creation',   color:'#10b981', members:'892',   type:'niche',    joined: false },
+  beauty:   { id:'beauty',   name:'✦ Beauty Creators',              desc:'Beauty, skincare, makeup, and wellness content creation',                color:'#f59e0b', members:'1,567', type:'niche',    joined: false },
+  travel:   { id:'travel',   name:'✦ Travel Creators',              desc:'Travel vlogs, destination content, and travel brand partnerships',       color:'#ef4444', members:'743',   type:'niche',    joined: false },
+  instagram:{ id:'instagram',name:'✦ Instagram Creators',           desc:'Instagram-specific strategies, Reels, Stories, and growth tactics',     color:'#ec4899', members:'2,856', type:'platform', joined: true  },
+  youtube:  { id:'youtube',  name:'✦ YouTube Creators',             desc:'YouTube content strategy, SEO, monetization, and audience building',    color:'#ef4444', members:'1,923', type:'platform', joined: false },
+  shorts:   { id:'shorts',   name:'✦ Shorts-First Creators',        desc:'Short-form video strategy across Instagram, YouTube, and emerging platforms', color:'#f59e0b', members:'1,104', type:'platform', joined: false },
+};
+
+export const NICHE_OPTIONS = [
+  { id:'fashion',   label:'👗 Fashion & Style'      },
+  { id:'tech',      label:'💻 Tech & Gadgets'        },
+  { id:'beauty',    label:'💄 Beauty & Skincare'     },
+  { id:'fitness',   label:'🏋️ Fitness & Health'      },
+  { id:'food',      label:'🍳 Food & Recipes'         },
+  { id:'travel',    label:'✈️ Travel & Lifestyle'    },
+  { id:'finance',   label:'💰 Finance & Business'    },
+  { id:'gaming',    label:'🎮 Gaming & Esports'      },
+  { id:'education', label:'📚 Education & Coaching'  },
+  { id:'comedy',    label:'😂 Comedy & Entertainment' },
+];
+
+export const FEED_TABS = [
+  { id:'foryou',    label:'✦ For You'   },
+  { id:'following', label:'👥 Following' },
+  { id:'latest',    label:'🕐 Latest'   },
+  { id:'trending',  label:'🔥 Trending' },
+];
+
+export const FEEDBACK_TABS = [
+  { id:'reel',      label:'🎥 Reel Drafts',     count: 12   },
+  { id:'thumbnail', label:'🖼️ Thumbnails',       count: 8    },
+  { id:'script',    label:'📝 Scripts',          count: 5    },
+  { id:'brand',     label:'🏷️ Brand Readiness',  count: 3    },
+  { id:'mine',      label:'📂 My Submissions',   count: null },
+];
+
+export const REPORT_REASONS = [
+  { id:'harassment',            label:'Harassment or bullying',        icon:'🚨', sla:'4h'  },
+  { id:'spam',                  label:'Spam or self-promotion',         icon:'📢', sla:null  },
+  { id:'adult',                 label:'Adult or inappropriate content', icon:'🔞', sla:null  },
+  { id:'misinfo',               label:'Misinformation',                 icon:'⚠️', sla:null  },
+  { id:'vulgarity',             label:'Vulgarity or hate speech',       icon:'🤬', sla:null  },
+  { id:'undisclosed_promotion', label:'Undisclosed paid promotion',     icon:'💰', sla:null  },
+  { id:'other',                 label:'Other',                          icon:'⋯',  sla:null  },
+];
+
+export const COMMUNITY_RULES = [
+  { icon:'🔞', text:'No nudity, adult content, or explicit media of any kind' },
+  { icon:'📵', text:'No personal social handles, follower-farming, or self-promotion links' },
+  { icon:'🤝', text:'No harassment, bullying, or targeted attacks on any creator' },
+  { icon:'📢', text:'No spam, undisclosed paid promotions, or misinformation' },
+  { icon:'◎',  text:'Be specific and helpful when giving feedback — vague comments are not allowed' },
+];
+
+export const MOCK_POSTS = [
+  {
+    id:'p1', authorName:'Priya Sharma', authorInitial:'P',
+    authorGrad:'linear-gradient(135deg,#6366f1,#a855f7)',
+    authorNiche:'Fashion · 48K followers', authorId:'priya_sharma',
+    spaceLabel:'👗 Fashion',
+    title:'Best ring light setups for reels under ₹5,000 — my honest breakdown after testing 6',
+    preview:"After spending 3 months testing different lighting setups, I've narrowed it down to what actually works for Indian skin tones and budget constraints. The Godox SL60 is overpriced for what it does...",
+    tags:['Reels','Lighting','Budget Setup'],
+    likes:248, replies:34, liked:false, saved:false, timeAgo:'2 hours ago',
+  },
+  {
+    id:'p2', authorName:'Rohan Verma', authorInitial:'R',
+    authorGrad:'linear-gradient(135deg,#06b6d4,#6366f1)',
+    authorNiche:'Tech · 156K followers', authorId:'rohan_verma',
+    spaceLabel:'◫ Tech',
+    title:"I got my first brand deal at 10K followers — here's exactly what I did",
+    preview:"Everyone says you need 100K followers for brand deals. That's a myth. I landed a ₹45,000 deal with just 10K followers by doing three things that most creators completely ignore...",
+    tags:['Brand Deals','Small Creators','Monetization'],
+    likes:512, replies:89, liked:true, saved:false, timeAgo:'5 hours ago',
+  },
+  {
+    id:'p3', authorName:'Ananya Singh', authorInitial:'A',
+    authorGrad:'linear-gradient(135deg,#10b981,#06b6d4)',
+    authorNiche:'Beauty · 67K followers', authorId:'ananya_singh',
+    spaceLabel:'👗 Fashion',
+    title:'Has anyone tried Instagram Broadcast Channels for creator-audience connection?',
+    preview:"I've been testing it for 2 weeks. Initial results are interesting — open rates are much higher than stories but algorithm treatment seems different...",
+    tags:['Instagram','Strategy','Community Building'],
+    likes:94, replies:21, liked:false, saved:false, timeAgo:'8 hours ago',
+  },
+  {
+    id:'p4', authorName:'Zara Khan', authorInitial:'Z',
+    authorGrad:'linear-gradient(135deg,#ec4899,#f59e0b)',
+    authorNiche:'Fashion · 92K followers', authorId:'zara_khan',
+    spaceLabel:'👗 Fashion',
+    title:"Why the Instagram algorithm punished my account for 3 weeks — and what reversed it",
+    preview:"In February I went from 40K reach per reel to under 3K overnight. No shadowban warning, no violation notice. Just silence. After deep-diving into every post...",
+    tags:['Algorithm','Instagram','Growth'],
+    likes:418, replies:112, liked:false, saved:true, timeAgo:'1 day ago',
+  },
+];
+
+export const MOCK_NOTIFICATIONS = [
+  { id:'n1', unread:true,  icon:'🎙️', body:'<strong>Brand Deals Masterclass</strong> is live now — 540 listening',                                  time:'2 min ago'  },
+  { id:'n2', unread:true,  icon:'💬', body:'Rohan Verma replied to your discussion: <em>"Great point about engagement rates..."</em>',              time:'15 min ago' },
+  { id:'n3', unread:true,  icon:'◎',  body:'Your reel draft received <strong>3 new feedback</strong> responses — including mentor review',          time:'1 hour ago' },
+  { id:'n4', unread:false, icon:'📅', body:'Reminder: <strong>Instagram Algorithm Decoded</strong> starts in 24 hours',                             time:'Yesterday'  },
+];
+
+export const MOCK_EVENTS = [
+  {
+    id:'ev1', status:'live',
+    title:'Brand Deals Masterclass: How to pitch yourself to 10x your brand partnerships',
+    host:{ name:'Arjun Mehta', initial:'A', grad:'linear-gradient(135deg,#f59e0b,#ef4444)' },
+    speakers:[
+      { name:'Neha Gupta',  initial:'N', grad:'linear-gradient(135deg,#6366f1,#a855f7)', muted:true  },
+      { name:'Rohan Verma', initial:'R', grad:'linear-gradient(135deg,#10b981,#06b6d4)', muted:true  },
+    ],
+    listenerCount:540, elapsed:'38 min elapsed', access:'free',
+    coverGrad:'linear-gradient(135deg,#1a0533,#0a1628)',
+  },
+  {
+    id:'ev2', status:'upcoming',
+    title:'Instagram Algorithm Decoded: What\'s actually working in 2025',
+    host:{ name:'Neha Gupta', initial:'N', grad:'linear-gradient(135deg,#6366f1,#a855f7)' },
+    dateLabel:'Tomorrow · 7:00 PM IST', rsvpCount:234, access:'free',
+    coverGrad:'linear-gradient(135deg,#1a0533,#0a1628)', coverEmoji:'🧠',
+  },
+  {
+    id:'ev3', status:'upcoming',
+    title:'How to Write Hooks That Stop the Scroll in 0.5 Seconds',
+    host:{ name:'Sameer Joshi', initial:'S', grad:'linear-gradient(135deg,#10b981,#06b6d4)' },
+    dateLabel:'Thu, Mar 27 · 6:00 PM IST', rsvpCount:189, access:'free',
+    coverGrad:'linear-gradient(135deg,#0a1628,#1e0a2e)', coverEmoji:'✍️',
+  },
+  {
+    id:'ev4', status:'upcoming',
+    title:'First ₹1 Lakh Month as a Creator — Real Numbers, Real Strategy',
+    host:{ name:'Kavya Reddy', initial:'K', grad:'linear-gradient(135deg,#a855f7,#6366f1)' },
+    dateLabel:'Fri, Mar 28 · 8:00 PM IST', rsvpCount:67, access:'premium',
+    coverGrad:'linear-gradient(135deg,#1e2800,#0a1e0a)', coverEmoji:'💰',
+  },
+  {
+    id:'ev5', status:'upcoming',
+    title:'Cinematic Reels Masterclass: Lighting, Colour Grade & Storytelling',
+    host:{ name:'Zara Khan', initial:'Z', grad:'linear-gradient(135deg,#ec4899,#f59e0b)' },
+    dateLabel:'Sun, Mar 30 · 5:00 PM IST', rsvpCount:40, access:'invite_only',
+    coverGrad:'linear-gradient(135deg,#1a0a1e,#0a0a2e)', coverEmoji:'🎬',
+  },
+  {
+    id:'ev6', status:'ended',
+    title:'How I Got My First 5 Brand Deals as a Nano Creator',
+    host:{ name:'Arjun Mehta', initial:'A', grad:'linear-gradient(135deg,#f59e0b,#ef4444)' },
+    dateLabel:'Mar 15, 2025', replayCount:1240, duration:'1:12:34', access:'free',
+    coverGrad:'linear-gradient(135deg,#0a1a0a,#0a0a1a)',
+    takeaways:[
+      'Nano creators (5K–50K) are more valuable to brands for niche, high-trust audiences than mega-influencers with diluted reach',
+      'Your media kit should lead with engagement rate, not follower count — brands care about 3%+ ER more than raw numbers',
+      'Cold outreach email structure: (1) one-sentence hook with their product, (2) your niche + audience, (3) engagement proof, (4) simple CTA',
+      'Never quote a flat fee on first contact — get them to name the budget first, then respond with your rate card',
+      'The fastest way to get brand deals is to do 1 unpaid collab with a good product, document the results, use that as proof',
+    ],
+    highlights:[
+      '"Brands don\'t pay for followers. They pay for attention from the right people. A 10K creator in the right niche will always outperform a 500K creator in a crowded one."',
+      '"Your first brand deal is the hardest. Your second is 10x easier. Don\'t wait for perfection — start with a product you genuinely use."',
+    ],
+  },
+  {
+    id:'ev7', status:'ended',
+    title:'Content Calendar Strategy for Consistent Posting',
+    host:{ name:'Neha Gupta', initial:'N', grad:'linear-gradient(135deg,#6366f1,#a855f7)' },
+    dateLabel:'Mar 10, 2025', replayCount:892, duration:'58:20', access:'free',
+    coverGrad:'linear-gradient(135deg,#1a0a0a,#0a0a1a)',
+    takeaways:[], highlights:[],
+  },
+];
+
+export const MOCK_FEEDBACK_SUBS = [
+  {
+    id:'fs1', contentType:'reel', contentTypeLabel:'🎥 Reel Draft',
+    authorName:'Priya Sharma', authorInitial:'P', authorGrad:'linear-gradient(135deg,#6366f1,#a855f7)', authorId:'priya_sharma',
+    authorNiche:'Fashion Creator · 2 hours ago',
+    statusLabel:'🔴 Needs Feedback', statusBg:'rgba(239,68,68,.12)', statusColor:'#f87171',
+    title:'"Outfits for ₹500 — Day 5 of 30 Days Challenge"',
+    objective:'Does the transition at 0:12 feel too abrupt? Is the hook strong enough to stop the scroll?',
+    peerCount:3, mentorAssigned:'Kavya Reddy',
+    checklist:{ hook:true, pacing:true, audio:false, captions:false, visual:true },
+    comments:[
+      { name:'Rohan Verma', initial:'R', grad:'linear-gradient(135deg,#06b6d4,#6366f1)', text:'Transition at 0:12 is jarring — try a jump cut instead. Hook is solid though.', time:'1h ago', likes:8, isMentor:false },
+      { name:'Kavya Reddy', initial:'K', grad:'linear-gradient(135deg,#6366f1,#a855f7)', text:'Great foundation. Two things: (1) Caption font is too small for mobile — increase by 20%. (2) The closing shot lingers 2 seconds too long, loses momentum. Fix these and this is brand-ready.', time:'45min ago', likes:28, isMentor:true },
+    ],
+    brandReadiness:null,
+  },
+  {
+    id:'fs2', contentType:'brand', contentTypeLabel:'🏷️ Brand Readiness',
+    authorName:'Rohan Verma', authorInitial:'R', authorGrad:'linear-gradient(135deg,#06b6d4,#6366f1)', authorId:'rohan_verma',
+    authorNiche:'Tech Creator · 5 hours ago',
+    statusLabel:'✨ Brand Ready', statusBg:'rgba(251,191,36,.12)', statusColor:'#fbbf24',
+    title:'Tech Unboxing Series — 3 Episodes reviewed by Kavya Reddy',
+    objective:'Is this series ready to pitch to smartphone and accessory brands?',
+    peerCount:7, mentorAssigned:'Kavya Reddy',
+    checklist:{ hook:true, pacing:true, audio:true, captions:true, visual:true },
+    comments:[],
+    brandReadiness:{ brandSafe:87, visualQuality:91, readyToPitch:true },
+  },
+  {
+    id:'fs3', contentType:'script', contentTypeLabel:'📝 Script',
+    authorName:'Ananya Singh', authorInitial:'A', authorGrad:'linear-gradient(135deg,#10b981,#06b6d4)', authorId:'ananya_singh',
+    authorNiche:'Beauty Creator · Yesterday',
+    statusLabel:'👨‍🏫 Mentor Review', statusBg:'rgba(99,102,241,.12)', statusColor:'#818cf8',
+    title:'"Stop buying wrong skincare" — Hook Script',
+    objective:'Does the hook feel too promotional? Is the transition to product reveal smooth enough?',
+    scriptExcerpt:`HOOK: "Stop buying the wrong skincare. I spent ₹12,000 so you don't have to."\n[cut to product shelf]\nNARRATION: "After testing 23 products in 6 months, here's the truth about what Indian skin actually needs..."`,
+    peerCount:2, mentorAssigned:null,
+    checklist:{ hook:false, pacing:false, audio:false, captions:false, visual:false },
+    comments:[],
+    brandReadiness:null,
+  },
+];
+
+export const MOCK_REPORTS = [
+  { id:'r1', type:'Post',    reason:'Spam / promotional links',       severity:'medium', by:'Anonymous',   time:'12 min ago',  preview:'"Check out my Instagram @priya.creator for more tips! Follow for follow back!"' },
+  { id:'r2', type:'Comment', reason:'Adult or inappropriate content', severity:'high',   by:'2 users',     time:'34 min ago',  preview:'[content hidden for review]'                                                   },
+  { id:'r3', type:'Profile', reason:'Misinformation / false claims',  severity:'medium', by:'1 user',      time:'1 hour ago',  preview:'"I guarantee 10,000 followers in 7 days using my secret method — DM me for paid training"' },
+];
+
+export const TOP_CREATORS = [
+  { rank:1, rankColor:'#fbbf24', rankIcon:'🥇', name:'Rohan Verma',   badge:'🏅 Creator of the Week',  pts:'2,840 pts', id:'rohan_verma',   grad:'linear-gradient(135deg,#f59e0b,#ef4444)', initial:'R' },
+  { rank:2, rankColor:'#94a3b8', rankIcon:'🥈', name:'Zara Khan',     badge:'⭐ Top Helper',           pts:'2,240 pts', id:'zara_khan',     grad:'linear-gradient(135deg,#06b6d4,#6366f1)', initial:'Z' },
+  { rank:3, rankColor:'#cd7c2e', rankIcon:'🥉', name:'Ananya Singh',  badge:'🚀 Rising Creator',       pts:'1,890 pts', id:'ananya_singh',  grad:'linear-gradient(135deg,#10b981,#06b6d4)', initial:'A' },
+];
+
+export const PROFILES = {
+  priya_sharma:  { name:'Priya Sharma',  handle:'@priya.sharma',  initial:'P', grad:'linear-gradient(135deg,#6366f1,#a855f7)', niche:'Fashion', followers:'48K',  bio:'Fashion content creator · Affordable style tips for Indian women · 5 years creating', stats:{ followers:'48.2K', posts:124, pts:892, reviews:37 },  badges:[{icon:'🌟',label:'Creator of the Week',date:'Mar 2025'},{icon:'✅',label:'Brand Ready',date:'Feb 2025'},{icon:'🎓',label:'Circle Graduate',date:'Jan 2025'}] },
+  rohan_verma:   { name:'Rohan Verma',   handle:'@rohan.tech',    initial:'R', grad:'linear-gradient(135deg,#06b6d4,#6366f1)', niche:'Tech',    followers:'156K', bio:'Tech reviewer · Unboxing, reviews, and honest opinions · 3 years on YouTube · Previously Samsung product team', stats:{ followers:'156K', posts:89, pts:1240, reviews:52 }, badges:[{icon:'🏆',label:'Top Contributor',date:'Mar 2025'},{icon:'✅',label:'Brand Ready',date:'Mar 2025'}] },
+  zara_khan:     { name:'Zara Khan',     handle:'@zara.creates',  initial:'Z', grad:'linear-gradient(135deg,#ec4899,#f59e0b)', niche:'Fashion', followers:'92K',  bio:'Fashion & lifestyle · Sustainable fashion advocate · Working with brands for 4+ years', stats:{ followers:'92K', posts:201, pts:654, reviews:28 },  badges:[{icon:'🌱',label:'Community Pioneer',date:'Dec 2024'}] },
+  ananya_singh:  { name:'Ananya Singh',  handle:'@ananya.beauty', initial:'A', grad:'linear-gradient(135deg,#10b981,#06b6d4)', niche:'Beauty',  followers:'67K',  bio:'Skincare & makeup for Indian skin tones · Honest reviews only · Cruelty-free advocate',   stats:{ followers:'67K', posts:67, pts:420, reviews:14 }, badges:[] },
+  meera_iyer:    { name:'Meera Iyer',    handle:'@meera.content', initial:'M', grad:'linear-gradient(135deg,#f59e0b,#ef4444)', niche:'Content', followers:'28K',  bio:'Content Creator · Weekly tips for growing your audience organically', stats:{ followers:'28K', posts:45, pts:220, reviews:8 },   badges:[] },
+  dev_kapoor:    { name:'Dev Kapoor',    handle:'@devkapoor',     initial:'D', grad:'linear-gradient(135deg,#8b5cf6,#ec4899)', niche:'Finance', followers:'41K',  bio:'Finance Creator · Making money topics accessible for everyone',      stats:{ followers:'41K', posts:78, pts:340, reviews:19 },  badges:[] },
+};
