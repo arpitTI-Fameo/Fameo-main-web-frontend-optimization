@@ -1,0 +1,18 @@
+export const S = {
+    page: { padding: "32px 40px", maxWidth: 900, margin: "0 auto", fontFamily: "'DM Sans',sans-serif" },
+    toast: { position: "fixed", top: 20, right: 20, zIndex: 999, padding: "12px 20px", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,.15)" },
+    header: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 },
+    heading: { fontFamily: "'Cormorant Garamond',serif", fontSize: 30, fontWeight: 400, color: "#1a1208", marginBottom: 4 },
+    sub: { fontSize: 13, color: "#aaa" },
+    count: { fontSize: 11, color: "#bbb", alignSelf: "center" },
+    list: { display: "flex", flexDirection: "column", gap: 10 },
+    card: { background: "#fff", border: "1.5px solid #ededea", borderRadius: 10, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 },
+    cardLeft: { display: "flex", alignItems: "flex-start", gap: 12, flex: 1, minWidth: 0 },
+    archiveDot: { width: 8, height: 8, borderRadius: "50%", background: "#ddd", flexShrink: 0, marginTop: 5 },
+    cardTitle: { fontSize: 13, fontWeight: 400, color: "#555", marginBottom: 3 },
+    cardMeta: { fontSize: 11, color: "#bbb", marginTop: 1 },
+    cardActions: { display: "flex", gap: 8, flexShrink: 0 },
+    restoreBtn: { fontSize: 11, padding: "7px 14px", border: "1.5px solid #7ec87e44", background: "#7ec87e18", color: "#3a7c3a", borderRadius: 6, cursor: "pointer", fontWeight: 500 },
+    deleteBtn: { fontSize: 11, padding: "7px 14px", border: "1.5px solid #d4909044", background: "#d4909018", color: "#9a3030", borderRadius: 6, cursor: "pointer" },
+    empty: { textAlign: "center", padding: "60px 0", fontSize: 13, color: "#bbb" },
+};

@@ -1,4 +1,4 @@
-import Courses from '@/modules/Resources/Courses';
+import Courses from '@/modules/Main/Resources/Courses';
 
 export default function CoursesPage() {
   return <Courses />;

@@ -1,6 +1,6 @@
-import ProductsSubNav from '@/modules/Products/ProductsSubNav';
-import CartDrawer from '@/modules/Cart/CartDrawer';
-import CartToast from '@/modules/Cart/CartToast';
+import ProductsSubNav from '@/modules/Main/Products/ProductsSubNav';
+import CartDrawer from '@/modules/Main/Cart/CartDrawer';
+import CartToast from '@/modules/Main/Cart/CartToast';
 
 export default function ProductsLayout({ children }) {
   return (

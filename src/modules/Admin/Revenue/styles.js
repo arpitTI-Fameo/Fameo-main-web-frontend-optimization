@@ -1,0 +1,17 @@
+export const S = {
+  page:    { padding:"32px 40px",maxWidth:1000,margin:"0 auto",fontFamily:"'DM Sans',sans-serif" },
+  header:  { display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:28 },
+  heading: { fontFamily:"'Cormorant Garamond',serif",fontSize:30,fontWeight:400,color:"#1a1208",marginBottom:4 },
+  sub:     { fontSize:13,color:"#aaa" },
+  saOnly:  { fontSize:10,letterSpacing:".1em",textTransform:"uppercase",padding:"5px 12px",background:"#C9A96E18",color:"#C9A96E",border:"1px solid #C9A96E44",borderRadius:4,fontWeight:500 },
+  statsGrid:{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16,marginBottom:24 },
+  statCard: { background:"#fff",border:"1.5px solid #ededea",borderRadius:10,padding:"20px",display:"flex",flexDirection:"column",gap:2 },
+  statValue:{ fontFamily:"'Cormorant Garamond',serif",fontSize:34,fontWeight:300,color:"#1a1208",lineHeight:1,letterSpacing:"-.02em" },
+  statLabel:{ fontSize:12,fontWeight:500,color:"#555",marginTop:6 },
+  statSub:  { fontSize:11,color:"#bbb" },
+  card:    { background:"#fff",border:"1.5px solid #ededea",borderRadius:10,overflow:"hidden" },
+  cardTitle:{ fontFamily:"'Cormorant Garamond',serif",fontSize:18,fontWeight:400,color:"#1a1208",padding:"16px 20px",borderBottom:"1px solid #f0f0ee" },
+  tableHead:{ display:"flex",gap:16,padding:"10px 20px",background:"#fafaf8",fontSize:10,letterSpacing:".1em",textTransform:"uppercase",color:"#aaa",borderBottom:"1px solid #ededea" },
+  tableRow: { display:"flex",gap:16,padding:"13px 20px",borderBottom:"1px solid #f5f5f2",alignItems:"center" },
+  empty:   { textAlign:"center",padding:"60px 0",fontSize:13,color:"#bbb" },
+};

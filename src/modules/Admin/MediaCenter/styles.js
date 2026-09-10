@@ -1,0 +1,26 @@
+// modules/Admin/MediaCenter/styles.js
+
+export const S = {
+    page: { padding: "32px 40px", maxWidth: 1200, margin: "0 auto", fontFamily: "'DM Sans',sans-serif" },
+    toast: { position: "fixed", top: 20, right: 20, zIndex: 999, padding: "12px 20px", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,.15)" },
+    header: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 },
+    heading: { fontFamily: "'Cormorant Garamond',serif", fontSize: 30, fontWeight: 400, color: "#1a1208", marginBottom: 4 },
+    sub: { fontSize: 13, color: "#aaa" },
+    headerActions: { display: "flex", gap: 10 },
+    uploadBtn: { fontSize: 11, letterSpacing: ".1em", textTransform: "uppercase", padding: "10px 20px", background: "#1a1208", color: "#F0E8D6", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 500 },
+    filters: { display: "flex", gap: 8, alignItems: "center", marginBottom: 24, flexWrap: "wrap" },
+    filterPill: { fontSize: 10, letterSpacing: ".06em", textTransform: "uppercase", padding: "5px 14px", borderRadius: 40, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", transition: "all .15s" },
+    search: { fontSize: 12, padding: "7px 12px", border: "1.5px solid #e8e8e4", borderRadius: 8, outline: "none", width: 180, fontFamily: "'DM Sans',sans-serif", marginLeft: "auto" },
+    count: { fontSize: 11, color: "#bbb" },
+    grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 16 },
+    card: { background: "#fff", border: "1.5px solid #ededea", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" },
+    cardThumb: { height: 100, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+    cardBody: { padding: "12px 14px", flex: 1 },
+    cardName: { fontSize: 12, fontWeight: 500, color: "#1a1208", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 4 },
+    cardMeta: { fontSize: 10, color: "#bbb", marginTop: 1 },
+    cardFooter: { padding: "8px 14px", borderTop: "1px solid #f5f5f2", display: "flex", alignItems: "center", justifyContent: "space-between" },
+    typeBadge: { fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase", padding: "2px 8px", borderRadius: 3, fontWeight: 600 },
+    viewBtn: { fontSize: 11, background: "none", border: "none", color: "#7eb8d8", cursor: "pointer", textDecoration: "none", padding: "2px 4px" },
+    deleteBtn: { fontSize: 11, background: "none", border: "none", color: "#d49090", cursor: "pointer", padding: "2px 4px" },
+    empty: { textAlign: "center", padding: "60px 0", fontSize: 13, color: "#bbb" },
+};

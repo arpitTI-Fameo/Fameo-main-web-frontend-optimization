@@ -1,4 +1,4 @@
-import Wallet from '@/modules/Account/Wallet';
+import Wallet from '@/modules/Main/Account/Wallet';
 
 export default function AccountWalletPage() {
   return <Wallet />;

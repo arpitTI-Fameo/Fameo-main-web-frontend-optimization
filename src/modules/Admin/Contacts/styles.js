@@ -1,0 +1,18 @@
+export const S = {
+    page: { padding: "32px 40px", maxWidth: 1100, margin: "0 auto", fontFamily: "'DM Sans',sans-serif" },
+    header: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 },
+    heading: { fontFamily: "'Cormorant Garamond',serif", fontSize: 30, fontWeight: 400, color: "#1a1208", marginBottom: 4 },
+    sub: { fontSize: 13, color: "#aaa" },
+    count: { fontSize: 12, color: "#bbb", alignSelf: "center" },
+    filters: { display: "flex", gap: 10, marginBottom: 16 },
+    search: { fontSize: 12, padding: "8px 14px", border: "1.5px solid #e8e8e4", borderRadius: 8, outline: "none", width: 240, fontFamily: "'DM Sans',sans-serif" },
+    select: { fontSize: 12, padding: "8px 12px", border: "1.5px solid #e8e8e4", borderRadius: 8, outline: "none", background: "#fff", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
+    table: { background: "#fff", border: "1.5px solid #ededea", borderRadius: 10, overflow: "hidden" },
+    thead: { display: "flex", padding: "10px 16px", background: "#fafaf8", borderBottom: "1px solid #ededea", fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "#aaa", gap: 12 },
+    trow: { display: "flex", alignItems: "center", padding: "11px 16px", borderBottom: "1px solid #f5f5f2", gap: 12 },
+    avatar: { width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, flexShrink: 0 },
+    name: { fontSize: 13, fontWeight: 400, color: "#1a1208", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+    rolePill: { fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase", padding: "2px 8px", borderRadius: 3, fontWeight: 600 },
+    statusDot: { fontSize: 9, letterSpacing: ".08em", textTransform: "uppercase", padding: "2px 8px", borderRadius: 3, fontWeight: 600, background: "transparent" },
+    empty: { padding: "40px 0", textAlign: "center", fontSize: 13, color: "#bbb" },
+};

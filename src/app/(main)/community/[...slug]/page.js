@@ -1,4 +1,4 @@
-import CommunityLayout from '@/modules/Community';
+import CommunityLayout from '@/modules/Main/Community';
 
 export default function CommunitySlugPage({ params, searchParams }) {
   const slug = params?.slug || [];

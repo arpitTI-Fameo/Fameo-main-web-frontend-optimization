@@ -1,0 +1,25 @@
+// modules/Admin/Approval/styles.js
+
+export const S = {
+  page: { padding: "32px 40px", maxWidth: 900, margin: "0 auto", fontFamily: "'DM Sans',sans-serif" },
+  toast: { position: "fixed", top: 20, right: 20, zIndex: 999, padding: "12px 20px", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,.15)" },
+  header: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 },
+  heading: { fontFamily: "'Cormorant Garamond',serif", fontSize: 30, fontWeight: 400, color: "#1a1208", marginBottom: 4 },
+  sub: { fontSize: 13, color: "#aaa" },
+  liveNote: { fontSize: 11, color: "#7ec87e", fontWeight: 500, alignSelf: "center" },
+  tabRow: { display: "flex", borderBottom: "1px solid #ededea", marginBottom: 24 },
+  tabBtn: { fontSize: 12, padding: "10px 18px", border: "none", background: "transparent", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", transition: "all .15s" },
+  list: { display: "flex", flexDirection: "column", gap: 12 },
+  card: { background: "#fff", border: "1.5px solid #ededea", borderRadius: 10, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 },
+  cardLeft: { display: "flex", alignItems: "flex-start", gap: 12, flex: 1, minWidth: 0 },
+  typePill: { fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase", padding: "3px 8px", borderRadius: 4, fontWeight: 600, flexShrink: 0, marginTop: 2 },
+  cardTitle: { fontSize: 14, fontWeight: 400, color: "#1a1208", marginBottom: 3 },
+  cardMeta: { fontSize: 11, color: "#bbb" },
+  cardNotes: { fontSize: 11, color: "#C9A96E", marginTop: 4, fontStyle: "italic" },
+  cardActions: { display: "flex", gap: 8, flexShrink: 0 },
+  btnApprove: { fontSize: 11, padding: "7px 14px", border: "1.5px solid #7ec87e44", background: "#7ec87e18", color: "#3a7c3a", borderRadius: 6, cursor: "pointer", fontWeight: 500 },
+  btnChanges: { fontSize: 11, padding: "7px 14px", border: "1.5px solid #C9A96E44", background: "#C9A96E18", color: "#7a5a1a", borderRadius: 6, cursor: "pointer" },
+  btnReject: { fontSize: 11, padding: "7px 14px", border: "1.5px solid #d4909044", background: "#d4909018", color: "#9a3030", borderRadius: 6, cursor: "pointer" },
+  statusBadge: { fontSize: 11, letterSpacing: ".06em", fontWeight: 500, textTransform: "uppercase", flexShrink: 0 },
+  empty: { textAlign: "center", padding: "60px 0", fontSize: 13, color: "#bbb" },
+};

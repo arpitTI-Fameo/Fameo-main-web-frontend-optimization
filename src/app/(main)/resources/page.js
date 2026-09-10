@@ -1,4 +1,4 @@
-import Resources from '@/modules/Resources';
+import Resources from '@/modules/Main/Resources';
 
 export default function ResourcesPage() {
   return <Resources />;

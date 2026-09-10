@@ -1,10 +1,17 @@
-
 // store/adminAuthStore.js
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-const ADMIN_ROLES = ["superAdmin","contentManager","moduleMaster","supportAgent"];
-const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const ADMIN_ROLES = ["superAdmin", "contentManager", "moduleMaster", "supportAgent"];
+// Every other file in this codebase treats NEXT_PUBLIC_API_URL as the ORIGIN
+// (http://localhost:5000) and appends /api at the call site. Normalise here so
+// this store works whether or not the env var already carries an /api suffix —
+// getting it wrong produces "Route not found: POST /auth/login", which looks
+// like a backend problem but is a base-URL problem.
+const ORIGIN = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000")
+  .replace(/\/+$/, "")
+  .replace(/\/api$/, "");
+const BASE = `${ORIGIN}/api`;
 
 // SAST H-1 / H-8, and the wiring C-2 needs.
 //
@@ -45,22 +52,22 @@ const clearCookie = (name) => {
 export const useAdminAuthStore = create(
   persist(
     (set) => ({
-      user:    null,
+      user: null,
       loading: false,
-      error:   null,
+      error: null,
 
       login: async (email, password) => {
         set({ loading: true, error: null });
         try {
-          const res  = await fetch(`${BASE}/auth/login`, {
-            method:  "POST",
+          const res = await fetch(`${BASE}/auth/login`, {
+            method: "POST",
             headers: { "Content-Type": "application/json" },
-            body:    JSON.stringify({ email, password }),
+            body: JSON.stringify({ email, password }),
           });
           const json = await res.json();
 
           const token = json?.data?.token;
-          const user  = json?.data?.user;
+          const user = json?.data?.user;
 
           if (!token || !user) {
             set({ loading: false, error: "Login failed — no token returned" });
@@ -90,10 +97,10 @@ export const useAdminAuthStore = create(
         try {
           const token = localStorage.getItem("fameo_token");
           await fetch(`${BASE}/auth/logout`, {
-            method:  "POST",
+            method: "POST",
             headers: { Authorization: `Bearer ${token}` },
           });
-        } catch {}
+        } catch { }
         localStorage.removeItem("fameo_token");
         localStorage.removeItem("fameo_refresh");
         // Clear the legacy key too — H-8's sessionStorage role must not survive

@@ -1,0 +1,26 @@
+// components/Layout/AdminShell/styles.js
+
+export const S = {
+  root: { display: "flex", minHeight: "100vh", background: "#F7F6F3", fontFamily: "'DM Sans',sans-serif" },
+  sidebar: { display: "flex", flexDirection: "column", flexShrink: 0, transition: "width .25s cubic-bezier(.22,1,.36,1)", overflow: "hidden", position: "sticky", top: 0, height: "100vh" },
+  sbTop: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 16px 16px", borderBottom: "1px solid rgba(240,232,214,0.07)", flexShrink: 0 },
+  logo: { fontFamily: "'Cormorant Garamond',serif", fontSize: 17, fontWeight: 500, letterSpacing: ".14em", textTransform: "uppercase" },
+  colBtn: { background: "none", border: "none", fontSize: 18, cursor: "pointer", lineHeight: 1 },
+  roleBadge: { margin: "10px 12px 4px", padding: "6px 10px", borderRadius: 6, display: "flex", alignItems: "center", gap: 7, flexShrink: 0 },
+  roleDot: { width: 6, height: 6, borderRadius: "50%", flexShrink: 0 },
+  roleLabel: { fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", fontWeight: 500 },
+  nav: { flex: 1, overflowY: "auto", padding: "6px 0", scrollbarWidth: "none" },
+  navSec: { marginBottom: 4 },
+  secLabel: { display: "block", fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(240,232,214,0.18)", padding: "10px 16px 4px" },
+  navItem: { display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", textDecoration: "none", transition: "all .15s", fontSize: 12 },
+  navIcon: { fontSize: 13, flexShrink: 0, width: 16, textAlign: "center" },
+  navLabel: { flex: 1, letterSpacing: ".02em" },
+  badge: { fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 10 },
+  footer: { padding: "10px 14px", borderTop: "1px solid rgba(240,232,214,0.07)", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 },
+  avatar: { width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, flexShrink: 0 },
+  footInfo: { flex: 1, minWidth: 0 },
+  footName: { display: "block", fontSize: 11, color: "rgba(240,232,214,0.65)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  footRole: { display: "block", fontSize: 9, color: "rgba(240,232,214,0.28)", letterSpacing: ".06em", textTransform: "uppercase" },
+  footBtn: { background: "none", border: "none", fontSize: 14, cursor: "pointer", color: "rgba(240,232,214,0.28)" },
+  main: { flex: 1, overflow: "auto", minWidth: 0 },
+};

@@ -3,7 +3,7 @@
 // right. Existing pages (profile, subscription, orders…) keep their own
 // internal markup — this only adds the surrounding navigation.
 
-import AccountNav from '@/modules/Account/AccountNav';
+import AccountNav from '@/modules/Main/Account/AccountNav';
 import './account.css';
 
 export const metadata = {
