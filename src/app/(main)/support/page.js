@@ -1,5 +1,5 @@
 // app/(main)/support/page.js
-import SupportCenter from '@/components/support/SupportCenter';
+import SupportCenter from '@/modules/Support';
 
 export const metadata = {
   title: 'Support',

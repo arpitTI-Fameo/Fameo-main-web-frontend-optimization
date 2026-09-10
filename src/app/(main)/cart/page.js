@@ -1,8 +1,7 @@
-// src/app/cart/page.js
 // Route: /cart
 
-import CartClient from "@/components/cart/CartClient";
+import Cart from '@/modules/Cart';
 
 export default function CartPage() {
-  return <CartClient />;
+  return <Cart />;
 }

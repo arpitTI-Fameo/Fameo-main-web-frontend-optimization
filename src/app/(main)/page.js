@@ -1,5 +1,5 @@
-import FameoHomepage from '@/components/home/FameoHomepage';
+import Landing from '@/modules/Landing';
 
 export default function Home() {
-  return <FameoHomepage />;
+  return <Landing />;
 }

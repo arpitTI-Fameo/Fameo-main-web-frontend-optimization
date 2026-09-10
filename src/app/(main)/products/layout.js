@@ -1,30 +1,6 @@
-// // app/(main)/products/layout.js
-// import ProductsSubNav from '@/components/navbar/ProductsSubNav';
-
-// export default function ProductsLayout({ children }) {
-//   return (
-//     <>
-//       <ProductsSubNav />
-//       {children}
-//     </>
-//   );
-// }
-
-// import ProductsSubNav from '@/components/navbar/ProductsSubNav';
-// import CartDrawer     from '@/components/cart/CartDrawer';
-
-// export default function ProductsLayout({ children }) {
-//   return (
-//     <>
-//       <ProductsSubNav />
-//       <CartDrawer />
-//       {children}
-//     </>
-//   );
-// }
-import ProductsSubNav from '@/components/navbar/ProductsSubNav';
-import CartDrawer     from '@/components/cart/CartDrawer';
-import CartToast      from '@/components/cart/CartToast';
+import ProductsSubNav from '@/modules/Products/ProductsSubNav';
+import CartDrawer from '@/modules/Cart/CartDrawer';
+import CartToast from '@/modules/Cart/CartToast';
 
 export default function ProductsLayout({ children }) {
   return (

@@ -1,4 +1,4 @@
-// import CommunityLayout from '@/components/community/CommunityLayout';
+// import CommunityLayout from '@/modules/Community';
 
 // export const metadata = {
 //   title: 'Community — Fameo',
@@ -9,7 +9,7 @@
 //   return <CommunityLayout initialPage="home" searchParams={searchParams} />;
 // }
 // app/(main)/community/page.js
-import CommunityLayout from '@/components/community/CommunityLayout';
+import CommunityLayout from '@/modules/Community';
 
 export const metadata = { title: 'Community — Fameo' };
 

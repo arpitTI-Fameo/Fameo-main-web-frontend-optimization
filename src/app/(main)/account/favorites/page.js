@@ -1,5 +1,5 @@
-// app/account/favorites/page.jsx (or .tsx)
+import Favorites from '@/modules/Account/Favorites';
 
 export default function FavoritesPage() {
-  return <div>Favorites</div>;
+  return <Favorites />;
 }

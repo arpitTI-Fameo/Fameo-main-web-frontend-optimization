@@ -1,7 +1,5 @@
+import Orders from '@/modules/Account/Orders';
+
 export default function OrdersPage() {
-  return (
-    <div>
-      <h1>My Orders</h1>
-    </div>
-  );
+  return <Orders />;
 }

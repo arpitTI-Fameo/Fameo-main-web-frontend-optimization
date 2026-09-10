@@ -1,7 +1,5 @@
+import Courses from '@/modules/Resources/Courses';
+
 export default function CoursesPage() {
-  return (
-    <div>
-      <h1>Courses Page</h1>
-    </div>
-  );
+  return <Courses />;
 }
