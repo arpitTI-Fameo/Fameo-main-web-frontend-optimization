@@ -4,7 +4,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
-import { api } from "@/services/api";
+import { useAdminContentById, useSaveContentMutation } from "@/lib/hooks/admin/useContent";
 import { S } from './styles';
 import { MODULES } from '../constants';
 
@@ -42,26 +42,28 @@ export default function TopicEditor({ params }) {
 
     const showToast = (msg, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3000); };
 
+    const contentQuery = useAdminContentById(id, { enabled: !isNew });
+    const saveMutation = useSaveContentMutation();
+
     useEffect(() => {
         if (isNew) {
             // Default moduleId to first assigned module for moduleMaster
             if (assignedModules?.length) setTopic(t => ({ ...t, moduleId: assignedModules[0] }));
+            setLoading(false);
             return;
         }
-        api.get(`/admin/content/${id}`)
-            .then(d => {
-                const t = d?.data?.topic || EMPTY;
-                // Block moduleMaster from editing outside assigned modules
-                if (isMM && assignedModules && !assignedModules.includes(t.moduleId)) {
-                    alert("You don't have access to edit this topic.");
-                    router.replace("/admin/content");
-                    return;
-                }
-                setTopic(t);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
-    }, [id, isNew]);
+        if (contentQuery.isSuccess || contentQuery.isError) {
+            const t = contentQuery.data?.data?.topic || EMPTY;
+            // Block moduleMaster from editing outside assigned modules
+            if (isMM && assignedModules && !assignedModules.includes(t.moduleId)) {
+                alert("You don't have access to edit this topic.");
+                router.replace("/admin/content");
+                return;
+            }
+            if (contentQuery.isSuccess) setTopic(t);
+            setLoading(false);
+        }
+    }, [isNew, contentQuery.isSuccess, contentQuery.isError, contentQuery.data]);
 
     const set = (k, v) => setTopic(t => ({ ...t, [k]: v }));
     const setArr = (k, i, v) => setTopic(t => { const a = [...t[k]]; a[i] = v; return { ...t, [k]: a }; });
@@ -74,13 +76,11 @@ export default function TopicEditor({ params }) {
         const payload = { ...topic };
         if (overrideStatus) payload.status = overrideStatus;
         try {
-            const url = isNew ? "/admin/content" : `/admin/content/${id}`;
-            const method = isNew ? "post" : "put";
-            const data = await api[method](url, payload);
-            const saved_ = data?.data?.topic;
-            if (saved_) setTopic(saved_);
+            const saved_ = await saveMutation.saveContent({ id, isNew, form: payload });
+            const savedTopic = saved_?.data?.topic;
+            if (savedTopic) setTopic(savedTopic);
             setSaved(true); setTimeout(() => setSaved(false), 2000);
-            if (isNew && saved_?._id) router.replace(`/admin/content/${saved_._id}/edit`);
+            if (isNew && savedTopic?._id) router.replace(`/admin/content/${savedTopic._id}/edit`);
             showToast(
                 overrideStatus === "published" ? "Published live ◉ — visible on Learner Hub instantly" :
                     overrideStatus === "review" ? "Submitted for review — awaiting approval" :

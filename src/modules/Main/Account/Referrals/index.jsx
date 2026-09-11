@@ -5,8 +5,7 @@
 
 import { useState } from 'react';
 
-import { usePortalData } from '@/hooks/usePortalData';
-import { getReferrals, shareCoupon } from '@/services/portal.service';
+import { useReferrals, useShareCouponMutation } from '@/lib/hooks/main/usePortal';
 import InviteModal from '@/modules/Main/Account/InviteModal';
 import {
   PageTitle, Section, Card, StatTile, Chip, StatusChip, Button, Table, tdStyle,
@@ -23,9 +22,15 @@ const TIER_STYLE = {
 };
 
 export default function Referrals() {
-  const { data, loading, error, refetch } = usePortalData(getReferrals);
-  const [toast, setToast]   = useState('');
-  const [busy, setBusy]     = useState(null);
+  const referralsQuery = useReferrals();
+  const shareCouponMutation = useShareCouponMutation();
+  
+  const loading = referralsQuery.isPending;
+  const error = referralsQuery.error?.message;
+  const refetch = referralsQuery.refetch;
+  const data = referralsQuery.data;
+
+  const [toast, setToast] = useState('');
   const [inviteOpen, setInviteOpen] = useState(false);
 
   const flash = (msg) => {
@@ -35,18 +40,16 @@ export default function Referrals() {
 
   // Copy the code, then record the share.
   const handleShare = async (coupon) => {
-    setBusy(coupon.id);
     try {
       await navigator.clipboard?.writeText(coupon.code);
-      await shareCoupon(coupon.id);
+      await shareCouponMutation.mutateAsync(coupon.id);
       flash(`Copied ${coupon.code} — share it with a friend`);
-      refetch();
     } catch {
       flash('Could not share that coupon. Try again.');
-    } finally {
-      setBusy(null);
     }
   };
+
+  const busy = shareCouponMutation.isPending ? shareCouponMutation.variables : null;
 
   return (
     <div>
@@ -69,9 +72,9 @@ export default function Referrals() {
           {loading ? <SkeletonTiles count={4} /> : (
             <div className="fa-grid-4">
               <StatTile label="Total coupons" value={data.summary.total} />
-              <StatTile label="Remaining"     value={data.summary.remaining} />
-              <StatTile label="Subscribed"    value={data.summary.subscribed} color={GREEN} />
-              <StatTile label="Total earned"  value={inr(data.summary.totalEarned)} color={GOLD} />
+              <StatTile label="Remaining" value={data.summary.remaining} />
+              <StatTile label="Subscribed" value={data.summary.subscribed} color={GREEN} />
+              <StatTile label="Total earned" value={inr(data.summary.totalEarned)} color={GOLD} />
             </div>
           )}
         </Section>

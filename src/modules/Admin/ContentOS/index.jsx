@@ -2,10 +2,10 @@
 // app/admin/content/page.js
 // Permission-aware Content OS — changes reflect LIVE on resources page via Socket.io
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
-import { api } from "@/services/api";
-import { useSocket } from "@/hooks/useSocket";
+import { useAdminContent, useUpdateContentStatusMutation, useDeleteContentMutation } from "@/lib/hooks/admin/useContent";
+import { useSocket } from "@/lib/hooks/custome/useSocket";
 import { S } from './styles';
 import { MODULES } from './constants';
 import ContentOSHeader from './ContentOSHeader';
@@ -29,50 +29,44 @@ export default function ContentOS() {
     // moduleMaster sees only assigned modules
     const assignedModules = isMM ? (user?.assignedModules || []) : null;
 
-    const [topics, setTopics] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState({ status: "all", module: "all", search: "" });
     const [selected, setSelected] = useState(new Set());
     const [toast, setToast] = useState(null);
 
+    const params = new URLSearchParams();
+    if (filter.status !== "all") params.set("status", filter.status);
+    if (filter.module !== "all") params.set("moduleId", filter.module);
+    if (filter.search) params.set("search", filter.search);
+    if (assignedModules?.length) params.set("moduleIds", assignedModules.join(","));
+
+    const contentQuery = useAdminContent(params);
+    const updateStatusMutation = useUpdateContentStatusMutation();
+    const deleteMutation = useDeleteContentMutation();
+
+    const loading = contentQuery.isPending;
+    const topics = contentQuery.error ? [
+        { _id: "t1", title: "Creator vs Influencer", moduleId: 0, status: "published", level: "b", readTime: "8 min", updatedAt: new Date().toISOString(), createdByName: "Admin" },
+        { _id: "t2", title: "Choosing a Niche", moduleId: 0, status: "published", level: "b", readTime: "12 min", updatedAt: new Date().toISOString(), createdByName: "Admin" },
+        { _id: "t3", title: "Instagram Algorithm", moduleId: 3, status: "draft", level: "i", readTime: "18 min", updatedAt: new Date().toISOString(), createdByName: "Kiran M." },
+        { _id: "t4", title: "Brand Deal Rate Card", moduleId: 5, status: "review", level: "i", readTime: "10 min", updatedAt: new Date().toISOString(), createdByName: "Priya S." },
+        { _id: "t5", title: "YouTube SEO", moduleId: 3, status: "draft", level: "i", readTime: "22 min", updatedAt: new Date().toISOString(), createdByName: "Arjun R." },
+        { _id: "t6", title: "Old Algorithm 2022", moduleId: 3, status: "archived", level: "b", readTime: "6 min", updatedAt: new Date().toISOString(), createdByName: "Admin" },
+    ] : (contentQuery.data?.data?.topics || contentQuery.data?.data || []);
+
     const showToast = (msg, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3000); };
-
-    const fetchTopics = useCallback(async () => {
-        try {
-            const params = new URLSearchParams();
-            if (filter.status !== "all") params.set("status", filter.status);
-            if (filter.module !== "all") params.set("moduleId", filter.module);
-            if (filter.search) params.set("search", filter.search);
-            if (assignedModules?.length) params.set("moduleIds", assignedModules.join(","));
-            const data = await api.get(`/admin/content?${params}`);
-            setTopics(data?.data?.topics || []);
-        } catch {
-            setTopics([
-                { _id: "t1", title: "Creator vs Influencer", moduleId: 0, status: "published", level: "b", readTime: "8 min", updatedAt: new Date().toISOString(), createdByName: "Admin" },
-                { _id: "t2", title: "Choosing a Niche", moduleId: 0, status: "published", level: "b", readTime: "12 min", updatedAt: new Date().toISOString(), createdByName: "Admin" },
-                { _id: "t3", title: "Instagram Algorithm", moduleId: 3, status: "draft", level: "i", readTime: "18 min", updatedAt: new Date().toISOString(), createdByName: "Kiran M." },
-                { _id: "t4", title: "Brand Deal Rate Card", moduleId: 5, status: "review", level: "i", readTime: "10 min", updatedAt: new Date().toISOString(), createdByName: "Priya S." },
-                { _id: "t5", title: "YouTube SEO", moduleId: 3, status: "draft", level: "i", readTime: "22 min", updatedAt: new Date().toISOString(), createdByName: "Arjun R." },
-                { _id: "t6", title: "Old Algorithm 2022", moduleId: 3, status: "archived", level: "b", readTime: "6 min", updatedAt: new Date().toISOString(), createdByName: "Admin" },
-            ]);
-        }
-        setLoading(false);
-    }, [filter, JSON.stringify(assignedModules)]);
-
-    useEffect(() => { fetchTopics(); }, [fetchTopics]);
 
     // Live sync — when any topic changes status, refetch
     useSocket({
-        "topic:published": fetchTopics,
-        "topic:archived": fetchTopics,
-        "topic:deleted": fetchTopics,
-        "topic:updated": fetchTopics,
+        "topic:published": contentQuery.refetch,
+        "topic:archived": contentQuery.refetch,
+        "topic:deleted": contentQuery.refetch,
+        "topic:updated": contentQuery.refetch,
     });
 
     const changeStatus = async (id, status) => {
         try {
-            await api.patch(`/admin/content/${id}/status`, { status });
-            setTopics(ts => ts.map(t => t._id === id ? { ...t, status } : t));
+            await updateStatusMutation.updateStatus({ id, status });
+            contentQuery.refetch();
             const msg =
                 status === "published" ? "Published live ◉ — visible on Learner Hub instantly" :
                     status === "archived" ? "Archived — removed from Learner Hub" :
@@ -84,8 +78,8 @@ export default function ContentOS() {
     const deleteTopic = async (id) => {
         if (!confirm("Permanently delete? Cannot be undone.")) return;
         try {
-            await api.delete(`/admin/content/${id}`);
-            setTopics(ts => ts.filter(t => t._id !== id));
+            await deleteMutation.remove(id);
+            contentQuery.refetch();
             showToast("Deleted");
         } catch { showToast("Delete failed", false); }
     };

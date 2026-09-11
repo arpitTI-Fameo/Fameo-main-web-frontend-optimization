@@ -3,11 +3,12 @@
 // Full course management — add, edit, delete, publish/unpublish
 // API: /api/courses/admin/*
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
-import { api } from "@/services/api";
-import { useSocket } from "@/hooks/useSocket";
+import { useAdminCourses, useCreateAdminCourseMutation, useTogglePublishAdminCourseMutation, useToggleFeatureAdminCourseMutation, useDeleteAdminCourseMutation, useUpdateAdminCourseMutation } from "@/lib/hooks/admin/useCourses";
+import { getAdminCourse } from "@/lib/services/admin/courses.service";
+import { useSocket } from "@/lib/hooks/custome/useSocket";
 import { COURSES as STATIC_COURSES } from "@/constants/courses";
 import { MediaPicker } from "@/components/admin/MediaPicker";
 
@@ -19,8 +20,6 @@ export default function CoursesAdmin() {
     const isSA = user?.role === "superAdmin";
     const canEdit = ["superAdmin", "contentManager"].includes(user?.role);
 
-    const [courses, setCourses] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [catFilter, setCat] = useState("all");
     const [toast, setToast] = useState(null);
@@ -33,52 +32,50 @@ export default function CoursesAdmin() {
         setTimeout(() => setToast(null), 3000);
     };
 
-    const load = useCallback(async () => {
-        setLoading(true);
-        try {
-            const data = await api.get("/courses/admin/list");
-            const dbCourses = data?.data?.courses || [];
+    const coursesQuery = useAdminCourses();
+    const createCourseMutation = useCreateAdminCourseMutation();
+    const togglePublishCourseMutation = useTogglePublishAdminCourseMutation();
+    const toggleFeatureCourseMutation = useToggleFeatureAdminCourseMutation();
+    const deleteCourseMutation = useDeleteAdminCourseMutation();
 
-            // Merge: DB courses + static courses not yet in DB
-            const dbSlugs = new Set(dbCourses.map(c => c.slug));
-            const staticOnly = STATIC_COURSES
-                .filter(c => !dbSlugs.has(c.slug))
-                .map(c => ({
-                    ...c,
-                    _id: c.id,
-                    isPublished: false,
-                    isFeatured: false,
-                    enrolledCount: c.enrolled || 0,
-                    totalLessons: c.lessons || 0,
-                    updatedAt: new Date().toISOString(),
-                    _static: true,
-                }));
+    const loading = coursesQuery.isPending;
 
-            setCourses([...dbCourses, ...staticOnly]);
-        } catch {
-            // Full fallback — all static
-            setCourses(STATIC_COURSES.map(c => ({
+    let courses = [];
+    if (!coursesQuery.error && coursesQuery.data) {
+        const dbCourses = coursesQuery.data?.data?.courses || coursesQuery.data?.data || [];
+        const dbSlugs = new Set(dbCourses.map(c => c.slug));
+        const staticOnly = STATIC_COURSES
+            .filter(c => !dbSlugs.has(c.slug))
+            .map(c => ({
                 ...c,
                 _id: c.id,
-                isPublished: true,
+                isPublished: false,
                 isFeatured: false,
                 enrolledCount: c.enrolled || 0,
                 totalLessons: c.lessons || 0,
                 updatedAt: new Date().toISOString(),
                 _static: true,
-            })));
-        }
-        setLoading(false);
-    }, []);
-
-    useEffect(() => { load(); }, [load]);
+            }));
+        courses = [...dbCourses, ...staticOnly];
+    } else if (coursesQuery.error) {
+        courses = STATIC_COURSES.map(c => ({
+            ...c,
+            _id: c.id,
+            isPublished: true,
+            isFeatured: false,
+            enrolledCount: c.enrolled || 0,
+            totalLessons: c.lessons || 0,
+            updatedAt: new Date().toISOString(),
+            _static: true,
+        }));
+    }
 
     // Live sync
     useSocket({
-        "course:published": load,
-        "course:unpublished": load,
-        "course:deleted": load,
-        "course:updated": load,
+        "course:published": () => coursesQuery.refetch(),
+        "course:unpublished": () => coursesQuery.refetch(),
+        "course:deleted": () => coursesQuery.refetch(),
+        "course:updated": () => coursesQuery.refetch(),
     });
 
     const filtered = Array.isArray(courses) ? courses.filter(c => {
@@ -98,10 +95,10 @@ export default function CoursesAdmin() {
             if (!target?._id) { showToast("Couldn't save course to DB", false); return; }
         }
         try {
-            const data = await api.patch(`/courses/admin/${target._id}/toggle-publish`, {});
+            const data = await togglePublishCourseMutation.togglePublish(target._id);
             showToast(data?.data?.isPublished ? "Published live ◉" : "Unpublished");
         } catch { showToast("Failed", false); return; }
-        load(); // reconcile state + drop the migrated static duplicate
+        coursesQuery.refetch(); // reconcile state + drop the migrated static duplicate
     };
 
     const toggleFeatured = async (course) => {
@@ -111,26 +108,25 @@ export default function CoursesAdmin() {
             if (!target?._id) { showToast("Couldn't save course to DB", false); return; }
         }
         try {
-            await api.patch(`/courses/admin/${target._id}/feature`, {});
+            await toggleFeatureCourseMutation.toggleFeature(target._id);
             showToast("Featured status updated");
         } catch { showToast("Failed", false); return; }
-        load();
+        coursesQuery.refetch();
     };
 
     const deleteCourse = async (id) => {
         try {
-            await api.delete(`/courses/admin/${id}`);
-            setCourses(cs => cs.filter(c => c._id !== id));
+            await deleteCourseMutation.deleteCourse(id);
+            coursesQuery.refetch();
             setDeleting(null);
             showToast("Course deleted");
         } catch { showToast("Delete failed", false); }
     };
 
-    // Migrate static → DB. Returns the created/existing DB course so callers can act on it.
     const migrateToDb = async (course, { silent = false } = {}) => {
         try {
             const { _static, _id, updatedAt, ...payload } = course;
-            const data = await api.post("/courses/admin", {
+            const data = await createCourseMutation.createCourse({
                 ...payload,
                 courseId: course.id || course.slug,
                 enrolled: course.enrolled || course.enrolledCount || 0,
@@ -139,19 +135,10 @@ export default function CoursesAdmin() {
                 reviews: course.reviews || course.reviewCount || 0,
                 isPublished: false,
             });
-            if (!silent) { showToast("Course saved to database ◉"); load(); }
+            if (!silent) { showToast("Course saved to database ◉"); coursesQuery.refetch(); }
             return data?.data?.course || null;
         } catch (e) {
-            // Already migrated — fetch the existing record so the caller can still act on it
-            if (e.message?.includes("already exists")) {
-                try {
-                    const list = await api.get("/courses/admin/list");
-                    const found = (list?.data?.courses || []).find(c => c.slug === course.slug);
-                    if (!silent) { showToast("Already in DB — refreshed", true); load(); }
-                    return found || null;
-                } catch { if (!silent) load(); return null; }
-            }
-            if (!silent) { showToast("Migration failed", false); load(); }
+            if (!silent) { showToast("Migration failed", false); coursesQuery.refetch(); }
             return null;
         }
     };
@@ -162,7 +149,7 @@ export default function CoursesAdmin() {
         if (statics.length === 0) { showToast("All courses already in DB ◉"); return; }
         showToast(`Migrating ${statics.length} courses…`);
         for (const c of statics) await migrateToDb(c).catch(() => { });
-        load();
+        coursesQuery.refetch();
         showToast(`${statics.length} courses migrated to DB ◉`);
     };
 
@@ -351,7 +338,7 @@ export default function CoursesAdmin() {
                     onSaved={() => {
                         setShowForm(false);
                         setEditing(null);
-                        load();
+                        coursesQuery.refetch();
                         showToast(editing ? "Course updated ◉" : "Course created ◉");
                     }}
                     showToast={showToast}
@@ -368,6 +355,9 @@ function CourseForm({ course, onClose, onSaved, showToast }) {
     const isNew = !course || course._static;
     const [saving, setSaving] = useState(false);
     const [tab, setTab] = useState("basic");  // basic | content | chapters | media
+
+    const createCourseMutation = useCreateAdminCourseMutation();
+    const updateCourseMutation = useUpdateAdminCourseMutation();
 
     const [form, setForm] = useState({
         title: course?.title || "",
@@ -399,7 +389,7 @@ function CourseForm({ course, onClose, onSaved, showToast }) {
     useEffect(() => {
         if (!course || course._static || course.chapters?.length) return;
         setChLoading(true);
-        api.get(`/courses/admin/${course._id}`)
+        getAdminCourse(course._id)
             .then(d => setChapters(d?.data?.course?.chapters || []))
             .catch(() => showToast("Couldn't load chapters", false))
             .finally(() => setChLoading(false));
@@ -537,9 +527,9 @@ function CourseForm({ course, onClose, onSaved, showToast }) {
                 })),
             };
             if (isNew) {
-                await api.post("/courses/admin", payload);
+                await createCourseMutation.createCourse(payload);
             } else {
-                await api.put(`/courses/admin/${course._id}`, payload);
+                await updateCourseMutation.updateCourse({ id: course._id, form: payload });
             }
             onSaved();
         } catch (e) {

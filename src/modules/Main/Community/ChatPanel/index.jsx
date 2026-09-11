@@ -7,10 +7,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
-// SAST H-5 (extended). This read localStorage's `fameo_token` — the ADMIN
-// key set by adminAuthStore, not the creator session. Regular users sent an
-// empty Bearer token; admins leaked their admin JWT to community endpoints.
 import { useAuthStore } from '@/store/authStore';
+import { useRooms, useMessages, useMessageUploadMutation } from '@/lib/hooks/main/useChat';
 
 // ── Design tokens (white theme) ───────────────────────────────────────────────
 const T = {
@@ -102,16 +100,19 @@ export default function ChatPanel({ roomId, currentUser, roomName, roomAvatar, o
   const token   = currentUser?.token || useAuthStore.getState().token || '';
 
   // ── Load history + connect socket ────────────────────────────────────────
+  const { data: messagesRes, isLoading: messagesLoading } = useMessages(roomId, { enabled: !!roomId && !!token });
+  const { mutateAsync: uploadMessageMutation } = useMessageUploadMutation();
+
+  useEffect(() => {
+    setLoading(messagesLoading);
+    if (messagesRes?.data || messagesRes) {
+      const a = Array.isArray(messagesRes?.data) ? messagesRes.data : messagesRes;
+      if (Array.isArray(a)) setMessages(a);
+    }
+  }, [messagesRes, messagesLoading]);
+
   useEffect(() => {
     if (!roomId || !token) return;
-
-    setLoading(true);
-    fetch(`${API}/api/chat/rooms/${roomId}/messages?limit=50`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.json())
-      .then(res => { setMessages(Array.isArray(res.data) ? res.data : []); setLoading(false); })
-      .catch(() => setLoading(false));
 
     const sock = getSocket(token);
     sock.on('connect',    () => setConnected(true));
@@ -193,12 +194,7 @@ export default function ChatPanel({ roomId, currentUser, roomName, roomAvatar, o
     fd.append('file', file);
     fd.append('type', type);
     try {
-      const res = await fetch(`${API}/api/chat/rooms/${roomId}/messages`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: fd,
-      });
-      if (!res.ok) throw new Error('Upload failed');
+      await uploadMessageMutation({ roomId, fd });
     } catch (e) { console.error(e); }
     setUploading(false);
   }
@@ -564,12 +560,15 @@ export function ChatRoomList({ currentUser, onSelectRoom }) {
   const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState('');
   const token = currentUser?.token || useAuthStore.getState().token || '';
+  const { data: roomsRes, isLoading } = useRooms({ enabled: !!token });
 
   useEffect(() => {
-    fetch(`${API}/api/chat/rooms?limit=30`, { headers:{ Authorization:`Bearer ${token}` } })
-      .then(r=>r.json()).then(res=>{ setRooms(Array.isArray(res.data)?res.data:[]); setLoading(false); })
-      .catch(()=>setLoading(false));
-  },[token]);
+    setLoading(isLoading);
+    if (roomsRes?.data || roomsRes) {
+      const a = Array.isArray(roomsRes?.data) ? roomsRes.data : roomsRes;
+      if (Array.isArray(a)) setRooms(a);
+    }
+  }, [roomsRes, isLoading]);
 
   const filtered = rooms.filter(r => {
     const name = r.name || r.participants?.find(p=>p.user._id!==currentUser?._id)?.user?.name || '';

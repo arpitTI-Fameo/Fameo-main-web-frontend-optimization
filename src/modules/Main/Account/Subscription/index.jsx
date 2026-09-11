@@ -3,113 +3,68 @@
 // Account → Subscription. Membership + Payment info + payment history (invoices)
 // + Cancel. Robust against missing fields so the Cancel button and history always
 // render whenever the user actually has a paid membership.
- 
-import { useState, useEffect, useCallback } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import {
-  getCurrent as svcGetCurrent,
-  getTransactions as svcGetTransactions,
-  cancelSubscription as svcCancel,
-  setAutoRenew as svcSetAutoRenew,
-  SessionExpiredError,
-} from '@/services/subscription.service';
- 
+import { useCurrentSubscription, useSubscriptionHistory, useCancelSubscriptionMutation, useSetAutoRenewMutation } from '@/lib/hooks/main/useSubscription';
+
 // Subscriptions go through the web backend, which proxies to the central
 // subscription API (shared with the app) and verifies Razorpay on writes.
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
- 
-const PLAN_COLORS = { free:'#9898a8', pro:'#7c9ec9', popular:'#d4a0c0', elite:'#e8457a' };
-const PLAN_ICONS  = { free:'○', pro:'✦', popular:'◈', elite:'★' };
+
+const PLAN_COLORS = { free: '#9898a8', pro: '#7c9ec9', popular: '#d4a0c0', elite: '#e8457a' };
+const PLAN_ICONS = { free: '○', pro: '✦', popular: '◈', elite: '★' };
 import { S } from './styles';
 import { fmtINR, fmtDate, fmtShort, printInvoice } from './helpers';
- 
+
 export default function Subscription() {
   const router = useRouter();
   const { token, updateMembership, logout } = useAuthStore();
- 
-  const [sub,      setSub]      = useState(null);
-  const [invoices, setInvoices] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState('');
-  const [success,  setSuccess]  = useState('');
-  const [showCancel,  setShowCancel]  = useState(false);
-  const [cancelling,  setCancelling]  = useState(false);
+
+  const currentQuery = useCurrentSubscription();
+  const historyQuery = useSubscriptionHistory();
+  const cancelMutation = useCancelSubscriptionMutation();
+  const autoRenewMutation = useSetAutoRenewMutation();
+
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [showCancel, setShowCancel] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
- 
-  const authHeaders = { 'Content-Type':'application/json', Authorization:`Bearer ${token}` };
- 
-  const load = useCallback(async () => {
-    if (!token) { router.push('/login?redirect=/account/subscription'); return; }
-    setLoading(true);
-    try {
-      // Both come from the web backend → central API (the synced source of truth).
-      const [current, txns] = await Promise.all([
-        svcGetCurrent(),
-        svcGetTransactions().catch(() => []),
-      ]);
-      setSub(current || null);
-      setInvoices(Array.isArray(txns) ? txns : []);
-    } catch (e) {
-      if (e instanceof SessionExpiredError) {
-        logout();
-        router.push('/login?reason=session_expired&redirect=/account/subscription');
-        return;
-      }
-      setError('Could not load your subscription. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
- 
-  useEffect(() => { load(); }, [load]);
-  // Option 2 sync: /current reads live from the central store the app also
-  // writes to, so re-fetching pulls any app-side change. Refresh when the user
-  // returns to this tab or refocuses the window, so an already-open page updates
-  // after they change their plan in the app.
+
   useEffect(() => {
-    const refresh = () => { if (document.visibilityState === 'visible') load(); };
-    window.addEventListener('focus', refresh);
-    document.addEventListener('visibilitychange', refresh);
-    return () => {
-      window.removeEventListener('focus', refresh);
-      document.removeEventListener('visibilitychange', refresh);
-    };
-  }, [load]);
- 
+    if (!token) { router.push('/login?redirect=/account/subscription'); }
+  }, [token, router]);
+
+  const sub = currentQuery.data || null;
+  const invoices = historyQuery.data || [];
+  const loading = currentQuery.isPending || historyQuery.isPending;
+  const cancelling = cancelMutation.isPending;
+
   const handleCancel = async () => {
-    setCancelling(true);
     setError(''); setSuccess('');
     try {
-      // This backend cancel takes { cancel_reason }; it downgrades and syncs
-      // the change to the app.
-      const result = await svcCancel({ subscriptionId: sub?.subscription_id ?? sub?.subscriptionId, reason: 'User cancelled from web' });
+      const result = await cancelMutation.mutateAsync({ subscriptionId: sub?.subscription_id ?? sub?.subscriptionId, reason: 'User cancelled from web' });
       updateMembership('free');
       setSuccess(result?.message || 'Subscription cancelled. You keep access until it expires.');
       setShowCancel(false);
-      await load();
     } catch (e) {
-      if (e instanceof SessionExpiredError) {
+      if (e.status === 401) {
         logout();
         router.push('/login?reason=session_expired&redirect=/account/subscription');
         return;
       }
       setError(e.message);
-    } finally {
-      setCancelling(false);
     }
   };
- 
+
   const handleAutoRenew = async (nextValue) => {
     setError(''); setSuccess('');
-    setSub(prev => prev ? { ...prev, autoRenew: nextValue } : prev); // optimistic
     try {
-      await svcSetAutoRenew({ subscriptionId: sub?.subscription_id ?? sub?.subscriptionId, autoRenew: nextValue });
+      await autoRenewMutation.mutateAsync({ subscriptionId: sub?.subscription_id ?? sub?.subscriptionId, autoRenew: nextValue });
       setSuccess(nextValue ? 'Auto-renew turned on.' : 'Auto-renew turned off.');
-      await load();
     } catch (e) {
-      setSub(prev => prev ? { ...prev, autoRenew: !nextValue } : prev);
-      if (e instanceof SessionExpiredError) {
+      if (e.status === 401) {
         logout();
         router.push('/login?reason=session_expired&redirect=/account/subscription');
         return;
@@ -117,7 +72,7 @@ export default function Subscription() {
       setError(e.message);
     }
   };
- 
+
   if (loading) {
     return (
       <>
@@ -126,7 +81,7 @@ export default function Subscription() {
       </>
     );
   }
- 
+
   // Robust active detection: treat as active if the backend flags it active, OR
   // there's a subscription id / paid tier present. Prevents the whole card
   // (and Cancel + history) from disappearing on a slightly different shape.
@@ -140,51 +95,51 @@ export default function Subscription() {
   // Central /current shape (PDF): { subscription_id, plan:{plan_code,plan_name},
   // status, is_cancelled, auto_renew, expires_at, days_remaining, amount_paid,
   // billing_duration_months }. Legacy web-backend fields kept as fallbacks.
-  const subId     = sub?.subscription_id ?? sub?.subscriptionId ?? null;
-  const planCode  = (sub?.plan?.plan_code || sub?.membershipType || sub?.planCode || 'free').toLowerCase();
+  const subId = sub?.subscription_id ?? sub?.subscriptionId ?? null;
+  const planCode = (sub?.plan?.plan_code || sub?.membershipType || sub?.planCode || 'free').toLowerCase();
   const planLabel = sub?.plan?.plan_name || sub?.planName || planCode;
   const hasPaidTier = planCode && planCode !== 'free' && subId !== 'free';
   const cancelled = sub?.is_cancelled === true || sub?.status === 'cancelled';
-  const daysLeft   = sub?.days_remaining ?? null;
+  const daysLeft = sub?.days_remaining ?? null;
   // A cancelled subscription still grants access until it expires. So "active"
   // means: a paid plan that hasn't expired yet — NOT status === 'active' only.
   // (status is 'cancelled' the moment they cancel, but access continues.)
   const notExpired = daysLeft == null ? true : Number(daysLeft) > 0;
-  const isActive  = Boolean(
+  const isActive = Boolean(
     hasPaidTier &&
     (sub?.status === 'active' || cancelled ? notExpired : (sub?.active ?? true))
   );
-  const tier      = planCode;
+  const tier = planCode;
   const recurring = false;
-  const willEnd   = cancelled || sub?.auto_renew === false || sub?.autoRenew === false;
-  const nextDate  = sub?.expires_at || sub?.expiresAt || sub?.nextChargeAt;
-  const months    = sub?.billing_duration_months || sub?.durationMonths || 1;
+  const willEnd = cancelled || sub?.auto_renew === false || sub?.autoRenew === false;
+  const nextDate = sub?.expires_at || sub?.expiresAt || sub?.nextChargeAt;
+  const months = sub?.billing_duration_months || sub?.durationMonths || 1;
   const amountPaid = sub?.amount_paid ?? sub?.amountPaid ?? 0;
- 
+
   return (
     <>
       <style>{S}</style>
       <div className="sb-page">
         <h1 className="sb-h">My <em>Subscription</em></h1>
         <p className="sb-sub">Membership · Billing · Invoices</p>
- 
-        {error   && <div className="msg-err">⚠ {error}</div>}
+
+        {error && <div className="msg-err">⚠ {error}</div>}
         {success && <div className="msg-ok">✓ {success}</div>}
- 
+
         {!isActive ? (
           <>
             <div className="sb-empty">
               <p>You don’t have an active membership.</p>
               <button className="btn btn-dark" onClick={() => router.push('/plans')}>Browse plans</button>
             </div>
- 
+
             {/* Show past invoices even when not currently subscribed. */}
             <div className="sb-label">Payment history</div>
             <div className="sb-card">
               {invoices.length === 0 ? (
                 <div className="sb-inv-empty">No invoices yet.</div>
               ) : (
-                <div className="sb-inv-wrap" style={{ borderTop:'none' }}>
+                <div className="sb-inv-wrap" style={{ borderTop: 'none' }}>
                   {invoices.map((inv) => (
                     <div className="sb-inv" key={inv.id}>
                       <div className="sb-inv-l">
@@ -226,7 +181,7 @@ export default function Subscription() {
                 <span className="chev">›</span>
               </button>
             </div>
- 
+
             {/* ── Payment info ──────────────────────────────── */}
             <div className="sb-label">Payment info</div>
             <div className="sb-card">
@@ -235,7 +190,7 @@ export default function Subscription() {
                   {willEnd ? 'Access until' : (recurring ? 'Next payment' : 'Expires')}
                 </div>
                 <div className="sb-next-d">{fmtDate(nextDate)}</div>
- 
+
                 {!willEnd && recurring && (
                   <div className="sb-pay-line">
                     <span className="sb-brand">RAZORPAY</span>
@@ -243,22 +198,22 @@ export default function Subscription() {
                   </div>
                 )}
                 {willEnd && (
-                  <div className="sb-muted" style={{ marginTop:10 }}>
+                  <div className="sb-muted" style={{ marginTop: 10 }}>
                     Auto-debit is off. You won’t be charged again.
                   </div>
                 )}
               </div>
- 
+
               <div className="sb-row static">
                 <span>Payment method</span>
                 <span className="sb-muted">Managed by Razorpay</span>
               </div>
- 
+
               <button className="sb-row" onClick={() => setShowHistory(v => !v)}>
                 <span>View payment history</span>
                 <span className="chev">{showHistory ? '⌃' : '›'}</span>
               </button>
- 
+
               {showHistory && (
                 <div className="sb-inv-wrap">
                   {invoices.length === 0 ? (
@@ -283,7 +238,7 @@ export default function Subscription() {
                 </div>
               )}
             </div>
- 
+
             {/* ── Auto-renew (this backend uses the autoRenew field) ── */}
             <div className="sb-autorenew">
               <div className="sb-autorenew-txt">
@@ -302,7 +257,7 @@ export default function Subscription() {
                 <span className="sb-switch-knob" />
               </button>
             </div>
- 
+
             {/* ── Cancel ── */}
             <button className="sb-cancel" onClick={() => setShowCancel(true)}>
               {willEnd ? 'End membership now' : 'Cancel Membership'}
@@ -310,7 +265,7 @@ export default function Subscription() {
           </>
         )}
       </div>
- 
+
       {/* Cancel confirmation modal */}
       {showCancel && (
         <div className="modal-bg" onClick={() => !cancelling && setShowCancel(false)}>

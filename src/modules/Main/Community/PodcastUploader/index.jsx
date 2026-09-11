@@ -11,10 +11,9 @@
 //          POST /api/podcast/episodes/:id/publish
 
 import { useState, useRef, useEffect } from 'react';
-// SAST H-5 (extended). This read localStorage's `fameo_token` — the ADMIN
-// key set by adminAuthStore, not the creator session. Regular users sent an
-// empty Bearer token; admins leaked their admin JWT to community endpoints.
 import { useAuthStore } from '@/store/authStore';
+import { BFF_BASE } from '@/lib/config';
+import { useCreateEpisodeMutation, useUpdateEpisodeMutation, usePublishEpisodeMutation } from '@/lib/hooks/main/usePodcast';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
@@ -41,17 +40,6 @@ const T = {
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 function getToken() { return useAuthStore.getState().token || null; }
-async function apiFetch(path, opts={}) {
-  const token = getToken();
-  const isForm = opts.body instanceof FormData;
-  const res = await fetch(`${API}/api${path}`, {
-    ...opts,
-    headers: { ...(token?{Authorization:`Bearer ${token}`}:{}), ...(isForm?{}:{'Content-Type':'application/json'}), ...opts.headers },
-  });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.message||`HTTP ${res.status}`);
-  return json;
-}
 
 const fmtSec = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
 
@@ -60,6 +48,10 @@ export default function PodcastUploader({ showId, shows = [], onSuccess, onCance
   const [step, setStep]           = useState(1);
   const [episodeId, setEpisodeId] = useState(null);
   const [error, setError]         = useState('');
+
+  const { mutateAsync: createEpisodeMutation } = useCreateEpisodeMutation();
+  const { mutateAsync: updateEpisodeMutation } = useUpdateEpisodeMutation();
+  const { mutateAsync: publishEpisodeMutation } = usePublishEpisodeMutation();
 
   // Step 1
   const [selectedShow, setSelectedShow] = useState(showId || '');
@@ -97,14 +89,14 @@ export default function PodcastUploader({ showId, shows = [], onSuccess, onCance
     if (!sid) { setError('Please select a show.'); return; }
     setCreating(true); setError('');
     try {
-      const res = await apiFetch(`/podcast/shows/${sid}/episodes`, {
-        method:'POST',
-        body: JSON.stringify({
+      const res = await createEpisodeMutation({
+        showId: sid,
+        data: {
           title: title.trim(),
           description,
           showNotes,
           tags: JSON.stringify(tags.split(',').map(t=>t.trim()).filter(Boolean).slice(0,5)),
-        }),
+        }
       });
       const id = res.data?._id || res._id;
       setEpisodeId(id);
@@ -130,7 +122,7 @@ export default function PodcastUploader({ showId, shows = [], onSuccess, onCance
         else { setError('Upload failed — please try again.'); resolve(false); }
       };
       xhr.onerror = () => { setUploading(false); setError('Network error during upload.'); resolve(false); };
-      xhr.open('POST', `${API}/api/podcast/episodes/${episodeId}/audio`);
+      xhr.open('POST', `${BFF_BASE}/podcast/episodes/${episodeId}/audio`);
       if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
       xhr.send(fd);
     });
@@ -175,9 +167,9 @@ export default function PodcastUploader({ showId, shows = [], onSuccess, onCance
     setSavingCh(true); setError('');
     try {
       if (chapters.length > 0) {
-        await apiFetch(`/podcast/episodes/${episodeId}`, { method:'PATCH', body:JSON.stringify({ chapters }) });
+        await updateEpisodeMutation({ id: episodeId, data: { chapters } });
       }
-      await apiFetch(`/podcast/episodes/${episodeId}/publish`, { method:'POST' });
+      await publishEpisodeMutation(episodeId);
       setStep(4);
     } catch(e) { setError(e.message); }
     setSavingCh(false);
@@ -185,7 +177,7 @@ export default function PodcastUploader({ showId, shows = [], onSuccess, onCance
 
   async function skipAndPublish() {
     setSavingCh(true); setError('');
-    try { await apiFetch(`/podcast/episodes/${episodeId}/publish`,{method:'POST'}); setStep(4); }
+    try { await publishEpisodeMutation(episodeId); setStep(4); }
     catch(e) { setError(e.message); }
     setSavingCh(false);
   }

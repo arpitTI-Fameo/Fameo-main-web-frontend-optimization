@@ -3,7 +3,7 @@
 // Modal to browse media library and pick a file to attach
 
 import { useState, useEffect } from "react";
-import { api } from "@/services/api";
+import { getMediaLibrary } from "@/lib/services/admin/media.service";
 
 const TYPE_ICONS = { video: "▶", image: "◉", pdf: "◇", graphic: "◈" };
 const TYPE_COLORS = { video: "#7eb8d8", image: "#b89fd4", pdf: "#d49090", graphic: "#C9A96E" };
@@ -15,7 +15,7 @@ export function MediaPicker({ onSelect, onClose, selectedIds = [] }) {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    api.get("/media?limit=200")
+    getMediaLibrary(200)
       .then(d => setMedia(d?.data?.media || []))
       .catch(() => setMedia([]))
       .finally(() => setLoading(false));

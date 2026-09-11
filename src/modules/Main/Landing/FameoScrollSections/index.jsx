@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import useAuthCta from '@/hooks/useAuthCta';   
+import useAuthCta from '@/lib/hooks/custome/useAuthCta';
 import { CSS } from './styles';
 import IntroToGrid from './IntroToGrid';
 import KineticBands from './KineticBands';

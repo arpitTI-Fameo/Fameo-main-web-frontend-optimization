@@ -3,34 +3,16 @@
 import { create }  from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-
-// SAST H-2 / M-3.
+// SAST H-1 / H-2 are now CLOSED.
 //
-// Two changes to how the session cookie is written:
+// This file used to mirror the session token into a cookie with
+// document.cookie, which is script-readable by definition — so "httpOnly" was
+// never achievable here. The session cookie is now issued by
+// app/api/auth/login/route.js with httpOnly + SameSite=Strict + Secure, and
+// this store never sees the token at all.
 //
-//   SameSite=Strict (was Lax). Lax still attaches the cookie to top-level
-//   cross-site GET navigations, so a link from an external page carried the
-//   session — the CSRF surface M-3 describes.
-//
-//   Secure in production. Without it the cookie is transmitted over plain HTTP
-//   and anyone on the network path can read the session token.
-//
-// HttpOnly is deliberately NOT set here, and cannot be: a cookie written by
-// document.cookie is by definition script-readable. Closing H-1/H-2 properly
-// means the Express login endpoint issuing Set-Cookie itself. That is a
-// separate change — this file at least stops the cookie leaking sideways and
-// over plaintext in the meantime.
-const isSecure = () =>
-  typeof window !== 'undefined' && window.location.protocol === 'https:';
-
-const setCookie = (name, value, days = 7) => {
-  if (typeof document === 'undefined') return;
-  document.cookie =
-    `${name}=${value}; path=/; max-age=${days * 24 * 60 * 60}; SameSite=Strict` +
-    (isSecure() ? '; Secure' : '');
-};
-
+// What remains is UI state (`user`) plus a clear-only helper for the legacy
+// fameo_membership cookie.
 const clearCookie = (name) => {
   if (typeof document === 'undefined') return;
   document.cookie = `${name}=; path=/; max-age=0; SameSite=Strict`;
@@ -43,10 +25,15 @@ export const useAuthStore = create(
       token:   null,
       loading: false,
 
-      // Called after successful login
+      // Called after successful login.
+      //
+      // The session cookie is NO LONGER written here. /api/auth/login sets it
+      // httpOnly, server-side, and this code cannot (and must not) see it.
+      // `token` is kept in the signature for the legacy admin/register flows
+      // that still pass one; when it is null the store simply holds no token,
+      // which is the correct post-migration state for the creator app.
       login: (userData, token) => {
-        set({ user: userData, token });
-        setCookie('fameo_token', token);
+        set({ user: userData, token: token ?? null });
         // NOTE: fameo_membership is no longer written. SAST C-4 — the
         // middleware used to read it for paid-route gating, and it was
         // client-writable, so one console line bought premium access. Tier now
@@ -58,16 +45,14 @@ export const useAuthStore = create(
 
       // Logout — clear state instantly, then notify backenda
       logout: async () => {
-        const currentToken = get().token;
         set({ user: null, token: null });
-        clearCookie('fameo_token');
         clearCookie('fameo_membership');
-        if (currentToken) {
-          fetch(`${API}/api/auth/logout`, {
-            method:  'POST',
-            headers: { Authorization: `Bearer ${currentToken}` },
-          }).catch(() => {});
-        }
+        // Hits our own route, which clears the httpOnly cookie server-side and
+        // notifies upstream. The browser has no token to send any more.
+        fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'same-origin',
+        }).catch(() => {});
       },
 
       // Update profile fields locally
@@ -89,18 +74,14 @@ export const useAuthStore = create(
           user: { ...s.user, membership: { ...s.user?.membership, type } },
         }));
 
-        const currentToken = get().token;
-        if (!currentToken) return;
         try {
-          const res = await fetch(`${API}/api/auth/refresh-session`, {
-            method:  'POST',
-            headers: { Authorization: `Bearer ${currentToken}` },
+          const res = await fetch('/api/auth/refresh-session', {
+            method: 'POST',
+            credentials: 'same-origin',
           });
           const json = await res.json();
-          const next = json?.data?.token;
-          if (res.ok && next) {
-            set({ token: next, user: json.data.user ?? get().user });
-            setCookie('fameo_token', next);
+          if (res.ok && json?.data?.user) {
+            set({ user: json.data.user });
           }
         } catch {
           // Non-fatal: the next login picks up the new plan. Paid areas may
@@ -110,14 +91,19 @@ export const useAuthStore = create(
 
       setUser: (userData) => set({ user: userData }),
 
-      isLoggedIn: () => !!get().token,
+      // Derived from `user`, not from a token: the token is httpOnly now and
+      // this code cannot read it. `user` is the client-visible proof of session.
+      isLoggedIn: () => !!get().user,
     }),
     {
       name:       'fameo-auth',
       partialize: (s) => ({ user: s.user, token: s.token }),
-      onRehydrateStorage: () => (state) => {
-        if (state?.token) setCookie('fameo_token', state.token);
-        else clearCookie('fameo_token');
+      onRehydrateStorage: () => () => {
+        // Previously this mirrored the token into a script-readable cookie on
+        // every rehydrate. The session cookie is httpOnly and server-owned now,
+        // so rehydrate must not touch it — a document.cookie write here would
+        // be ignored for the new cookie and would clobber the legacy one the
+        // admin panel still uses.
         clearCookie('fameo_membership');
       },
     }

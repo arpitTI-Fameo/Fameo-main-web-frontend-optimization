@@ -20,8 +20,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
-import { useAuthHydrated } from '@/hooks/useAuthHydrated';
-import { useProfilePhoto } from '@/hooks/useProfilePhoto';
+import { useAuthHydrated } from '@/lib/hooks/custome/useAuthHydrated';
+import { useProfilePhoto } from '@/lib/hooks/custome/useProfilePhoto';
 import { ROUTES } from '@/constants/routes';
 
 export const LOGIN_FLAG = 'fameo_just_logged_in';
@@ -229,7 +229,7 @@ export default function WelcomeBanner({ showReturning = true }) {
                 {ctaLabel}
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" strokeWidth="2"
-                        strokeLinecap="round" strokeLinejoin="round" />
+                    strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </Link>
               {isFirst && (

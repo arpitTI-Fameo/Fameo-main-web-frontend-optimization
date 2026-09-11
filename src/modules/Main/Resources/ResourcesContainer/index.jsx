@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { COURSES } from "@/constants/courses";
+import { useCourses } from '@/lib/hooks/main/useResource';
 
 import ResourcesHero from "../ResourcesHero";
 import MembershipPerks from "../MembershipPerks";
@@ -33,27 +34,18 @@ export default function ResourcesContainer() {
   const showPaused = useRef(false);
   const loopPaused = useRef(false);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-
   /* Live content: published DB courses override the static seed by slug */
+  const { data } = useCourses({ limit: 100 });
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/courses?limit=100`);
-        const data = await res.json();
-        const dbCourses = data?.data?.courses || [];
-        if (!dbCourses.length || cancelled) return;
-        const dbBySlug = new Map(dbCourses.map(c => [c.slug, c]));
-        const merged = [
-          ...dbCourses.map(c => normalizeCourse(c)),
-          ...COURSES.filter(c => !dbBySlug.has(c.slug)),
-        ];
-        setCourses(merged);
-      } catch { /* API unreachable — keep static fallback */ }
-    })();
-    return () => { cancelled = true; };
-  }, [API_BASE]);
+    const dbCourses = Array.isArray(data) ? data : data?.data?.courses || [];
+    if (!dbCourses.length) return;
+    const dbBySlug = new Map(dbCourses.map(c => [c.slug, c]));
+    const merged = [
+      ...dbCourses.map(c => normalizeCourse(c)),
+      ...COURSES.filter(c => !dbBySlug.has(c.slug)),
+    ];
+    setCourses(merged);
+  }, [data]);
 
   /* derived collections */
   const showcase = courses.slice(0, 6);

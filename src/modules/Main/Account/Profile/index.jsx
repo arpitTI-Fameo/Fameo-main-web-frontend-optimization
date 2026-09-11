@@ -3,64 +3,42 @@
 import { useState, useEffect } from "react";
 import AccountDashboard from "@/modules/Main/Account/AccountDashboard";
 
-// Direct UAT endpoint — identifies the user from the UAT bearer token.
-const PROFILE_URL = "https://uat-api.fameo.info/api/v1/user-config/web-profile";
 import { S, GOLD } from "./styles";
-import { getAppToken, pickPhoto } from "./helpers";
+import { pickPhoto } from "./helpers";
 import Avatar from "./Avatar";
 import Verified from "./Verified";
 import Field from "./Field";
 import Section from "./Section";
+import { useProfile } from '@/lib/hooks/main/useUser';
 
 export default function Profile() {
+  const { data: json, isLoading: loading, error: apiError } = useProfile();
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  
+  const error = apiError?.message || "";
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const token = getAppToken();
-        if (!token) {
-          throw new Error("You're not logged in — please log in again.");
-        }
-        const res = await fetch(PROFILE_URL, {
-          method: "GET",
-          headers: {
-            accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const json = await res.json();
-        if (!res.ok || json?.success === false) {
-          throw new Error(json?.message || `Request failed (${res.status})`);
-        }
-
-        // Shape: { data: [ { user_profile: {...}, registration: {...}, profile_picture } ] }
-        const entry = Array.isArray(json?.data) ? json.data[0] : json?.data;
-        const up = entry?.user_profile || entry || {};
-        const registration = entry?.registration || {};
-        const merged = {
-          ...up,
-          profile_picture: pickPhoto(up, registration, entry),
-          documents: registration.documents || up.documents || [],
-          recommended_tier: registration.recommended_tier || null,
-        };
-        // Cache the photo so the navbar avatar can show it everywhere.
-        if (typeof window !== "undefined") {
-          if (merged.profile_picture) localStorage.setItem("fameo_profile_photo", merged.profile_picture);
-          else localStorage.removeItem("fameo_profile_photo");
-        }
-        if (!cancelled) setProfile(merged);
-      } catch (e) {
-        if (!cancelled) setError(e.message || "Couldn't load your profile");
-      } finally {
-        if (!cancelled) setLoading(false);
+    if (!json) return;
+    try {
+      const entry = Array.isArray(json?.data) ? json.data[0] : json?.data;
+      const up = entry?.user_profile || entry || {};
+      const registration = entry?.registration || {};
+      const merged = {
+        ...up,
+        profile_picture: pickPhoto(up, registration, entry),
+        documents: registration.documents || up.documents || [],
+        recommended_tier: registration.recommended_tier || null,
+      };
+      
+      if (typeof window !== "undefined") {
+        if (merged.profile_picture) localStorage.setItem("fameo_profile_photo", merged.profile_picture);
+        else localStorage.removeItem("fameo_profile_photo");
       }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+      setProfile(merged);
+    } catch (e) {
+      console.error("Failed to parse profile:", e);
+    }
+  }, [json]);
 
   if (loading) {
     return (

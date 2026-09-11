@@ -13,8 +13,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { useAuthHydrated } from '@/hooks/useAuthHydrated';
-import { useProfilePhoto, clearProfilePhoto } from '@/hooks/useProfilePhoto';
+import { useAuthHydrated } from '@/lib/hooks/custome/useAuthHydrated';
+import { useProfilePhoto, clearProfilePhoto } from '@/lib/hooks/custome/useProfilePhoto';
 import { ACCOUNT_MENU_ITEMS } from '@/constants/megaMenu';
 import { ROUTES } from '@/constants/routes';
 
@@ -195,7 +195,7 @@ export default function UserMenu({ onNavigate }) {
             <span className="um-name">{firstNameOf(user.name)}</span>
             <svg className="um-chev" width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.6"
-                    strokeLinecap="round" strokeLinejoin="round" />
+                strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
 

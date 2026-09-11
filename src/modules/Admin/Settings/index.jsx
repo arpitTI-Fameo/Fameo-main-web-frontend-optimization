@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
-import { api } from "@/services/api";
+import { useAdminSettings, useUpdateAdminFeatureFlagMutation } from "@/lib/hooks/admin/useOverview";
 import { useRouter } from "next/navigation";
 import { S } from './styles';
 import { FLAG_META } from './constants';
@@ -14,33 +14,26 @@ import SettingsIntegrations from './SettingsIntegrations';
 export function Settings() {
   const { user } = useAdminAuthStore();
   const router = useRouter();
-  const [flags, setFlags] = useState({});
-  const [integrations, setInteg] = useState({});
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
   const [notif, setNotif] = useState(null);
 
-  useEffect(() => {
-    if (user && user.role !== "superAdmin") { router.push("/admin"); return; }
-    api.get("/admin/settings")
-      .then(d => { setFlags(d.data?.features || {}); setInteg(d.data?.integrations || {}); })
-      .catch(() => {
-        setFlags({ progressTracking: true, moduleFollowing: true, qaComments: true, shopAndCTAs: true, contentApprovalWorkflow: true, moduleGlossary: false, liveSessionScheduling: false, learnerRegistration: true });
-        setInteg({ razorpay: { connected: true, keyId: "rzp_live_xxx" }, cloudflareR2: { connected: true, bucketName: "fameo-media" }, sendgrid: { connected: false, apiKey: "" }, firebase: { connected: true } });
-      })
-      .finally(() => setLoading(false));
-  }, [user, router]);
+  const settingsQuery = useAdminSettings({ enabled: user?.role === "superAdmin" });
+  const updateFeatureFlagMutation = useUpdateAdminFeatureFlagMutation();
 
   if (user?.role !== "superAdmin") return null;
+
+  const loading = settingsQuery.isPending;
+  const flags = settingsQuery.error ? { progressTracking: true, moduleFollowing: true, qaComments: true, shopAndCTAs: true, contentApprovalWorkflow: true, moduleGlossary: false, liveSessionScheduling: false, learnerRegistration: true } : (settingsQuery.data?.data?.features || {});
+  const integrations = settingsQuery.error ? { razorpay: { connected: true, keyId: "rzp_live_xxx" }, cloudflareR2: { connected: true, bucketName: "fameo-media" }, sendgrid: { connected: false, apiKey: "" }, firebase: { connected: true } } : (settingsQuery.data?.data?.integrations || {});
 
   const showNotif = (msg) => { setNotif(msg); setTimeout(() => setNotif(null), 3000); };
 
   const toggleFlag = async (key) => {
-    const next = { ...flags, [key]: !flags[key] };
-    setFlags(next);
+    const next = { [key]: !flags[key] };
     setSaving(s => ({ ...s, [key]: true }));
     try {
-      await api.patch("/admin/settings/features", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ [key]: next[key] }) });
+      await updateFeatureFlagMutation.toggleFlag(next);
+      settingsQuery.refetch();
       showNotif(`${FLAG_META[key]?.label} ${next[key] ? "enabled" : "disabled"} — live instantly`);
     } catch { showNotif("Save failed"); }
     setSaving(s => ({ ...s, [key]: false }));
@@ -49,7 +42,7 @@ export function Settings() {
   return (
     <div style={S.page}>
       {notif && <div style={S.toast}>{notif}</div>}
-      
+
       <SettingsHeader />
 
       {loading ? <div style={S.empty}>Loading…</div> : <>

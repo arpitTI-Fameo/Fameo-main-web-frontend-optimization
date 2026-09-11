@@ -15,9 +15,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
-import { inr } from '@/lib/formatCurrency';
-import { useMembership } from '@/hooks/useMembership';
-import { memberUnitPrice } from '@/lib/planPricing';
+import { inr } from '@/utils/formatCurrency';
+import { useMembership } from '@/lib/hooks/custome/useMembership';
+import { memberUnitPrice } from '@/utils/planPricing';
 import { S } from './styles';
 import CheckIcon from './CheckIcon';
 
@@ -26,9 +26,9 @@ const MAX_STACK = 3;
 
 
 export default function CartToast() {
-  const lastAdded  = useCartStore((s) => s.lastAdded);
-  const cartItems  = useCartStore((s) => s.cartItems);
-  const uiToast    = useUIStore((s) => s.toast);
+  const lastAdded = useCartStore((s) => s.lastAdded);
+  const cartItems = useCartStore((s) => s.cartItems);
+  const uiToast = useUIStore((s) => s.toast);
   const clearToast = useUIStore((s) => s.clearToast);
   const openDrawer = useUIStore((s) => s.openCartDrawer);
   const drawerOpen = useUIStore((s) => s.cartDrawerOpen);
@@ -57,9 +57,9 @@ export default function CartToast() {
   useEffect(() => {
     if (!lastAdded?.at) return;
     const entry = cartItems.find((i) => i.product.id === lastAdded.id);
-    const p     = entry?.product;
+    const p = entry?.product;
     const listed = Number(p?.price) || 0;
-    const unit   = isMember ? memberUnitPrice(listed, rate) : listed;
+    const unit = isMember ? memberUnitPrice(listed, rate) : listed;
 
     push({
       kind: 'success',

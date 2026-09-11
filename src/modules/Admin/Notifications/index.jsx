@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
-import { api } from "@/services/api";
-import { useSocket } from "@/hooks/useSocket";
+import { useAdminNotifications, useSendNotificationMutation } from "@/lib/hooks/admin/useNotifications";
+import { useSocket } from "@/lib/hooks/custome/useSocket";
 import { S } from './styles';
 import { EMPTY } from './constants';
 
@@ -13,7 +13,6 @@ import NotificationsHistory from './NotificationsHistory';
 
 export function Notifications() {
   const { user } = useAdminAuthStore();
-  const [sent, setSent] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState(null);
@@ -23,30 +22,24 @@ export function Notifications() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const loadNotifications = useCallback(async () => {
-    try {
-      const data = await api.get("/admin/notifications");
-      setSent(data?.data?.notifications || data?.data || []);
-    } catch {
-      setSent([
-        { _id: "n1", title: "New module dropped: Scaling & Career Growth", type: "newContent", audience: "all", sentAt: new Date(Date.now() - 86400000).toISOString(), openRate: 34 },
-        { _id: "n2", title: "Brand Deal template pack now live", type: "product", audience: "moduleFollowers", sentAt: new Date(Date.now() - 172800000).toISOString(), openRate: 28 },
-        { _id: "n3", title: "Platform update: Q&A now available", type: "platformUpdate", audience: "all", sentAt: new Date(Date.now() - 259200000).toISOString(), openRate: 41 },
-      ]);
-    }
-  }, []);
+  const notificationsQuery = useAdminNotifications();
+  const sendMutation = useSendNotificationMutation();
 
-  useEffect(() => { loadNotifications(); }, [loadNotifications]);
+  const sent = notificationsQuery.error ? [
+    { _id: "n1", title: "New module dropped: Scaling & Career Growth", type: "newContent", audience: "all", sentAt: new Date(Date.now() - 86400000).toISOString(), openRate: 34 },
+    { _id: "n2", title: "Brand Deal template pack now live", type: "product", audience: "moduleFollowers", sentAt: new Date(Date.now() - 172800000).toISOString(), openRate: 28 },
+    { _id: "n3", title: "Platform update: Q&A now available", type: "platformUpdate", audience: "all", sentAt: new Date(Date.now() - 259200000).toISOString(), openRate: 41 },
+  ] : (notificationsQuery.data?.data?.notifications || notificationsQuery.data?.data || []);
 
   // Live — refresh when another admin sends a notification
-  useSocket({ "notification:sent": loadNotifications });
+  useSocket({ "notification:sent": notificationsQuery.refetch });
 
   const send = async () => {
     if (!form.title || !form.body) return alert("Title and body required");
     setSending(true);
     try {
-      const data = await api.post("/notifications", form);
-      if (data?.data) setSent(prev => [data.data, ...prev]);
+      await sendMutation.sendNotification(form);
+      notificationsQuery.refetch();
       setForm(EMPTY);
       showToast("Notification sent to learners ◉");
     } catch { showToast("Send failed", false); }

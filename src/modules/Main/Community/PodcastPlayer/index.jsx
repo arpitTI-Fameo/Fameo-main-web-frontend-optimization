@@ -9,10 +9,8 @@
 //          POST /api/podcast/episodes/:id/save
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-// SAST H-5 (extended). This read localStorage's `fameo_token` — the ADMIN
-// key set by adminAuthStore, not the creator session. Regular users sent an
-// empty Bearer token; admins leaked their admin JWT to community endpoints.
 import { useAuthStore } from '@/store/authStore';
+import { useEpisode, useEpisodeTranscription, useEpisodeComments, useToggleEpisodeLikeMutation, useToggleEpisodeSaveMutation, useAddEpisodeCommentMutation, useShow, useEpisodes } from '@/lib/hooks/main/usePodcast';
 
 // ── Design tokens (white theme) ───────────────────────────────────────────────
 const T = {
@@ -39,16 +37,6 @@ const T = {
 };
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-function getToken() { return useAuthStore.getState().token || null; }
-async function apiFetch(path, opts={}) {
-  const token = getToken();
-  const isForm = opts.body instanceof FormData;
-  const res = await fetch(`${API}/api${path}`, {
-    ...opts,
-    headers: { ...(token?{Authorization:`Bearer ${token}`}:{}), ...(isForm?{}:{'Content-Type':'application/json'}), ...opts.headers },
-  });
-  return res.json();
-}
 
 const fmt = s => { const t=Math.max(0,Math.floor(s||0)); const h=Math.floor(t/3600),m=Math.floor((t%3600)/60),sc=t%60; return h>0?`${h}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${m}:${String(sc).padStart(2,'0')}`; };
 
@@ -76,32 +64,30 @@ export default function PodcastPlayer({ episodeId, episode: episodeProp, current
   const audioRef   = useRef(null);
   const seekBarRef = useRef(null);
 
+  const { data: epData, isLoading: epLoading } = useEpisode(episodeId, { enabled: !episodeProp && !!episodeId });
+  const { data: commsData } = useEpisodeComments(episode?._id, { enabled: !!episode?._id });
+  const { data: transData, isLoading: isTransLoading } = useEpisodeTranscription(episode?._id, { enabled: activeTab === 'transcript' && !!episode?._id });
+
+  const { mutateAsync: toggleLikeMutation } = useToggleEpisodeLikeMutation();
+  const { mutateAsync: toggleSaveMutation } = useToggleEpisodeSaveMutation();
+  const { mutateAsync: addCommentMutation } = useAddEpisodeCommentMutation();
+
   // Load episode
   useEffect(() => {
     if (episodeProp) { setEpisode(episodeProp); setLiked(episodeProp.liked); setSaved(episodeProp.saved); return; }
-    if (!episodeId) return;
-    setPageLoading(true);
-    apiFetch(`/podcast/episodes/${episodeId}`)
-      .then(res => { if(res.data){setEpisode(res.data);setLiked(res.data.liked);setSaved(res.data.saved);} setPageLoading(false); })
-      .catch(() => setPageLoading(false));
-  },[episodeId, episodeProp]);
+    if (epData?.data) { setEpisode(epData.data); setLiked(epData.data.liked); setSaved(epData.data.saved); }
+  },[episodeProp, epData]);
 
   // Load comments
   useEffect(() => {
-    if (!episode?._id) return;
-    apiFetch(`/podcast/episodes/${episode._id}/comments?limit=50`)
-      .then(res => { if(res.data) setComments(Array.isArray(res.data)?res.data:[]); })
-      .catch(() => {});
-  },[episode?._id]);
+    if (commsData?.data) setComments(Array.isArray(commsData.data) ? commsData.data : []);
+  },[commsData]);
 
-  // Load transcription when tab opens
+  // Load transcription
   useEffect(() => {
-    if (activeTab!=='transcript' || !episode?._id || transcription!==null) return;
-    setTranscLoading(true);
-    apiFetch(`/podcast/episodes/${episode._id}/transcription`)
-      .then(res => { setTranscription(res.data||res); setTranscLoading(false); })
-      .catch(() => { setTranscription({ status:'failed' }); setTranscLoading(false); });
-  },[activeTab, episode?._id]);
+    setTranscLoading(isTransLoading);
+    if (transData) setTranscription(transData.data || transData);
+  },[transData, isTransLoading]);
 
   // Audio events
   useEffect(() => {
@@ -147,20 +133,22 @@ export default function PodcastPlayer({ episodeId, episode: episodeProp, current
 
   async function toggleLike() {
     setLiked(v=>!v);
-    try { await apiFetch(`/podcast/episodes/${episode._id}/like`,{method:'POST'}); }
+    try { await toggleLikeMutation(episode._id); }
     catch { setLiked(v=>!v); }
   }
   async function toggleSave() {
     setSaved(v=>!v);
-    try { await apiFetch(`/podcast/episodes/${episode._id}/save`,{method:'POST'}); }
+    try { await toggleSaveMutation(episode._id); }
     catch { setSaved(v=>!v); }
   }
   async function postComment() {
     if(!commentInput.trim()) return;
     const body = { content: commentInput };
     if(commentStamp) body.timestamp = Math.floor(currentTime);
-    const res = await apiFetch(`/podcast/episodes/${episode._id}/comments`,{ method:'POST', body:JSON.stringify(body) });
-    if(res.data) { setComments(prev=>[...prev,res.data]); setCommentInput(''); }
+    try {
+      const res = await addCommentMutation({ id: episode._id, data: body });
+      if(res.data) { setComments(prev=>[...prev,res.data]); setCommentInput(''); }
+    } catch {}
   }
 
   const progress = duration>0?(currentTime/duration)*100:0;
@@ -169,7 +157,9 @@ export default function PodcastPlayer({ episodeId, episode: episodeProp, current
     return currentTime>=c.startSec && (!next||currentTime<next.startSec);
   });
 
-  if (pageLoading) return (
+  const pageIsLoading = (!episodeProp && !!episodeId && epLoading);
+
+  if (pageIsLoading) return (
     <div style={{ background:T.bg, borderRadius:20, padding:32, fontFamily:T.font, ...style }}>
       <div style={{ display:'flex', gap:20, marginBottom:24 }}>
         <div style={{ width:100, height:100, borderRadius:14, background:'#e5e8f0' }} />
@@ -438,17 +428,19 @@ export function EpisodeList({ showId, onSelect }) {
   const [loading, setLoading]   = useState(true);
   const [show, setShow]         = useState(null);
 
+  const { data: showData, isLoading: showLoading } = useShow(showId, { enabled: !!showId });
+  const { data: epsData, isLoading: epsLoading } = useEpisodes(showId, { enabled: !!showId });
+
   useEffect(()=>{
-    if(!showId) return;
-    Promise.all([
-      apiFetch(`/podcast/${showId}`),
-      apiFetch(`/podcast/shows/${showId}/episodes`),
-    ]).then(([sh,eps])=>{
-      if(sh.data) setShow(sh.data);
-      setEpisodes(Array.isArray(eps.data)?eps.data:Array.isArray(eps)?eps:[]);
-      setLoading(false);
-    }).catch(()=>setLoading(false));
-  },[showId]);
+    if (showData?.data) setShow(showData.data);
+  },[showData]);
+
+  useEffect(()=>{
+    if (epsData?.data) setEpisodes(Array.isArray(epsData.data) ? epsData.data : []);
+    else if (Array.isArray(epsData)) setEpisodes(epsData);
+  },[epsData]);
+
+  const loading = showLoading || epsLoading;
 
   const fmt2 = s=>`${Math.floor((s||0)/60)}m`;
 

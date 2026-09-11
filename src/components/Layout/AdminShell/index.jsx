@@ -4,8 +4,8 @@
 // once its auth guard passes, so hooks here only run for a valid admin.
 
 import { useEffect } from "react";
-import { api } from "@/services/api";
-import { useSocket } from "@/hooks/useSocket";
+import { getAdminApprovals } from "@/lib/services/admin/approvals.service";
+import { useSocket } from "@/lib/hooks/custome/useSocket";
 
 import AdminSidebar from "./AdminSidebar";
 import { NAV, ROLE_COLORS } from "./constants";
@@ -21,7 +21,7 @@ export default function AdminShell({
   const fetchPending = async () => {
     if (!canFetchPending) return;  // ← fix: skip for supportAgent + moduleMaster
     try {
-      const d = await api.get("/admin/approvals?status=pending&limit=1");
+      const d = await getAdminApprovals("pending&limit=1");
       setPending(d?.data?.total ?? d?.data?.approvals?.length ?? 0);
     } catch { }
   };

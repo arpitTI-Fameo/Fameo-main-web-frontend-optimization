@@ -2,7 +2,7 @@
 // modules/Products/ProductShowcase/ProductDetail/index.jsx
 
 import { useEffect, useState } from "react";
-import { useMembership } from "@/hooks/useMembership";
+import { useMembership } from "@/lib/hooks/custome/useMembership";
 
 import { DISCOUNT_LABEL } from '../constants';
 import { formatINR } from '../helpers';
@@ -30,7 +30,7 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
   // discount CEILING — so every visitor, including anonymous and free-tier
   // users, was shown the full Elite price as if it were their own. Now it
   // prices off the viewer's actual plan rate, capped by the product's ceiling.
-  const capPct  = Number(product.max_discount_pct) || 0;
+  const capPct = Number(product.max_discount_pct) || 0;
   const planPct = capPct ? Math.min(percent, capPct) : percent;
   const applies = product.discount_mode !== "NO_DISCOUNT" && planPct > 0;
   const memberPrice = applies

@@ -6,32 +6,26 @@ import { useAuthStore } from '@/store/authStore';
 import CheckoutSteps from './CheckoutSteps';
 import CheckoutSummary from './CheckoutSummary';
 import DeliveryForm, { validateAddress, validateAddressFields, focusFirstError } from './DeliveryForm';
-import { SHIPPING_RATES, shippingCostFor } from '@/lib/shipping';
-import { planTotals, reconcilePlanTotals, planLabel } from '@/lib/planPricing';
-import { useMembership } from '@/hooks/useMembership';
+import { SHIPPING_RATES, shippingCostFor } from '@/utils/shipping';
+import { planTotals, reconcilePlanTotals, planLabel } from '@/utils/planPricing';
+import { useMembership } from '@/lib/hooks/custome/useMembership';
 import PaymentStep from './PaymentStep';
 import OrderReview from './OrderReview';
 import OrderConfirmation from './OrderConfirmation';
-import {
-  syncCartToServer,
-  checkout as productsCheckout,
-  clearCart as clearServerCart,
-} from '@/services/fameoProducts.service';
+import { useCreateRazorpayOrderMutation, useVerifyPaymentMutation } from '@/lib/hooks/main/useOrder';
+import { useSyncCartToServerMutation, useCheckoutMutation, useClearCartMutation } from '@/lib/hooks/main/useFameoProducts';
 import { S } from './styles';
+import { BFF_BASE } from '@/lib/api/config';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// Same-origin via the BFF; the httpOnly session cookie is attached
+// server-side, so this module no longer builds an Authorization header.
+const BASE = BFF_BASE;
 
 // Razorpay's default per-transaction ceiling. Keep in sync with RAZORPAY_MAX_INR
 // on the backend — if Razorpay Support raises your account limit, raise both.
 const MAX_ORDER_INR = Number(process.env.NEXT_PUBLIC_MAX_ORDER_INR || 500000);
 const ADDRESS_KEY = 'fameo_saved_address';
 
-const getToken = () => {
-  try {
-    const raw = localStorage.getItem('fameo-auth');
-    return raw ? JSON.parse(raw)?.state?.token : null;
-  } catch { return null; }
-};
 
 const loadRazorpay = () =>
   new Promise((resolve) => {
@@ -50,6 +44,12 @@ export default function Checkout() {
   const cartItems = useCartStore((s) => s.cartItems);
   const cartTotal = useCartStore((s) => s.cartTotal());
   const clearCart = useCartStore((s) => s.clearCart);
+
+  const { mutateAsync: createRazorpayOrder } = useCreateRazorpayOrderMutation();
+  const { mutateAsync: verifyPayment } = useVerifyPaymentMutation();
+  const syncCartToServerMutation = useSyncCartToServerMutation();
+  const productsCheckoutMutation = useCheckoutMutation();
+  const clearServerCartMutation = useClearCartMutation();
 
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
@@ -176,12 +176,11 @@ export default function Checkout() {
       const sdkLoaded = await loadRazorpay();
       if (!sdkLoaded) throw new Error('Razorpay SDK failed to load');
 
-      const authToken = getToken();
-      const headers = { 'Content-Type': 'application/json', ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) };
+      const headers = { 'Content-Type': 'application/json' };
 
       // STEP 1 — push the local cart into the products server cart.
       // This reserves stock and locks the plan discount (doc §1.3).
-      const { cart: serverCart, failed } = await syncCartToServer(cartItems);
+      const { cart: serverCart, failed } = await syncCartToServerMutation.mutateAsync(cartItems);
       if (failed.length) {
         throw new Error(
           `Could not reserve: ${failed.map(f => `${f.name} (${f.reason})`).join('; ')}`
@@ -243,18 +242,13 @@ export default function Checkout() {
       }
 
       // STEP 3 — Razorpay order. The backend now prices this itself from the
-      // products-backend server cart; `expectedINR` is sent only so it can
+      // expectedINR is sent only so it can
       // refuse if what we displayed has drifted from what it computes. It
       // cannot raise or lower the charge.
-      const orderRes = await fetch(`${BASE}/api/orders/create-razorpay-order`, {
-        method: 'POST', headers,
-        body: JSON.stringify({
-          shippingMethod: shipping.id,
-          expectedINR: payableINR,
-        }),
+      const orderData = await createRazorpayOrder({
+        shippingMethod: shipping.id,
+        expectedINR: payableINR,
       });
-      const orderData = await orderRes.json();
-      if (!orderRes.ok) throw new Error(orderData.message || 'Failed to create order');
 
       const rzpOptions = {
         key: orderData.data.key,
@@ -277,22 +271,12 @@ export default function Checkout() {
         handler: async (response) => {
           try {
             // STEP 4 — record the payment on the main backend (PostgreSQL)
-            const verifyRes = await fetch(`${BASE}/api/orders/verify-payment`, {
-              method: 'POST', headers,
-              // Money no longer travels in this request. The backend reads the
-              // quote it wrote at create time and confirms the captured amount
-              // against Razorpay directly. cartItems / totalINR / shipping.cost
-              // used to be written to the orders row verbatim, which made a
-              // valid signature enough to mint an order at any price.
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                addr,
-              }),
+            const verifyData = await verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              addr,
             });
-            const verifyData = await verifyRes.json();
-            if (!verifyRes.ok) throw new Error(verifyData.message || 'Verification failed');
 
             // STEP 5 — create the products orders (MongoDB).
             // This is what makes the order appear in the retailer/admin dashboard,
@@ -312,7 +296,7 @@ export default function Checkout() {
                 pincode: addr.pin,
                 country: 'India',
               };
-              const res = await productsCheckout(serverCart.id, response.razorpay_payment_id, shippingAddress);
+              const res = await productsCheckoutMutation.mutateAsync({ cart_id: serverCart.id, payment_ref: response.razorpay_payment_id, shipping_address: shippingAddress });
               productsOrderIds = (res.orders || []).map(o => o.id);
             } catch (e) {
               // Payment already succeeded — never fail the user here.
@@ -347,7 +331,7 @@ export default function Checkout() {
         modal: {
           ondismiss: async () => {
             // Release reserved stock so an abandoned checkout doesn't hold units.
-            await clearServerCart().catch(() => { });
+            await clearServerCartMutation.mutateAsync().catch(() => { });
             setLoading(false);
             setError('Payment cancelled.');
           },
@@ -356,7 +340,7 @@ export default function Checkout() {
 
       const rzp = new window.Razorpay(rzpOptions);
       rzp.on('payment.failed', async (r) => {
-        await clearServerCart().catch(() => { });
+        await clearServerCartMutation.mutateAsync().catch(() => { });
         setError(`Payment failed: ${r.error.description}`);
         setLoading(false);
       });

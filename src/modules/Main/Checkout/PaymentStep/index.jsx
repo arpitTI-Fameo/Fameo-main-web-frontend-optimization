@@ -1,7 +1,7 @@
 'use client';
 // modules/Checkout/PaymentStep/index.jsx
 // COD removed — products are prepaid only. Razorpay is the only method.
-import { inr } from '@/lib/formatCurrency';
+import { inr } from '@/utils/formatCurrency';
 import { S } from './styles';
 
 export default function PaymentStep({

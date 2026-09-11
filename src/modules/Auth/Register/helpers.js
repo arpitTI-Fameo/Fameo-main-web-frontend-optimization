@@ -80,3 +80,15 @@ export function isFatalLiveness(message = '') {
   const m = message.toLowerCase();
   return m.includes('under 18') || m.includes('adult') || m.includes('explicit');
 }
+
+export const REFERRAL_PARAM_KEYS = ['ref', 'referral', 'coupon'];
+export function readReferralFromUrl() {
+  if (typeof window === 'undefined') return '';
+  const qs = new URLSearchParams(window.location.search);
+  for (const key of REFERRAL_PARAM_KEYS) {
+    const v = qs.get(key);
+    // Normalise the same way the manual input does, so a messy link still works.
+    if (v && v.trim()) return v.trim().replace(/[^A-Za-z0-9-]/g, '').slice(0, 30).toUpperCase();
+  }
+  return '';
+}

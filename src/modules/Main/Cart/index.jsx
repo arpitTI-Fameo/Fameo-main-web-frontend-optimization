@@ -4,11 +4,11 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useCartStore, useHydratedCart } from '@/store/cartStore';
-import { inr } from '@/lib/formatCurrency';
+import { inr } from '@/utils/formatCurrency';
 import CartItem from './CartItem';
-import { useMembership } from '@/hooks/useMembership';
-import { planTotals, memberUnitPrice, PLAN_DISCOUNTS } from '@/lib/planPricing';
-import { SHIPPING_RATES, shippingCostFor, DEFAULT_SHIPPING } from '@/lib/shipping';
+import { useMembership } from '@/lib/hooks/custome/useMembership';
+import { planTotals, memberUnitPrice, PLAN_DISCOUNTS } from '@/utils/planPricing';
+import { SHIPPING_RATES, shippingCostFor, DEFAULT_SHIPPING } from '@/utils/shipping';
 import { styles } from './styles';
 
 // The plan table and the membership fetch used to be duplicated here and in

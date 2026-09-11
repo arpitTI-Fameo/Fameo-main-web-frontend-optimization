@@ -3,20 +3,24 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
+import { useLoginMutation } from '@/lib/hooks/main/useAuth';
+import { toUserMessage } from "@/lib/api/errors";
 import { CSS } from "../styles";
 import { BUBBLES, SPARKLES, PARTICLES } from "../decor";
 import LoginHeader from "../LoginHeader";
 import LoginForm from "../LoginForm";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function LoginContainer() {
-  const params            = useSearchParams();
-  const router            = useRouter();
-  const { login, user }   = useAuthStore();
-  const [form, setForm]   = useState({ username: "", password: "" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const params = useSearchParams();
+  const router = useRouter();
+  const { login, user } = useAuthStore();
+  const loginMutation = useLoginMutation();
+  const [form, setForm] = useState({ username: "", password: "" });
+  const [localError, setLocalError] = useState("");
+
+  const isPending = loginMutation.isPending;
+  const error = localError || (loginMutation.error ? toUserMessage(loginMutation.error) : "");
 
   // Compute this AFTER mount so server and first client render agree (both
   // false), avoiding a hydration mismatch. It flips to true on the client only.
@@ -33,34 +37,38 @@ export default function LoginContainer() {
   }, [user, router]);
 
   const handleLogin = async () => {
-    setError("");
+    setLocalError("");
+    loginMutation.reset();
     if (!form.username || !form.password)
-      return setError("Username and password are required");
-    setLoading(true);
+      return setLocalError("Username and password are required");
+    
     try {
-      const res  = await fetch(`${BASE}/api/auth/app-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: form.username, password: form.password }),
+      // Posts to our own /api/auth/login, which calls upstream server-side and
+      // returns ONLY a Set-Cookie. The session token never reaches this code —
+      // that is the point of the httpOnly cookie (defect #4).
+      const data = await loginMutation.mutateAsync({
+        username: form.username,
+        password: form.password,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
-      const token    = data?.data?.token;
-      const appToken = data?.data?.appToken;
-      const user     = data?.data?.user;
+
+      const user = data?.user ?? null;
+
       if (typeof window !== "undefined") {
-        if (token)    localStorage.setItem("fameo_token", token);
-        if (appToken) localStorage.setItem("fameo_app_token", appToken);
-        if (user)     sessionStorage.setItem("fameo_user", JSON.stringify(user));
-        sessionStorage.setItem("fameo_just_logged_in", "1");   // ← add this
+        // LEGACY COMPATIBILITY — remove in Phase 4.
+        // ~20 call sites (admin services/api.js, Community, Checkout, Account)
+        // still read these directly. Dropping them now would sign those areas
+        // out. The httpOnly cookie above is already the real session; these are
+        // a shim, not a credential, and no longer include the session token.
+        if (data?.appToken) localStorage.setItem("fameo_app_token", data.appToken);
+        if (user) sessionStorage.setItem("fameo_user", JSON.stringify(user));
+        sessionStorage.setItem("fameo_just_logged_in", "1");
       }
-      login(user, token);
+
+      login(user, null);
       const dest = params.get("redirect") || "/";
       window.location.assign(dest);
     } catch (err) {
-      setError(err.message || "Something went wrong.");
-    } finally {
-      setLoading(false);
+      // Error is handled by loginMutation.error
     }
   };
 
@@ -80,7 +88,7 @@ export default function LoginContainer() {
 
       {/* 7 concentric pulsing rings */}
       <div className="lg-rings-wrap">
-        {[1,2,3,4,5,6,7].map(i => <div key={i} className="lg-ring-c" />)}
+        {[1, 2, 3, 4, 5, 6, 7].map(i => <div key={i} className="lg-ring-c" />)}
       </div>
 
       {/* Spinning corner arc circles */}
@@ -95,13 +103,13 @@ export default function LoginContainer() {
           key={i}
           className="lg-bubble"
           style={{
-            left:            b.left,
-            top:             b.top,
-            width:           b.size + 'px',
-            height:          b.size + 'px',
-            '--bop':         b.opacity,
-            animationDuration:  b.dur + 's',
-            animationDelay:     b.delay + 's',
+            left: b.left,
+            top: b.top,
+            width: b.size + 'px',
+            height: b.size + 'px',
+            '--bop': b.opacity,
+            animationDuration: b.dur + 's',
+            animationDelay: b.delay + 's',
           }}
         />
       ))}
@@ -142,7 +150,7 @@ export default function LoginContainer() {
         <LoginForm
           form={form}
           setForm={setForm}
-          loading={loading}
+          loading={isPending}
           error={error}
           isSessionExpired={isSessionExpired}
           handleLogin={handleLogin}

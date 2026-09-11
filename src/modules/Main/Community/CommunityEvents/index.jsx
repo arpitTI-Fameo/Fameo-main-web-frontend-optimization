@@ -14,12 +14,9 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
-import * as svc from '@/services/community.service';
 import { showToast } from '../Toast';
-// SAST H-5 (extended). This read localStorage's `fameo_token` — the ADMIN
-// key set by adminAuthStore, not the creator session. Regular users sent an
-// empty Bearer token; admins leaked their admin JWT to community endpoints.
 import { useAuthStore } from '@/store/authStore';
+import { useLiveEvent, useEvents, useEventQA, useRSVPMutation, useReplay, useEventDiscussion, useEventRoomMutation, useEventQAMutation, useRaiseHandMutation, useEventDiscussionMutation } from '@/lib/hooks/main/useEvent';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -45,8 +42,8 @@ const fmtSec = s => {
   const t = Math.max(0, Math.floor(s || 0));
   const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sc = t % 60;
   return h > 0
-    ? `${h}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`
-    : `${m}:${String(sc).padStart(2,'0')}`;
+    ? `${h}:${String(m).padStart(2, '0')}:${String(sc).padStart(2, '0')}`
+    : `${m}:${String(sc).padStart(2, '0')}`;
 };
 
 const fmtDur = secs => {
@@ -83,29 +80,29 @@ const MOCK_LIVE = {
   startedAt: new Date(Date.now() - 38 * 60 * 1000),
   listenerCount: 540, status: 'live',
   speakers: [
-    { userId: 'sp1', name: 'Arjun Mehta',  status: 'speaking', avatar: '' },
-    { userId: 'sp2', name: 'Priya Sharma', status: 'muted',    avatar: '' },
-    { userId: 'sp3', name: 'Rohan Verma',  status: 'muted',    avatar: '' },
+    { userId: 'sp1', name: 'Arjun Mehta', status: 'speaking', avatar: '' },
+    { userId: 'sp2', name: 'Priya Sharma', status: 'muted', avatar: '' },
+    { userId: 'sp3', name: 'Rohan Verma', status: 'muted', avatar: '' },
   ],
 };
 const MOCK_UPCOMING = [
-  { _id:'ev2', title:'Instagram Algorithm Decoded: What Actually Works in 2024', host:{ name:'Meera Iyer',  avatar:'' }, scheduledAt:new Date(Date.now()+86400000),   access:'free',        rsvpCount:234, speakers:[] },
-  { _id:'ev3', title:'Brand Pitch Templates: From DM to Signed Contract',        host:{ name:'Vikram Shah', avatar:'' }, scheduledAt:new Date(Date.now()+2*86400000), access:'premium',     rsvpCount:156, speakers:[] },
-  { _id:'ev4', title:'YouTube Shorts Strategy: 0 to 100K in 90 Days',            host:{ name:'Dev Creators',avatar:'' }, scheduledAt:new Date(Date.now()+3*86400000), access:'free',        rsvpCount:312, speakers:[] },
-  { _id:'ev5', title:'Mindful Brand Collabs — Saying No to Wrong Deals',          host:{ name:'Kavya Reddy', avatar:'' }, scheduledAt:new Date(Date.now()+5*86400000), access:'invite_only', rsvpCount:48,  speakers:[] },
-  { _id:'ev6', title:'Going Viral on Shorts: Algorithm Secrets from 0 to 1M',    host:{ name:'Ananya Singh',avatar:'' }, scheduledAt:new Date(Date.now()+7*86400000), access:'free',        rsvpCount:521, speakers:[] },
-  { _id:'ev7', title:'From Creator to Brand: Building Your Own Product Line',     host:{ name:'Zara Khan',   avatar:'' }, scheduledAt:new Date(Date.now()+9*86400000), access:'premium',     rsvpCount:98,  speakers:[] },
+  { _id: 'ev2', title: 'Instagram Algorithm Decoded: What Actually Works in 2024', host: { name: 'Meera Iyer', avatar: '' }, scheduledAt: new Date(Date.now() + 86400000), access: 'free', rsvpCount: 234, speakers: [] },
+  { _id: 'ev3', title: 'Brand Pitch Templates: From DM to Signed Contract', host: { name: 'Vikram Shah', avatar: '' }, scheduledAt: new Date(Date.now() + 2 * 86400000), access: 'premium', rsvpCount: 156, speakers: [] },
+  { _id: 'ev4', title: 'YouTube Shorts Strategy: 0 to 100K in 90 Days', host: { name: 'Dev Creators', avatar: '' }, scheduledAt: new Date(Date.now() + 3 * 86400000), access: 'free', rsvpCount: 312, speakers: [] },
+  { _id: 'ev5', title: 'Mindful Brand Collabs — Saying No to Wrong Deals', host: { name: 'Kavya Reddy', avatar: '' }, scheduledAt: new Date(Date.now() + 5 * 86400000), access: 'invite_only', rsvpCount: 48, speakers: [] },
+  { _id: 'ev6', title: 'Going Viral on Shorts: Algorithm Secrets from 0 to 1M', host: { name: 'Ananya Singh', avatar: '' }, scheduledAt: new Date(Date.now() + 7 * 86400000), access: 'free', rsvpCount: 521, speakers: [] },
+  { _id: 'ev7', title: 'From Creator to Brand: Building Your Own Product Line', host: { name: 'Zara Khan', avatar: '' }, scheduledAt: new Date(Date.now() + 9 * 86400000), access: 'premium', rsvpCount: 98, speakers: [] },
 ];
 const MOCK_REPLAYS = [
-  { _id:'r1', title:'Creator Monetization 101: Multiple Revenue Streams',  host:{ name:'Arjun Mehta' }, endedAt:new Date(Date.now()-7*86400000),  replay:{ playCount:1240, duration:3420, takeaways:['Engagement beats follower count with brands','Always negotiate content usage rights','Micro-creators get better CPM on niche categories'], highlights:['"The first brand deal is the hardest — after that, your portfolio speaks for you."','"Never accept a rate that doesn\'t cover your time, equipment, and editing costs."'] } },
-  { _id:'r2', title:'Negotiating Brand Deals: Real Scripts That Work',     host:{ name:'Zara Khan'   }, endedAt:new Date(Date.now()-14*86400000), replay:{ playCount:890,  duration:2700, takeaways:['Counter-offer on first approach always','Rate card should have 3 tiers','Usage clauses are worth more than base fee'], highlights:['"Your rate card is your brand. Never negotiate against yourself."'] } },
-  { _id:'r3', title:'Instagram Growth in 2024: What Actually Works',       host:{ name:'Meera Iyer'  }, endedAt:new Date(Date.now()-21*86400000), replay:{ playCount:2100, duration:4200, takeaways:['Carousel saves outperform everything','Post when YOUR audience is online','Collaborations > ads for organic growth'], highlights:[] } },
-  { _id:'r4', title:'Turning YouTube Shorts into Revenue: Full Strategy',  host:{ name:'Dev Creators' }, endedAt:new Date(Date.now()-28*86400000), replay:{ playCount:670,  duration:2100, takeaways:['Shorts funnel to long-form = best strategy','40% of Shorts revenue comes from Watch page traffic','Post time matters less than consistency'], highlights:[] } },
+  { _id: 'r1', title: 'Creator Monetization 101: Multiple Revenue Streams', host: { name: 'Arjun Mehta' }, endedAt: new Date(Date.now() - 7 * 86400000), replay: { playCount: 1240, duration: 3420, takeaways: ['Engagement beats follower count with brands', 'Always negotiate content usage rights', 'Micro-creators get better CPM on niche categories'], highlights: ['"The first brand deal is the hardest — after that, your portfolio speaks for you."', '"Never accept a rate that doesn\'t cover your time, equipment, and editing costs."'] } },
+  { _id: 'r2', title: 'Negotiating Brand Deals: Real Scripts That Work', host: { name: 'Zara Khan' }, endedAt: new Date(Date.now() - 14 * 86400000), replay: { playCount: 890, duration: 2700, takeaways: ['Counter-offer on first approach always', 'Rate card should have 3 tiers', 'Usage clauses are worth more than base fee'], highlights: ['"Your rate card is your brand. Never negotiate against yourself."'] } },
+  { _id: 'r3', title: 'Instagram Growth in 2024: What Actually Works', host: { name: 'Meera Iyer' }, endedAt: new Date(Date.now() - 21 * 86400000), replay: { playCount: 2100, duration: 4200, takeaways: ['Carousel saves outperform everything', 'Post when YOUR audience is online', 'Collaborations > ads for organic growth'], highlights: [] } },
+  { _id: 'r4', title: 'Turning YouTube Shorts into Revenue: Full Strategy', host: { name: 'Dev Creators' }, endedAt: new Date(Date.now() - 28 * 86400000), replay: { playCount: 670, duration: 2100, takeaways: ['Shorts funnel to long-form = best strategy', '40% of Shorts revenue comes from Watch page traffic', 'Post time matters less than consistency'], highlights: [] } },
 ];
 const MOCK_QA = [
-  { _id:'q1', question:"What's the minimum engagement rate brands look for with nano creators?", askedBy:{ name:'@priya_sharma' }, createdAt:new Date(Date.now()-15*60000), status:'answered' },
-  { _id:'q2', question:'Should I approach brands directly or through an agency when starting out?',  askedBy:{ name:'@dev_creator' },  createdAt:new Date(Date.now()-8*60000),  status:'pending'  },
-  { _id:'q3', question:'How do you negotiate rates when a brand lowballs your first quote?',         askedBy:{ name:'@meera_iyer' },   createdAt:new Date(Date.now()-3*60000),  status:'pending'  },
+  { _id: 'q1', question: "What's the minimum engagement rate brands look for with nano creators?", askedBy: { name: '@priya_sharma' }, createdAt: new Date(Date.now() - 15 * 60000), status: 'answered' },
+  { _id: 'q2', question: 'Should I approach brands directly or through an agency when starting out?', askedBy: { name: '@dev_creator' }, createdAt: new Date(Date.now() - 8 * 60000), status: 'pending' },
+  { _id: 'q3', question: 'How do you negotiate rates when a brand lowballs your first quote?', askedBy: { name: '@meera_iyer' }, createdAt: new Date(Date.now() - 3 * 60000), status: 'pending' },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -113,28 +110,28 @@ const MOCK_QA = [
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function CommunityEvents({ onOpenProfile, currentUser }) {
   // ── State ──────────────────────────────────────────────────────────────────
-  const [liveEvent,      setLiveEvent]      = useState(null);
-  const [upcoming,       setUpcoming]       = useState(MOCK_UPCOMING);
-  const [replays,        setReplays]        = useState(MOCK_REPLAYS);
-  const [loadingLive,    setLoadingLive]    = useState(true);
-  const [loadingUpcoming,setLoadingUpcoming]= useState(true);
+  const [liveEvent, setLiveEvent] = useState(null);
+  const [upcoming, setUpcoming] = useState(MOCK_UPCOMING);
+  const [replays, setReplays] = useState(MOCK_REPLAYS);
+  const [loadingLive, setLoadingLive] = useState(true);
+  const [loadingUpcoming, setLoadingUpcoming] = useState(true);
   const [loadingReplays, setLoadingReplays] = useState(true);
 
   // Live room state — driven by Socket.io
-  const [listenerCount,  setListenerCount]  = useState(0);
-  const [speakers,       setSpeakers]       = useState([]);
-  const [socketConnected,setSocketConnected]= useState(false);
-  const [inRoom,         setInRoom]         = useState(false);
+  const [listenerCount, setListenerCount] = useState(0);
+  const [speakers, setSpeakers] = useState([]);
+  const [socketConnected, setSocketConnected] = useState(false);
+  const [inRoom, setInRoom] = useState(false);
 
   // QA
-  const [qaOpen,   setQaOpen]   = useState(false);
-  const [qaItems,  setQaItems]  = useState(MOCK_QA);
-  const [qaInput,  setQaInput]  = useState('');
+  const [qaOpen, setQaOpen] = useState(false);
+  const [qaItems, setQaItems] = useState(MOCK_QA);
+  const [qaInput, setQaInput] = useState('');
   const [qaSubmitting, setQaSubmitting] = useState(false);
 
   // Raise hand
   const [raiseOpen, setRaiseOpen] = useState(false);
-  const [raiseMsg,  setRaiseMsg]  = useState('');
+  const [raiseMsg, setRaiseMsg] = useState('');
   const [raiseSubmitting, setRaiseSubmitting] = useState(false);
 
   // Hand approved notification
@@ -149,56 +146,63 @@ export default function CommunityEvents({ onOpenProfile, currentUser }) {
   // Replay view
   const [replayView, setReplayView] = useState(null);
 
+  // TanStack Query Hooks
+  const { data: liveEventRes, isLoading: liveEventLoading } = useLiveEvent();
+  const { data: upcomingRes, isLoading: upcomingLoading } = useEvents('upcoming');
+  const { data: replaysRes, isLoading: replaysLoading } = useEvents('past');
+  const { data: qaRes } = useEventQA(liveEvent?._id || MOCK_LIVE._id);
+  const { mutateAsync: rsvpMutation } = useRSVPMutation();
+  const { mutateAsync: eventRoomMutation } = useEventRoomMutation();
+  const { mutateAsync: eventQAMutation } = useEventQAMutation();
+  const { mutateAsync: raiseHandMutation } = useRaiseHandMutation();
+  const { mutateAsync: eventDiscussionMutation } = useEventDiscussionMutation();
+
   // Audio room
-  const [roomToken,   setRoomToken]   = useState(null);
-  const [joiningAudio,setJoiningAudio]= useState(false);
-  const [inAudio,     setInAudio]     = useState(false);
+  const [roomToken, setRoomToken] = useState(null);
+  const [joiningAudio, setJoiningAudio] = useState(false);
+  const [inAudio, setInAudio] = useState(false);
 
   // Elapsed time
   const [elapsed, setElapsed] = useState('');
 
-  const socketRef  = useRef(null);
+  const socketRef = useRef(null);
   const elapsedRef = useRef(null);
 
   // ── Load all events from API ───────────────────────────────────────────────
   useEffect(() => {
     // Live event
-    svc.getLiveEvent()
-      .then(e => {
-        setLiveEvent(e || MOCK_LIVE);
-        if (e) {
-          setListenerCount(e.listenerCount || 0);
-          setSpeakers(e.speakers || []);
-        } else {
-          setListenerCount(MOCK_LIVE.listenerCount);
-          setSpeakers(MOCK_LIVE.speakers);
-        }
-      })
-      .catch(() => {
-        setLiveEvent(MOCK_LIVE);
-        setListenerCount(MOCK_LIVE.listenerCount);
-        setSpeakers(MOCK_LIVE.speakers);
-      })
-      .finally(() => setLoadingLive(false));
+    setLoadingLive(liveEventLoading);
+    if (liveEventRes?.data || liveEventRes) {
+      const e = liveEventRes?.data || liveEventRes;
+      setLiveEvent(e || MOCK_LIVE);
+      setListenerCount(e?.listenerCount || MOCK_LIVE.listenerCount);
+      setSpeakers(e?.speakers || MOCK_LIVE.speakers);
+    } else if (!liveEventLoading) {
+      setLiveEvent(MOCK_LIVE);
+      setListenerCount(MOCK_LIVE.listenerCount);
+      setSpeakers(MOCK_LIVE.speakers);
+    }
 
     // Upcoming
-    svc.getEvents('upcoming')
-      .then(res => { const a = Array.isArray(res) ? res : res?.data || []; if (a.length > 0) setUpcoming(a); })
-      .catch(() => {})
-      .finally(() => setLoadingUpcoming(false));
+    setLoadingUpcoming(upcomingLoading);
+    if (upcomingRes?.data || upcomingRes) {
+      const a = Array.isArray(upcomingRes?.data) ? upcomingRes.data : upcomingRes;
+      if (Array.isArray(a) && a.length > 0) setUpcoming(a);
+    }
 
     // Past replays
-    svc.getEvents('past')
-      .then(res => { const a = Array.isArray(res) ? res : res?.data || []; if (a.length > 0) setReplays(a); })
-      .catch(() => {})
-      .finally(() => setLoadingReplays(false));
+    setLoadingReplays(replaysLoading);
+    if (replaysRes?.data || replaysRes) {
+      const a = Array.isArray(replaysRes?.data) ? replaysRes.data : replaysRes;
+      if (Array.isArray(a) && a.length > 0) setReplays(a);
+    }
 
     // Load existing QA for live event
-    const liveId = MOCK_LIVE._id;
-    svc.getQA(liveId)
-      .then(res => { const a = Array.isArray(res) ? res : res?.data || []; if (a.length > 0) setQaItems(a); })
-      .catch(() => {});
-  }, []);
+    if (qaRes?.data || qaRes) {
+      const a = Array.isArray(qaRes?.data) ? qaRes.data : qaRes;
+      if (Array.isArray(a) && a.length > 0) setQaItems(a);
+    }
+  }, [liveEventRes, upcomingRes, replaysRes, qaRes, liveEventLoading, upcomingLoading, replaysLoading]);
 
   // ── Elapsed timer for live event ──────────────────────────────────────────
   useEffect(() => {
@@ -217,7 +221,7 @@ export default function CommunityEvents({ onOpenProfile, currentUser }) {
     const sock = getEventSocket();
     socketRef.current = sock;
 
-    sock.on('connect',    () => setSocketConnected(true));
+    sock.on('connect', () => setSocketConnected(true));
     sock.on('disconnect', () => setSocketConnected(false));
 
     // §3.7: Join event broadcast channel
@@ -291,11 +295,9 @@ export default function CommunityEvents({ onOpenProfile, currentUser }) {
     setJoiningAudio(true);
     try {
       // §3.7: GET /api/events/:id/room → { token, roomId, provider }
-      const res = await fetch(`${API}/api/events/${ev._id}/room?role=listener`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      const data = await res.json();
-      const { token, roomId, provider } = data.data || data;
+      const res = await eventRoomMutation({ id: ev._id, role: 'listener' });
+      const data = res?.data || res;
+      const { token, roomId, provider } = data;
 
       setRoomToken({ token, roomId, provider });
       setInRoom(true);
@@ -325,11 +327,9 @@ export default function CommunityEvents({ onOpenProfile, currentUser }) {
     const ev = liveEvent || MOCK_LIVE;
     try {
       // Get speaker token
-      const res = await fetch(`${API}/api/events/${ev._id}/room?role=speaker`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      const data = await res.json();
-      const { token, roomId } = data.data || data;
+      const res = await eventRoomMutation({ id: ev._id, role: 'speaker' });
+      const data = res?.data || res;
+      const { token, roomId } = data;
       setRoomToken({ token, roomId });
 
       // Tell socket we accepted
@@ -358,14 +358,10 @@ export default function CommunityEvents({ onOpenProfile, currentUser }) {
 
     try {
       // §3.7: POST /api/events/:id/qa
-      const res = await fetch(`${API}/api/events/${ev._id}/qa`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ question: q }),
-      });
-      const data = await res.json();
-      if (data.data?._id) {
-        setQaItems(prev => prev.map(item => item._id === optimistic._id ? data.data : item));
+      const res = await eventQAMutation({ id: ev._id, data: { question: q } });
+      const data = res?.data || res;
+      if (data?._id) {
+        setQaItems(prev => prev.map(item => item._id === optimistic._id ? data : item));
       }
     } catch {
       // Keep optimistic item, it'll sync via Socket.io when server processes
@@ -386,11 +382,7 @@ export default function CommunityEvents({ onOpenProfile, currentUser }) {
 
     try {
       // §3.7: POST /api/events/:id/raise-hand { message }
-      await fetch(`${API}/api/events/${ev._id}/raise-hand`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ message: raiseMsg.trim() }),
-      });
+      await raiseHandMutation({ id: ev._id, data: { message: raiseMsg.trim() } });
     } catch { /* optimistic */ }
 
     setRaiseOpen(false);
@@ -405,13 +397,13 @@ export default function CommunityEvents({ onOpenProfile, currentUser }) {
     setRsvped(p => ({ ...p, [eventId]: true })); // optimistic
     try {
       // §3.7: POST /api/events/:id/rsvp
-      await svc.rsvpEvent(eventId);
+      await rsvpMutation(eventId);
     } catch {
       // Keep optimistic — backend will sync
     }
     // §3.7: Toast exactly as spec
     showToast('📅 Event saved! Reminder 24h before + 15min before.', 'success');
-  }, [rsvped]);
+  }, [rsvped, rsvpMutation]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
   if (replayView) {
@@ -657,7 +649,7 @@ export default function CommunityEvents({ onOpenProfile, currentUser }) {
         <SectionHeading icon="📅" title="Upcoming Events" />
         {loadingUpcoming ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16, marginBottom: 32 }}>
-            {[1,2,3].map(i => <EventCardSkeleton key={i} />)}
+            {[1, 2, 3].map(i => <EventCardSkeleton key={i} />)}
           </div>
         ) : (
           <div className="cm-events-grid" style={{ marginBottom: 36 }}>
@@ -679,7 +671,7 @@ export default function CommunityEvents({ onOpenProfile, currentUser }) {
         <SectionHeading icon="🔁" title="Replay Library" />
         {loadingReplays ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16, paddingBottom: 32 }}>
-            {[1,2,3,4].map(i => <EventCardSkeleton key={i} />)}
+            {[1, 2, 3, 4].map(i => <EventCardSkeleton key={i} />)}
           </div>
         ) : (
           <div className="cm-events-grid" style={{ paddingBottom: 40 }}>
@@ -756,53 +748,54 @@ export default function CommunityEvents({ onOpenProfile, currentUser }) {
 // §3.7 🆕 NEW: REPLAY DETAIL PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
 function ReplayDetail({ event, currentUser, onBack }) {
-  const [replayData,  setReplayData]  = useState(null);
-  const [discussion,  setDiscussion]  = useState([]);
-  const [comment,     setComment]     = useState('');
-  const [commenting,  setCommenting]  = useState(false);
-  const [loading,     setLoading]     = useState(true);
+  const [replayData, setReplayData] = useState(null);
+  const [discussion, setDiscussion] = useState([]);
+  const [comment, setComment] = useState('');
+  const [commenting, setCommenting] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Audio player state
-  const audioRef  = useRef(null);
-  const seekRef   = useRef(null);
-  const [playing,    setPlaying]    = useState(false);
-  const [currentTime,setCurrentTime]= useState(0);
-  const [duration,   setDuration]   = useState(0);
-  const [buffered,   setBuffered]   = useState(0);
-  const [speed,      setSpeed]      = useState(1);
+  const audioRef = useRef(null);
+  const seekRef = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [buffered, setBuffered] = useState(0);
+  const [speed, setSpeed] = useState(1);
   const [audioLoading, setAudioLoading] = useState(false);
+
+  const { data: replayDataRes } = useReplay(event._id);
+  const { data: discussionRes } = useEventDiscussion(event._id);
+  const [eventDiscussionMutation] = useEventDiscussionMutation();
 
   // §3.7: Load replay data — GET /api/events/:id/replay
   useEffect(() => {
-    svc.getReplay?.(event._id)
-      .then(res => {
-        const d = res?.data || res;
-        setReplayData(d);
-        setLoading(false);
-      })
-      .catch(() => {
-        setReplayData(event?.replay || null);
-        setLoading(false);
-      });
+    if (replayDataRes?.data || replayDataRes) {
+      setReplayData(replayDataRes?.data || replayDataRes);
+      setLoading(false);
+    } else {
+      setReplayData(event?.replay || null);
+      setLoading(false);
+    }
 
-    // §3.7: GET /api/events/:id/discussion
-    svc.getEventDiscussion?.(event._id)
-      .then(res => { const a = Array.isArray(res?.data) ? res.data : []; setDiscussion(a); })
-      .catch(() => {});
-  }, [event._id]);
+    if (discussionRes?.data || discussionRes) {
+      const a = Array.isArray(discussionRes?.data) ? discussionRes.data : discussionRes;
+      if (Array.isArray(a)) setDiscussion(a);
+    }
+  }, [replayDataRes, discussionRes, event]);
 
   // Audio events
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
-    const onLoaded  = () => { setDuration(a.duration || 0); setAudioLoading(false); };
-    const onTime    = () => {
+    const onLoaded = () => { setDuration(a.duration || 0); setAudioLoading(false); };
+    const onTime = () => {
       setCurrentTime(a.currentTime);
       if (a.buffered.length > 0) setBuffered((a.buffered.end(a.buffered.length - 1) / a.duration) * 100);
     };
-    const onEnded   = () => setPlaying(false);
-    const onWait    = () => setAudioLoading(true);
-    const onPlay    = () => setAudioLoading(false);
+    const onEnded = () => setPlaying(false);
+    const onWait = () => setAudioLoading(true);
+    const onPlay = () => setAudioLoading(false);
     a.addEventListener('loadedmetadata', onLoaded);
     a.addEventListener('timeupdate', onTime);
     a.addEventListener('ended', onEnded);
@@ -824,7 +817,7 @@ function ReplayDetail({ event, currentUser, onBack }) {
     const a = audioRef.current;
     if (!a) return;
     if (playing) { a.pause(); setPlaying(false); }
-    else { a.play().then(() => setPlaying(true)).catch(() => {}); }
+    else { a.play().then(() => setPlaying(true)).catch(() => { }); }
   }
 
   function seek(e) {
@@ -832,7 +825,7 @@ function ReplayDetail({ event, currentUser, onBack }) {
     const bar = seekRef.current;
     if (!a || !bar || !duration) return;
     const rect = bar.getBoundingClientRect();
-    const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     a.currentTime = pct * duration;
   }
 
@@ -850,14 +843,10 @@ function ReplayDetail({ event, currentUser, onBack }) {
     setComment('');
 
     try {
-      const res = await fetch(`${API}/api/events/${event._id}/discussion`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ content: optimistic.content }),
-      });
-      const data = await res.json();
-      if (data.data?._id) {
-        setDiscussion(prev => prev.map(c => c._id === optimistic._id ? data.data : c));
+      const res = await eventDiscussionMutation({ id: event._id, data: { content: optimistic.content } });
+      const data = res?.data || res;
+      if (data?._id) {
+        setDiscussion(prev => prev.map(c => c._id === optimistic._id ? data : c));
       }
     } catch { /* keep optimistic */ }
 
@@ -866,9 +855,9 @@ function ReplayDetail({ event, currentUser, onBack }) {
   }
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const takeaways  = replayData?.takeaways  || event?.replay?.takeaways  || [];
+  const takeaways = replayData?.takeaways || event?.replay?.takeaways || [];
   const highlights = replayData?.highlights || event?.replay?.highlights || [];
-  const audioUrl   = replayData?.audio_url  || replayData?.audioUrl     || event?.replay?.url || '';
+  const audioUrl = replayData?.audio_url || replayData?.audioUrl || event?.replay?.url || '';
 
   return (
     <div>
@@ -1074,11 +1063,11 @@ function SpeakerCard({ speaker }) {
 
 // §3.7: Upcoming event card — all required fields
 function UpcomingEventCard({ event: e, index, rsvped, onRSVP }) {
-  const EMOJIS = ['🎙️','📊','🎬','💼','📱','🎓'];
+  const EMOJIS = ['🎙️', '📊', '🎬', '💼', '📱', '🎓'];
   return (
     <div className="cm-event-card">
       {/* §3.7: Cover / gradient (100px height) */}
-      <div style={{ height: 100, background: e.coverImage ? `url(${e.coverImage}) center/cover` : `linear-gradient(135deg,hsl(${index*50},60%,10%),hsl(${index*50+30},70%,16%))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34, overflow: 'hidden', position: 'relative' }}>
+      <div style={{ height: 100, background: e.coverImage ? `url(${e.coverImage}) center/cover` : `linear-gradient(135deg,hsl(${index * 50},60%,10%),hsl(${index * 50 + 30},70%,16%))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34, overflow: 'hidden', position: 'relative' }}>
         {!e.coverImage && EMOJIS[index % 6]}
         {/* Access badge on cover */}
         <span className={`cm-access-badge cm-access-${e.access || 'free'}`} style={{ position: 'absolute', top: 8, right: 8 }}>
@@ -1104,7 +1093,7 @@ function UpcomingEventCard({ event: e, index, rsvped, onRSVP }) {
         {e.speakers?.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: -6, marginBottom: 6 }}>
             {e.speakers.slice(0, 3).map((sp, i) => (
-              <div key={i} style={{ width: 20, height: 20, borderRadius: '50%', background: `hsl(${i*80},60%,50%)`, border: '1.5px solid var(--cm-bg2)', marginLeft: i > 0 ? -6 : 0, fontSize: 8, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+              <div key={i} style={{ width: 20, height: 20, borderRadius: '50%', background: `hsl(${i * 80},60%,50%)`, border: '1.5px solid var(--cm-bg2)', marginLeft: i > 0 ? -6 : 0, fontSize: 8, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
                 {(sp.name || sp.user?.name || '?')[0]}
               </div>
             ))}
@@ -1137,7 +1126,7 @@ function UpcomingEventCard({ event: e, index, rsvped, onRSVP }) {
 function ReplayCard({ event: e, index, onWatch }) {
   return (
     <div className="cm-event-card" onClick={onWatch} style={{ cursor: 'pointer' }}>
-      <div style={{ height: 100, background: `linear-gradient(135deg,hsl(${index*40+220},50%,10%),hsl(${index*40+250},60%,18%))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34, position: 'relative' }}>
+      <div style={{ height: 100, background: `linear-gradient(135deg,hsl(${index * 40 + 220},50%,10%),hsl(${index * 40 + 250},60%,18%))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34, position: 'relative' }}>
         🎙️
         <div style={{ position: 'absolute', bottom: 8, right: 8, background: 'rgba(0,0,0,.75)', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10, backdropFilter: 'blur(4px)' }}>
           {fmtDur(e.replay?.duration)}
@@ -1166,9 +1155,9 @@ function ReplayCard({ event: e, index, onWatch }) {
 
 // Lightweight inline event chat (uses Socket.io, rate-limited to 1msg/10s)
 function EventChat({ eventId, currentUser }) {
-  const [messages,  setMessages]  = useState([]);
-  const [input,     setInput]     = useState('');
-  const [lastSent,  setLastSent]  = useState(0);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [lastSent, setLastSent] = useState(0);
   const bottomRef = useRef(null);
 
   useEffect(() => {

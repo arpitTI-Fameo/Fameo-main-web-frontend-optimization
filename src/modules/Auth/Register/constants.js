@@ -1,4 +1,4 @@
-import { API_BASE } from './api';
+import { BFF_APP_BASE } from '@/lib/api/config';
 
 /* ── file upload limits (must match the copy shown to the user) ─────────── */
 export const MAX_GENERIC_FILES = 5;
@@ -107,7 +107,7 @@ export function validateEmail(rawInput) {
      → { success: true, data: { pincode, state, district, area } }
    ------------------------------------------------------------------------ */
 export const PIN_PATTERN = /^[1-9][0-9]{5}$/;
-export const PIN_LOOKUP_URL = (pin) => `${API_BASE}/api/v1/locations/pincode/${pin}`;
+export const PIN_LOOKUP_URL = (pin) => `${BFF_APP_BASE}/api/v1/locations/pincode/${pin}`;
 // Flip on only once https://api.postalpincode.in is allow-listed in connect-src.
 export const PIN_USE_PUBLIC_FALLBACK = false;
 export const PIN_FALLBACK_URL = (pin) => `https://api.postalpincode.in/pincode/${pin}`;

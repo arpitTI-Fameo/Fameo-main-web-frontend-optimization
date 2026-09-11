@@ -11,12 +11,12 @@
 
 import Link from 'next/link';
 import { useCartStore, useHydratedCart } from '@/store/cartStore';
-import { useUIStore }    from '@/store/uiStore';
-import { inr }           from '@/lib/formatCurrency';
-import { useMembership } from '@/hooks/useMembership';
-import { planTotals }    from '@/lib/planPricing';
-import { FREE_SHIPPING_THRESHOLD } from '@/lib/shipping';
-import CartItem          from '../CartItem';
+import { useUIStore } from '@/store/uiStore';
+import { inr } from '@/utils/formatCurrency';
+import { useMembership } from '@/lib/hooks/custome/useMembership';
+import { planTotals } from '@/utils/planPricing';
+import { FREE_SHIPPING_THRESHOLD } from '@/utils/shipping';
+import CartItem from '../CartItem';
 
 import { S } from './styles';
 
@@ -25,15 +25,15 @@ import { S } from './styles';
 // while the checkout charged for it. Now imported from lib/shipping.js.
 
 export default function CartDrawer() {
-  const updateQty      = useCartStore((s) => s.updateQty);
+  const updateQty = useCartStore((s) => s.updateQty);
   const removeFromCart = useCartStore((s) => s.removeFromCart);
 
   // Drawer renders persisted cart state, so gate it on hydration like the other
   // cart surfaces.
   const { items: cartItems, total: cartTotal } = useHydratedCart();
 
-  const isOpen         = useUIStore((s) => s.cartDrawerOpen);
-  const close          = useUIStore((s) => s.closeCartDrawer);
+  const isOpen = useUIStore((s) => s.cartDrawerOpen);
+  const close = useUIStore((s) => s.closeCartDrawer);
 
   const { rate, percent, meta, isMember } = useMembership();
   const { discount: planDiscount, payable } = planTotals(cartItems, rate);
@@ -41,8 +41,8 @@ export default function CartDrawer() {
   // Threshold is judged on the post-discount payable, matching CartClient and
   // CheckoutClient.
   const shippingProgress = Math.min((payable / FREE_SHIPPING_THRESHOLD) * 100, 100);
-  const remaining        = Math.max(FREE_SHIPPING_THRESHOLD - payable, 0);
-  const freeShipping     = payable >= FREE_SHIPPING_THRESHOLD;
+  const remaining = Math.max(FREE_SHIPPING_THRESHOLD - payable, 0);
+  const freeShipping = payable >= FREE_SHIPPING_THRESHOLD;
 
   return (
     <>

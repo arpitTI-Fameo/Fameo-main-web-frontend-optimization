@@ -10,57 +10,43 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
-import { getStorefrontProducts } from '@/services/fameoProducts.service';
+import { useStorefrontProducts } from '@/lib/hooks/main/useFameoProducts';
 
-import ProductGrid   from '../ProductGrid';
+import ProductGrid from '../ProductGrid';
 import ProductDetail from '../ProductDetail';
 import { toUiProduct } from '../helpers';
 import { slugToCategory } from './helpers';
 
 export default function Category() {
   const { category: slug } = useParams();
-  const searchParams       = useSearchParams();
-  const brand              = searchParams.get('brand') || '';
+  const searchParams = useSearchParams();
+  const brand = searchParams.get('brand') || '';
 
   const addToCart = useCartStore((s) => s.addToCart);
 
   const categoryName = slugToCategory(slug || '');
 
-  const [products,        setProducts]        = useState([]);
-  const [loading,         setLoading]         = useState(true);
-  const [error,           setError]           = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  useEffect(() => {
-    let alive = true;
-    setLoading(true);
-    setError(null);
+  const { data, isLoading: loading, error: apiError } = useStorefrontProducts({ limit: 200 });
+  const error = apiError?.message || null;
 
-    const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+  const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
 
-    getStorefrontProducts({ limit: 200 })
-      .then((data) => {
-        if (!alive) return;
-        let list = (data?.products || []).map(toUiProduct);
-        // Filter by category client-side (forgiving of casing/spacing)
-        list = list.filter((p) => norm(p.category) === norm(categoryName));
-        if (brand) {
-          list = list.filter(
-            (p) =>
-              norm(p.brand) === norm(brand) ||
-              norm(p.name).includes(norm(brand))
-          );
-        }
-        setProducts(list);
-      })
-      .catch((e) => {
-        console.error('Failed to load category products:', e);
-        if (alive) setError('Could not load products. Please try again.');
-      })
-      .finally(() => alive && setLoading(false));
-
-    return () => { alive = false; };
-  }, [categoryName, brand]);
+  let products = [];
+  if (data?.products) {
+    let list = data.products.map(toUiProduct);
+    // Filter by category client-side (forgiving of casing/spacing)
+    list = list.filter((p) => norm(p.category) === norm(categoryName));
+    if (brand) {
+      list = list.filter(
+        (p) =>
+          norm(p.brand) === norm(brand) ||
+          norm(p.name).includes(norm(brand))
+      );
+    }
+    products = list;
+  }
 
   return (
     <div style={{ paddingTop: 108, minHeight: '70vh', background: '#fff' }}>

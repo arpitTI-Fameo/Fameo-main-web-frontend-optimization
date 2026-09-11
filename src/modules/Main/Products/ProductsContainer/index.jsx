@@ -8,13 +8,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
-import { flyToCart } from '@/lib/flyToCart';
+import { flyToCart } from '@/utils/flyToCart';
 import {
   PRODUCTS, HERO_SLIDES, TESTIMONIALS,
   PROMISES, MARQUEE_WORDS,
 } from '@/constants/mockData';
 import { PRODUCT_BRANDS } from '@/constants/megaMenu';
-import { getStorefrontProducts } from '@/services/fameoProducts.service';
+import { useStorefrontProducts } from '@/lib/hooks/main/useFameoProducts';
 
 import ProductDetail from '../ProductDetail';
 import ShopSection from '../ShopSection';
@@ -25,7 +25,6 @@ import { toUiProduct } from '../helpers';
 import { S } from '../styles';
 
 export default function ProductsContainer() {
-  const router = useRouter();
   const addToCartRaw = useCartStore((s) => s.addToCart);
   const showToast = useUIStore((s) => s.showToast);
   // Read inside the callback so the memo doesn't need to change identity.
@@ -80,22 +79,10 @@ export default function ProductsContainer() {
   const [promVis, setPromVis] = useState(false);
   const [testVis, setTestVis] = useState(false);
   const [ctaVis, setCtaVis] = useState(false);
-  // Live products from the products backend; mock data is only a fallback
-  const [liveProducts, setLiveProducts] = useState(null);
-  // Raw backend rows (paise, images[].url) — the showcase reads these directly
-  const [rawProducts, setRawProducts] = useState([]);
-
-  useEffect(() => {
-    let alive = true;
-    getStorefrontProducts()
-      .then(({ products = [] }) => {
-        if (!alive || !products.length) return;
-        setRawProducts(products);
-        setLiveProducts(products.map(toUiProduct));
-      })
-      .catch((e) => console.error('Failed to load products:', e));
-    return () => { alive = false; };
-  }, []);
+  // Live products from the products backend;
+  const { data } = useStorefrontProducts();
+  const rawProducts = data?.products || [];
+  const liveProducts = rawProducts.length ? rawProducts.map(toUiProduct) : null;
 
   // When the products backend is unreachable we fall back to mock data so the
   // page isn't empty — but mock rows have numeric ids the products API has never

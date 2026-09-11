@@ -5,8 +5,7 @@
 
 import Link from 'next/link';
 
-import { usePortalDataMap } from '@/hooks/usePortalData';
-import { getWallet, getTransactions } from '@/services/portal.service';
+import { useWallet, useTransactions } from '@/lib/hooks/main/usePortal';
 import {
   PageTitle, Section, Card, StatTile, StatusChip, Table, tdStyle,
   SkeletonTiles, Skeleton, ErrorBox, Empty, linkButtonStyle,
@@ -14,12 +13,19 @@ import {
 } from '@/modules/Main/Account/AccountUI';
 
 export default function Wallet() {
-  const { data, loading, error, refetch } = usePortalDataMap({
-    wallet:       getWallet,
-    transactions: getTransactions,
-  });
+  const walletQuery = useWallet();
+  const transactionsQuery = useTransactions();
 
-  const { wallet, transactions } = data;
+  const loading = walletQuery.isPending || transactionsQuery.isPending;
+  const error = walletQuery.error?.message || transactionsQuery.error?.message;
+  
+  const refetch = () => {
+    walletQuery.refetch();
+    transactionsQuery.refetch();
+  };
+
+  const wallet = walletQuery.data;
+  const transactions = transactionsQuery.data;
 
   return (
     <div>

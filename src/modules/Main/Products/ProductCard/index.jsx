@@ -12,7 +12,7 @@
 //   variant       — 'grid' (default) | 'list'
 
 import { useState } from 'react';
-import { inr } from '@/lib/formatCurrency';
+import { inr } from '@/utils/formatCurrency';
 // Member pricing. ProductCard was the last storefront surface still printing the
 // raw listed price — ShopSection / CollectionShowcase / ProductDetail all moved
 // to PlanPrice, but the /products/[category] grid renders through this file, so

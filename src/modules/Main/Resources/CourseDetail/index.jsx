@@ -5,6 +5,7 @@
 import { useState, useEffect, useMemo, use } from "react";
 import { useRouter } from "next/navigation";
 import { getCourseBySlug } from "@/constants/courses";
+import { useCourse } from '@/lib/hooks/main/useResource';
 
 import CourseOverview from './CourseOverview';
 import LessonView from './LessonView';
@@ -19,26 +20,21 @@ export default function CourseDetail({ params }) {
   const [loading, setLoading] = useState(true);
   const [lessonId, setLessonId] = useState(null);   // null = overview
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-
+  const { data, isLoading: apiLoading } = useCourse(courseSlug);
+  
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      let resolved = null;
-      const stat = getCourseBySlug(courseSlug);
-      try {
-        const res = await fetch(`${API_BASE}/api/courses/${courseSlug}`);
-        const data = await res.json();
-        const db = data?.data?.course;
-        if (db?.chapters?.length) resolved = normalizeCourse(db, stat || {});
-      } catch { /* API unreachable */ }
-      if (!resolved && stat) {
-        resolved = normalizeCourse(stat);
-      }
-      if (!cancelled) { setCourse(resolved); setLoading(false); }
-    })();
-    return () => { cancelled = true; };
-  }, [courseSlug, API_BASE]);
+    let resolved = null;
+    const stat = getCourseBySlug(courseSlug);
+    
+    if (data?.data?.course?.chapters?.length) {
+      resolved = normalizeCourse(data.data.course, stat || {});
+    } else if (stat) {
+      resolved = normalizeCourse(stat);
+    }
+    
+    setCourse(resolved);
+    setLoading(apiLoading);
+  }, [courseSlug, data, apiLoading]);
 
   /* hide the site nav for this immersive route */
   useEffect(() => {

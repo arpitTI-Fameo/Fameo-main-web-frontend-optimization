@@ -3,10 +3,11 @@
 // Full user & role management — superAdmin only
 // Create users, assign roles, change password, toggle access, delete
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
-import { api } from "@/services/api";
+import { useAdminRoleUsers, useUpdateAdminRoleMutation, useToggleAdminRoleAccessMutation, useDeleteAdminRoleUserMutation, useUpdateAdminRolePasswordMutation, useCreateAdminRoleUserMutation } from "@/lib/hooks/admin/useRoles";
+import { useUpdateModuleMasterModulesMutation } from "@/lib/hooks/admin/useModulemasters";
 
 import Toast from '../Toast';
 import RolesHeader from '../RolesHeader';
@@ -27,32 +28,22 @@ export default function RolesContainer() {
     if (user && user.role !== "superAdmin") router.replace("/admin");
   }, [user]);
 
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [toast, setToast] = useState(null);
-  const [modal, setModal] = useState(null); // { type, user }
+  const usersQuery = useAdminRoleUsers();
+  const updateRoleMutation = useUpdateAdminRoleMutation();
+  const toggleAccessMutation = useToggleAdminRoleAccessMutation();
+  const deleteUserMutation = useDeleteAdminRoleUserMutation();
+  const updatePasswordMutation = useUpdateAdminRolePasswordMutation();
+  const createUserMutation = useCreateAdminRoleUserMutation();
+  const updateModulesMutation = useUpdateModuleMasterModulesMutation();
 
-  const showToast = (msg, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3000); };
-
-  const load = useCallback(async () => {
-    try {
-      const data = await api.get("/admin/roles/users");
-      setUsers(data?.data?.users || data?.data || []);
-    } catch {
-      setUsers([
-        { _id: "u1", name: "Nagi Teja", email: "superadmin@fameo.in", role: "superAdmin", isActive: true, lastSeen: new Date().toISOString(), assignedModules: [0, 1, 2, 3, 4, 5, 6, 7], createdAt: new Date(Date.now() - 86400000 * 30).toISOString() },
-        { _id: "u2", name: "Kiran Mehta", email: "mm@fameo.in", role: "moduleMaster", isActive: true, lastSeen: new Date(Date.now() - 3600000).toISOString(), assignedModules: [0, 1, 3], createdAt: new Date(Date.now() - 86400000 * 20).toISOString() },
-        { _id: "u3", name: "Priya Sharma", email: "cm@fameo.in", role: "contentManager", isActive: true, lastSeen: new Date(Date.now() - 7200000).toISOString(), assignedModules: [], createdAt: new Date(Date.now() - 86400000 * 15).toISOString() },
-        { _id: "u4", name: "Ravi Support", email: "support@fameo.in", role: "supportAgent", isActive: true, lastSeen: new Date(Date.now() - 86400000).toISOString(), assignedModules: [], createdAt: new Date(Date.now() - 86400000 * 10).toISOString() },
-        { _id: "u5", name: "Aarav Test", email: "learner@fameo.in", role: "learner", isActive: false, lastSeen: new Date(Date.now() - 172800000).toISOString(), assignedModules: [], createdAt: new Date(Date.now() - 86400000 * 5).toISOString() },
-      ]);
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+  const loading = usersQuery.isPending;
+  const users = usersQuery.error ? [
+    { _id: "u1", name: "Nagi Teja", email: "superadmin@fameo.in", role: "superAdmin", isActive: true, lastSeen: new Date().toISOString(), assignedModules: [0, 1, 2, 3, 4, 5, 6, 7], createdAt: new Date(Date.now() - 86400000 * 30).toISOString() },
+    { _id: "u2", name: "Kiran Mehta", email: "mm@fameo.in", role: "moduleMaster", isActive: true, lastSeen: new Date(Date.now() - 3600000).toISOString(), assignedModules: [0, 1, 3], createdAt: new Date(Date.now() - 86400000 * 20).toISOString() },
+    { _id: "u3", name: "Priya Sharma", email: "cm@fameo.in", role: "contentManager", isActive: true, lastSeen: new Date(Date.now() - 7200000).toISOString(), assignedModules: [], createdAt: new Date(Date.now() - 86400000 * 15).toISOString() },
+    { _id: "u4", name: "Ravi Support", email: "support@fameo.in", role: "supportAgent", isActive: true, lastSeen: new Date(Date.now() - 86400000).toISOString(), assignedModules: [], createdAt: new Date(Date.now() - 86400000 * 10).toISOString() },
+    { _id: "u5", name: "Aarav Test", email: "learner@fameo.in", role: "learner", isActive: false, lastSeen: new Date(Date.now() - 172800000).toISOString(), assignedModules: [], createdAt: new Date(Date.now() - 86400000 * 5).toISOString() },
+  ] : (usersQuery.data?.data?.users || usersQuery.data?.data || []);
 
   if (!user || user.role !== "superAdmin") return null;
 
@@ -67,8 +58,8 @@ export default function RolesContainer() {
   const changeRole = async (uid, role) => {
     if (uid === user?._id || uid === user?.id) { showToast("You can't change your own role", false); return; }
     try {
-      await api.patch(`/admin/roles/${uid}`, { role });
-      setUsers(prev => prev.map(u => u._id === uid ? { ...u, role } : u));
+      await updateRoleMutation.updateRole({ id: uid, role });
+      usersQuery.refetch();
       showToast(`Role updated to ${ROLE_MAP[role]?.label || role}`);
     } catch { showToast("Couldn't update role — try again", false); }
   };
@@ -76,16 +67,16 @@ export default function RolesContainer() {
   const toggleAccess = async (uid, currentlyActive) => {
     if (uid === user?._id || uid === user?.id) { showToast("You can't disable your own account", false); return; }
     try {
-      await api.patch(`/admin/roles/${uid}/access`, { isActive: !currentlyActive });
-      setUsers(prev => prev.map(u => u._id === uid ? { ...u, isActive: !currentlyActive } : u));
+      await toggleAccessMutation.toggleAccess({ id: uid, isActive: !currentlyActive });
+      usersQuery.refetch();
       showToast(currentlyActive ? "Access removed — user can't log in" : "Access restored");
     } catch { showToast("Couldn't update access — try again", false); }
   };
 
   const deleteUser = async (uid) => {
     try {
-      await api.delete(`/admin/roles/${uid}`);
-      setUsers(prev => prev.filter(u => u._id !== uid));
+      await deleteUserMutation.deleteUser(uid);
+      usersQuery.refetch();
       setModal(null);
       showToast("User deleted");
     } catch { showToast("Couldn't delete user — try again", false); }
@@ -93,7 +84,7 @@ export default function RolesContainer() {
 
   const changePassword = async (uid, newPassword) => {
     try {
-      await api.patch(`/admin/roles/${uid}/password`, { password: newPassword });
+      await updatePasswordMutation.updatePassword({ id: uid, password: newPassword });
       setModal(null);
       showToast("Password updated — let the user know");
     } catch { showToast("Couldn't update password — try again", false); }
@@ -101,17 +92,17 @@ export default function RolesContainer() {
 
   const createUser = async (data) => {
     try {
-      await api.post("/admin/roles/create-user", data);
+      await createUserMutation.createUser(data);
       setModal(null);
-      load();
+      usersQuery.refetch();
       showToast(`${data.name} created — ${ROLE_MAP[data.role]?.label}`);
     } catch (e) { showToast(e.message || "Couldn't create user — try again", false); }
   };
 
   const updateModules = async (uid, modules) => {
     try {
-      await api.patch(`/admin/module-masters/${uid}/modules`, { moduleIds: modules });
-      setUsers(prev => prev.map(u => u._id === uid ? { ...u, assignedModules: modules } : u));
+      await updateModulesMutation.updateModules({ id: uid, mods: modules });
+      usersQuery.refetch();
       showToast("Modules updated");
     } catch { showToast("Couldn't update modules — try again", false); }
   };

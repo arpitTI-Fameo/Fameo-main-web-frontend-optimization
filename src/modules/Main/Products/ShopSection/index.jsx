@@ -3,10 +3,10 @@
 
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { inr } from '@/lib/formatCurrency';
+import { inr } from '@/utils/formatCurrency';
 import PlanPrice from '../PlanPrice';
 import AddToBagButton from '@/components/ui/AddToBagButton';
-import { useMembership } from '@/hooks/useMembership';
+import { useMembership } from '@/lib/hooks/custome/useMembership';
 
 import { CAT_TILES, PRICE_RANGES } from './constants';
 import { SHOP_STYLES } from './styles';
@@ -45,16 +45,16 @@ export default function ShopSection({ products = [], onProductClick, addToCart }
     Object.values(addTimers.current).forEach(clearTimeout);
   }, []);
 
-  const [shopCat,      setShopCat]      = useState("all");
-  const [shopSub,      setShopSub]      = useState(null);
-  const [shopBrand,    setShopBrand]    = useState(null);
-  const [panelTab,     setPanelTab]     = useState("sub");
-  const [priceRange,   setPriceRange]   = useState(0);
-  const [inStockOnly,  setInStockOnly]  = useState(false);
-  const [sort,         setSort]         = useState("featured");
-  const [viewMode,     setViewMode]     = useState("3");
+  const [shopCat, setShopCat] = useState("all");
+  const [shopSub, setShopSub] = useState(null);
+  const [shopBrand, setShopBrand] = useState(null);
+  const [panelTab, setPanelTab] = useState("sub");
+  const [priceRange, setPriceRange] = useState(0);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [sort, setSort] = useState("featured");
+  const [viewMode, setViewMode] = useState("3");
   const [visibleCount, setVisibleCount] = useState(9);
-  const [cardVis,      setCardVis]      = useState(new Set());
+  const [cardVis, setCardVis] = useState(new Set());
 
   const cardRefs = useRef([]);
 
@@ -75,7 +75,7 @@ export default function ShopSection({ products = [], onProductClick, addToCart }
 
   // ── Derived ──
   const activeTile = CAT_TILES.find(c => c.id === shopCat) || CAT_TILES[0];
-  const panelOpen  = shopCat !== "all" && (activeTile.subs.length > 0 || activeTile.brands.length > 0);
+  const panelOpen = shopCat !== "all" && (activeTile.subs.length > 0 || activeTile.brands.length > 0);
 
   const filtered = products
     .filter(p => {
@@ -87,14 +87,14 @@ export default function ShopSection({ products = [], onProductClick, addToCart }
       return true;
     })
     .sort((a, b) =>
-      sort === "price-asc"  ? a.price - b.price  :
-      sort === "price-desc" ? b.price - a.price  :
-      sort === "rating"     ? b.rating - a.rating : 0
+      sort === "price-asc" ? a.price - b.price :
+        sort === "price-desc" ? b.price - a.price :
+          sort === "rating" ? b.rating - a.rating : 0
     );
 
-  const visible    = filtered.slice(0, visibleCount);
+  const visible = filtered.slice(0, visibleCount);
   const hasFilters = shopCat !== "all" || shopBrand !== null || priceRange !== 0 || inStockOnly;
-  const gridClass  = viewMode === "list" ? "ss-grid-1" : viewMode === "2" ? "ss-grid-2" : "ss-grid-3";
+  const gridClass = viewMode === "list" ? "ss-grid-1" : viewMode === "2" ? "ss-grid-2" : "ss-grid-3";
 
   const clearFilters = () => {
     setShopCat("all"); setShopSub(null); setShopBrand(null);
@@ -128,30 +128,30 @@ export default function ShopSection({ products = [], onProductClick, addToCart }
           <div className="ss-view-btns">
             <button className={`ss-vbtn${viewMode === "3" ? " on" : ""}`} onClick={() => setViewMode("3")} title="3-column">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <rect x="0"    y="0"    width="3.5" height="3.5" fill="currentColor"/>
-                <rect x="4.75" y="0"    width="3.5" height="3.5" fill="currentColor"/>
-                <rect x="9.5"  y="0"    width="3.5" height="3.5" fill="currentColor"/>
-                <rect x="0"    y="4.75" width="3.5" height="3.5" fill="currentColor"/>
-                <rect x="4.75" y="4.75" width="3.5" height="3.5" fill="currentColor"/>
-                <rect x="9.5"  y="4.75" width="3.5" height="3.5" fill="currentColor"/>
-                <rect x="0"    y="9.5"  width="3.5" height="3.5" fill="currentColor"/>
-                <rect x="4.75" y="9.5"  width="3.5" height="3.5" fill="currentColor"/>
-                <rect x="9.5"  y="9.5"  width="3.5" height="3.5" fill="currentColor"/>
+                <rect x="0" y="0" width="3.5" height="3.5" fill="currentColor" />
+                <rect x="4.75" y="0" width="3.5" height="3.5" fill="currentColor" />
+                <rect x="9.5" y="0" width="3.5" height="3.5" fill="currentColor" />
+                <rect x="0" y="4.75" width="3.5" height="3.5" fill="currentColor" />
+                <rect x="4.75" y="4.75" width="3.5" height="3.5" fill="currentColor" />
+                <rect x="9.5" y="4.75" width="3.5" height="3.5" fill="currentColor" />
+                <rect x="0" y="9.5" width="3.5" height="3.5" fill="currentColor" />
+                <rect x="4.75" y="9.5" width="3.5" height="3.5" fill="currentColor" />
+                <rect x="9.5" y="9.5" width="3.5" height="3.5" fill="currentColor" />
               </svg>
             </button>
             <button className={`ss-vbtn${viewMode === "2" ? " on" : ""}`} onClick={() => setViewMode("2")} title="2-column">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <rect x="0"   y="0"   width="5.5" height="5.5" fill="currentColor"/>
-                <rect x="7.5" y="0"   width="5.5" height="5.5" fill="currentColor"/>
-                <rect x="0"   y="7.5" width="5.5" height="5.5" fill="currentColor"/>
-                <rect x="7.5" y="7.5" width="5.5" height="5.5" fill="currentColor"/>
+                <rect x="0" y="0" width="5.5" height="5.5" fill="currentColor" />
+                <rect x="7.5" y="0" width="5.5" height="5.5" fill="currentColor" />
+                <rect x="0" y="7.5" width="5.5" height="5.5" fill="currentColor" />
+                <rect x="7.5" y="7.5" width="5.5" height="5.5" fill="currentColor" />
               </svg>
             </button>
             <button className={`ss-vbtn${viewMode === "list" ? " on" : ""}`} onClick={() => setViewMode("list")} title="List">
               <svg width="13" height="11" viewBox="0 0 13 11" fill="none">
-                <rect x="0" y="0"   width="13" height="2" fill="currentColor"/>
-                <rect x="0" y="4.5" width="13" height="2" fill="currentColor"/>
-                <rect x="0" y="9"   width="13" height="2" fill="currentColor"/>
+                <rect x="0" y="0" width="13" height="2" fill="currentColor" />
+                <rect x="0" y="4.5" width="13" height="2" fill="currentColor" />
+                <rect x="0" y="9" width="13" height="2" fill="currentColor" />
               </svg>
             </button>
           </div>
@@ -346,12 +346,12 @@ export default function ShopSection({ products = [], onProductClick, addToCart }
                 ref={el => cardRefs.current[i] = el}
                 data-ssid={p.id}
                 className={`ss-list${cardVis.has(String(p.id)) ? " vis" : ""}`}
-                style={{ animationDelay:`${i * 0.05}s` }}
+                style={{ animationDelay: `${i * 0.05}s` }}
                 onClick={() => onProductClick && onProductClick(p)}
               >
                 <div className="ss-list-img">
                   <img src={p.thumb} alt={p.name} loading="lazy" />
-                  <span className={lblClass(p.tag)} style={{fontSize:"8px"}}>{p.tag}</span>
+                  <span className={lblClass(p.tag)} style={{ fontSize: "8px" }}>{p.tag}</span>
                 </div>
                 <div className="ss-list-body">
                   <div className="ss-list-left">
@@ -359,9 +359,9 @@ export default function ShopSection({ products = [], onProductClick, addToCart }
                     <h3 className="ss-list-name">{p.name}</h3>
                     <p className="ss-list-sub">{p.tagline}</p>
                     <p className="ss-list-desc">{p.desc}</p>
-                    <div style={{display:"flex",alignItems:"center",gap:"4px",marginTop:"8px"}}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "8px" }}>
                       <span className="ss-pc-stars">{"★".repeat(Math.floor(p.rating ?? 0))}</span>
-                      <span className="ss-pc-rnum" style={{fontSize:"11px"}}>{p.rating}</span>
+                      <span className="ss-pc-rnum" style={{ fontSize: "11px" }}>{p.rating}</span>
                       <span className="ss-pc-rcnt">({(p.reviews ?? 0).toLocaleString()})</span>
                     </div>
                   </div>
@@ -392,7 +392,7 @@ export default function ShopSection({ products = [], onProductClick, addToCart }
                 ref={el => cardRefs.current[i] = el}
                 data-ssid={p.id}
                 className={`ss-pc${cardVis.has(String(p.id)) ? " vis" : ""}`}
-                style={{ animationDelay:`${(i % 3) * 0.08}s` }}
+                style={{ animationDelay: `${(i % 3) * 0.08}s` }}
                 onClick={() => onProductClick && onProductClick(p)}
               >
                 <div className="ss-pc-img">
@@ -414,14 +414,14 @@ export default function ShopSection({ products = [], onProductClick, addToCart }
                   {/* rating/reviews are null on live backend rows — Math.floor(null)
                       is 0 and (null).toLocaleString() throws, so guard both. */}
                   {p.rating != null && (
-                    <div style={{display:"flex",alignItems:"center",gap:"4px",marginBottom:"10px"}}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "10px" }}>
                       <span className="ss-pc-stars">{"★".repeat(Math.floor(p.rating))}</span>
                       <span className="ss-pc-rnum">{p.rating}</span>
                       <span className="ss-pc-rcnt">({(p.reviews ?? 0).toLocaleString()})</span>
                     </div>
                   )}
                   <div className="ss-pc-foot">
-                    <div style={{display:"flex",alignItems:"baseline",gap:"4px"}}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
                       <span className="ss-pc-price"><PlanPrice price={p.price} /></span>
                       {p.original && <span className="ss-pc-was">{inr(p.original)}</span>}
                     </div>

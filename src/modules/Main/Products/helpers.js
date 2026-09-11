@@ -1,6 +1,6 @@
 // modules/Products/helpers.js
 
-import { adaptProduct } from '@/lib/productAdapter';
+import { adaptProduct } from '@/utils/productAdapter';
 
 // products-mongo row (snake_case, paise) → the shape ShopSection/ProductDetail render
 export const toUiProduct = (p) => {

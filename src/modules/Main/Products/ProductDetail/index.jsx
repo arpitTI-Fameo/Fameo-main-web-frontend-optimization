@@ -7,12 +7,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { inr } from '@/lib/formatCurrency';
+import { inr } from '@/utils/formatCurrency';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { MAIN_NAV_LINKS } from '@/constants/megaMenu';
 import PlanPrice from '../PlanPrice';
-import { useMembership } from '@/hooks/useMembership';
-import { memberUnitPrice } from '@/lib/planPricing';
+import { useMembership } from '@/lib/hooks/custome/useMembership';
+import { memberUnitPrice } from '@/utils/planPricing';
 
 import { S } from './styles';
 
@@ -38,15 +38,15 @@ export default function ProductDetail({ product, onClose, onAddToCart }) {
   const innerRef = useRef(null);
   const { toggle, has } = useWishlistStore();
 
-  const images   = Array.isArray(product?.images) ? product.images.filter(Boolean) : [];
-  const hasImgs  = images.length > 0;
-  const rating   = Number(product?.rating) || 0;
-  const reviews  = Number(product?.reviews) || 0;
+  const images = Array.isArray(product?.images) ? product.images.filter(Boolean) : [];
+  const hasImgs = images.length > 0;
+  const rating = Number(product?.rating) || 0;
+  const reviews = Number(product?.reviews) || 0;
   const features = Array.isArray(product?.features) ? product.features.filter(Boolean) : [];
-  const specs    = product?.specs && typeof product.specs === 'object' ? Object.entries(product.specs) : [];
+  const specs = product?.specs && typeof product.specs === 'object' ? Object.entries(product.specs) : [];
   const original = product?.original && product.original > product?.price ? product.original : null;
-  const savings  = original ? original - product.price : 0;
-  const stock    = product?.stock;
+  const savings = original ? original - product.price : 0;
+  const stock = product?.stock;
 
   useEffect(() => {
     setActiveImg(0);

@@ -1,10 +1,10 @@
 "use client";
 // modules/Admin/Approval/ApprovalContainer/index.jsx
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
-import { api } from "@/services/api";
-import { useSocket } from "@/hooks/useSocket";
+import { useAdminApprovals, useReviewApprovalMutation } from "@/lib/hooks/admin/useApprovals";
+import { useSocket } from "@/lib/hooks/custome/useSocket";
 
 import Toast from "../Toast";
 import ApprovalTabs from "../ApprovalTabs";
@@ -15,40 +15,31 @@ export default function ApprovalContainer() {
   const { user } = useAdminAuthStore();
   const accent = "#C9A96E";
   const [tab, setTab] = useState("pending");
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
+
+  const approvalsQuery = useAdminApprovals(tab);
+  const reviewMutation = useReviewApprovalMutation();
+
+  const loading = approvalsQuery.isPending;
+  const items = approvalsQuery.error ? [
+    { _id: "a1", type: "topic", title: "Reels Algorithm Deep Dive", submittedByName: "Kiran M.", submittedAt: new Date(Date.now() - 3600000).toISOString(), status: "pending" },
+    { _id: "a2", type: "product", title: "Brand Deal Template Pack", submittedByName: "Priya S.", submittedAt: new Date(Date.now() - 7200000).toISOString(), status: "pending" },
+    { _id: "a3", type: "topic", title: "Instagram Growth Masterclass", submittedByName: "Arjun R.", submittedAt: new Date(Date.now() - 10800000).toISOString(), status: "pending" },
+    { _id: "a4", type: "media", title: "Creator Studio Setup Guide.pdf", submittedByName: "Nisha K.", submittedAt: new Date(Date.now() - 14400000).toISOString(), status: "pending" },
+  ] : (approvalsQuery.data?.data?.approvals || approvalsQuery.data?.data || []);
 
   const showToast = (msg, ok = true) => {
     setToast({ msg, ok });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const loadApprovals = useCallback(async (status) => {
-    setLoading(true);
-    try {
-      const data = await api.get(`/admin/approvals?status=${status}`);
-      setItems(data?.data?.approvals || []);
-    } catch {
-      setItems([
-        { _id: "a1", type: "topic", title: "Reels Algorithm Deep Dive", submittedByName: "Kiran M.", submittedAt: new Date(Date.now() - 3600000).toISOString(), status: "pending" },
-        { _id: "a2", type: "product", title: "Brand Deal Template Pack", submittedByName: "Priya S.", submittedAt: new Date(Date.now() - 7200000).toISOString(), status: "pending" },
-        { _id: "a3", type: "topic", title: "Instagram Growth Masterclass", submittedByName: "Arjun R.", submittedAt: new Date(Date.now() - 10800000).toISOString(), status: "pending" },
-        { _id: "a4", type: "media", title: "Creator Studio Setup Guide.pdf", submittedByName: "Nisha K.", submittedAt: new Date(Date.now() - 14400000).toISOString(), status: "pending" },
-      ]);
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { loadApprovals(tab); }, [tab, loadApprovals]);
-
   // Live — refresh when another admin reviews something
-  useSocket({ "admin:approval_reviewed": () => loadApprovals(tab) });
+  useSocket({ "admin:approval_reviewed": approvalsQuery.refetch });
 
   const review = async (id, status, notes = "") => {
     try {
-      await api.patch(`/admin/approvals/${id}`, { status, notes });
-      setItems(prev => prev.filter(i => i._id !== id));
+      await reviewMutation.reviewApproval({ id, form: { status, notes } });
+      approvalsQuery.refetch();
       showToast(
         status === "approved" ? "Approved — published live ◉" :
           status === "rejected" ? "Rejected" : "Changes requested"

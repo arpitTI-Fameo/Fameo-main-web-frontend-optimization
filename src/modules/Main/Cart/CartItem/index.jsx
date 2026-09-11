@@ -10,7 +10,7 @@
 //   onRemove  — (productId) => void
 //   compact   — boolean, true = drawer style (smaller), false = full page style
 
-import { inr } from '@/lib/formatCurrency';
+import { inr } from '@/utils/formatCurrency';
 
 import { S } from './styles';
 

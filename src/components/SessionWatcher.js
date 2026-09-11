@@ -3,28 +3,30 @@
 // Checks session every 10 minutes
 // Only forces logout on explicit SESSION_EXPIRED — never on network errors
 
-import { useEffect, useRef } from 'react';
-import { useRouter }         from 'next/navigation';
-import { useAuthStore }      from '@/store/authStore';
+import { useEffect }   from 'react';
+import { useRouter }    from 'next/navigation';
+import { useAuthStore } from '@/store/authStore';
+import { authEndpoints } from '@/lib/api/endpoints';
+import { BFF_BASE }      from '@/lib/api/config';
 
-const BASE           = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const CHECK_INTERVAL = 10 * 60 * 1000; // 10 minutes
 
 export default function SessionWatcher() {
-  const { token, logout } = useAuthStore();
-  const router            = useRouter();
-  const tokenRef          = useRef(token);
-
-  useEffect(() => { tokenRef.current = token; }, [token]);
+  // `user` replaces `token` as the signed-in signal: the session token is
+  // httpOnly now and unreadable from here. The BFF attaches it server-side,
+  // so no Authorization header is built in the browser any more.
+  const user   = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const router = useRouter();
 
   useEffect(() => {
-    if (!token) return;
+    if (!user) return;
 
     const checkSession = async () => {
       try {
-        const res  = await fetch(`${BASE}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${tokenRef.current}` },
-          cache:   'no-store',
+        const res = await fetch(`${BFF_BASE}${authEndpoints.me()}`, {
+          credentials: 'same-origin',
+          cache:       'no-store',
         });
 
         if (res.status === 401) {
@@ -48,7 +50,7 @@ export default function SessionWatcher() {
       clearTimeout(initial);
       clearInterval(interval);
     };
-  }, [token]);
+  }, [user]);
 
   return null;
 }

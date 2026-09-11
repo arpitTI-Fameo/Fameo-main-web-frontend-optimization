@@ -5,8 +5,7 @@
 
 import { useState } from 'react';
 
-import { usePortalDataMap } from '@/hooks/usePortalData';
-import { getPortalProducts, getWallet, buyWithWallet } from '@/services/portal.service';
+import { usePortalProducts, useWallet, useBuyWithWalletMutation } from '@/lib/hooks/main/usePortal';
 import {
   PageTitle, Section, Card, Button, Chip, Skeleton, ErrorBox, Empty, Toast,
   inr, INK, GOLD, LINE, MUTED, FAINT, AMBER, AMBER_BG,
@@ -16,21 +15,27 @@ import {
 // Product icon glyphs, matching the account section's line-art style.
 const ICONS = {
   headphones: '◑',
-  watch:      '◔',
-  bottle:     '◇',
-  keyboard:   '▤',
-  speaker:    '◉',
-  mouse:      '◗',
+  watch: '◔',
+  bottle: '◇',
+  keyboard: '▤',
+  speaker: '◉',
+  mouse: '◗',
 };
 
 export default function Products() {
-  const { data, loading, error, refetch } = usePortalDataMap({
-    products: getPortalProducts,
-    wallet:   getWallet,
-  });
+  const productsQuery = usePortalProducts();
+  const walletQuery = useWallet();
+  const buyWithWalletMutation = useBuyWithWalletMutation();
+
+  const loading = productsQuery.isPending || walletQuery.isPending;
+  const error = productsQuery.error?.message || walletQuery.error?.message;
+  
+  const refetch = () => {
+    productsQuery.refetch();
+    walletQuery.refetch();
+  };
 
   const [toast, setToast] = useState('');
-  const [busy, setBusy]   = useState(null);
 
   const flash = (msg) => {
     setToast(msg);
@@ -38,20 +43,18 @@ export default function Products() {
   };
 
   const handleBuy = async (product) => {
-    setBusy(product.id);
     try {
-      await buyWithWallet(product.id);
+      await buyWithWalletMutation.mutateAsync(product.id);
       flash(`${product.name} ordered — paid from your wallet.`);
-      refetch(); // refresh the balance
     } catch (err) {
       flash(err?.message || 'Purchase failed. Please try again.');
-    } finally {
-      setBusy(null);
     }
   };
 
-  const { products, wallet } = data;
+  const products = productsQuery.data || [];
+  const wallet = walletQuery.data;
   const balance = wallet?.available ?? 0;
+  const busy = buyWithWalletMutation.isPending ? buyWithWalletMutation.variables : null;
 
   return (
     <div>

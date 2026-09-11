@@ -14,9 +14,9 @@
 //   free + logged in→ ₹10,000  · ◈ Popular members pay ₹9,800
 //   anonymous       → ₹10,000  (unchanged, no upsell noise)
 
-import { inr } from '@/lib/formatCurrency';
-import { memberUnitPrice, PLAN_DISCOUNTS, PLAN_META } from '@/lib/planPricing';
-import { useMembership } from '@/hooks/useMembership';
+import { inr } from '@/utils/formatCurrency';
+import { memberUnitPrice, PLAN_DISCOUNTS, PLAN_META } from '@/utils/planPricing';
+import { useMembership } from '@/lib/hooks/custome/useMembership';
 
 import { S } from './styles';
 
@@ -51,7 +51,7 @@ export default function PlanPrice({
   }
 
   if (isMember && rate > 0) {
-    const now  = memberUnitPrice(listed, rate);
+    const now = memberUnitPrice(listed, rate);
     const save = (listed - now) * qty;
 
     return (

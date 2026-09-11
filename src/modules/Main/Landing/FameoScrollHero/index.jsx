@@ -1,10 +1,10 @@
 'use client';
- 
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { useAuthCta } from '@/hooks/useAuthCta';
+import { useAuthCta } from '@/lib/hooks/custome/useAuthCta';
 import { CSS } from './styles';
- 
+
 /* ═══════════════════════════════════════════════════════════════════════════
    FAMEO SCROLL HERO — Telescope-style scroll-driven intro
    ─────────────────────────────────────────────────────────────────────────
@@ -31,26 +31,26 @@ import { CSS } from './styles';
    then your existing sections continue after it (they'll appear once the
    500vh scroll region is consumed).
    ═══════════════════════════════════════════════════════════════════════ */
- 
+
 /* ── Scattered hero images (positions mirror the reference layout) ────────
    x / y  : rest position, % of viewport
    w      : width px  (h optional)
    dx / dy: exit direction multipliers (radially outward)                  */
 const SCATTER = [
   { src: 'https://res.cloudinary.com/dsvqdtg2t/image/upload/v1783112756/zarah-back_dszkkw.webp', x: -1.5, y: 21, w: 130, h: 220, dx: -1.4, dy: -0.2 },
-  { src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&q=80', x: 7.5, y: 44, w: 100, h: 92,  dx: -1.6, dy:  0.1 },
-  { src: 'https://images.unsplash.com/photo-1523398002811-999ca8dec234?w=400&q=80', x: 29,  y: 15, w: 180, h: 132, dx: -0.6, dy: -1.3 },
-  { src: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=500&q=80', x: 36,  y: 2.5,w: 220, h: 210, dx:  0.1, dy: -1.6 },
-  { src: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&q=80',   x: 62.5,y: 10.5,w: 150, h: 168, dx:  0.8, dy: -1.3 },
-  { src: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&q=80', x: 89.5,y: 4.5, w: 125, h: 85,  dx:  1.5, dy: -0.9 },
-  { src: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&q=80', x: 80,  y: 28,  w: 265, h: 285, dx:  1.6, dy:  0   },
-  { src: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=300&q=80', x: 96.5,y: 59,  w: 90,  h: 100, dx:  1.7, dy:  0.3 },
-  { src: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=80',   x: 70,  y: 72,  w: 300, h: 235, dx:  1.1, dy:  1.2 },
-  { src: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&q=80', x: 29,  y: 65.5,w: 118, h: 105, dx: -0.4, dy:  1.5 },
-  { src: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=500&q=80', x: 16,  y: 66.5,w: 210, h: 195, dx: -1.2, dy:  1.1 },
-  { src: 'https://images.unsplash.com/photo-1526401485004-46910ecc8e51?w=300&q=80', x: 54,  y: 87,  w: 165, h: 130, dx:  0.2, dy:  1.7 },
+  { src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&q=80', x: 7.5, y: 44, w: 100, h: 92, dx: -1.6, dy: 0.1 },
+  { src: 'https://images.unsplash.com/photo-1523398002811-999ca8dec234?w=400&q=80', x: 29, y: 15, w: 180, h: 132, dx: -0.6, dy: -1.3 },
+  { src: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=500&q=80', x: 36, y: 2.5, w: 220, h: 210, dx: 0.1, dy: -1.6 },
+  { src: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&q=80', x: 62.5, y: 10.5, w: 150, h: 168, dx: 0.8, dy: -1.3 },
+  { src: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&q=80', x: 89.5, y: 4.5, w: 125, h: 85, dx: 1.5, dy: -0.9 },
+  { src: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&q=80', x: 80, y: 28, w: 265, h: 285, dx: 1.6, dy: 0 },
+  { src: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=300&q=80', x: 96.5, y: 59, w: 90, h: 100, dx: 1.7, dy: 0.3 },
+  { src: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=80', x: 70, y: 72, w: 300, h: 235, dx: 1.1, dy: 1.2 },
+  { src: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&q=80', x: 29, y: 65.5, w: 118, h: 105, dx: -0.4, dy: 1.5 },
+  { src: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=500&q=80', x: 16, y: 66.5, w: 210, h: 195, dx: -1.2, dy: 1.1 },
+  { src: 'https://images.unsplash.com/photo-1526401485004-46910ecc8e51?w=300&q=80', x: 54, y: 87, w: 165, h: 130, dx: 0.2, dy: 1.7 },
 ];
- 
+
 /* ── Curators (curator UI state — dots / arrow cycle these) ─────────────── */
 const CURATORS = [
   {
@@ -110,7 +110,7 @@ const CURATORS = [
     ],
   },
 ];
- 
+
 /* ── helpers ─────────────────────────────────────────────────────────────── */
 const clamp01 = v => Math.min(1, Math.max(0, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -118,7 +118,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const easeInOut = t => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 /* sub-progress inside [a,b] of the master progress */
 const seg = (p, a, b) => clamp01((p - a) / (b - a));
- 
+
 /* ── CSS ─────────────────────────────────────────────────────────────────── */
 export default function FameoScrollHero() {
   const runwayRef = useRef(null);
@@ -127,10 +127,10 @@ export default function FameoScrollHero() {
   const [vh, setVh] = useState(800);
   const [cur, setCur] = useState(0);        // active curator index
   const [thumbTick, setThumbTick] = useState(0); // auto-cycling thumbs
- 
+
   /* who is signed in, and what the pill's button should say to them */
   const auth = useAuthCta();
- 
+
   /* natural width/height ratio of each curator photo, measured on first load
      and cached. Used to size the seed so nothing is ever cropped. */
   const [imgAspect, setImgAspect] = useState({});
@@ -139,7 +139,7 @@ export default function FameoScrollHero() {
     const a = el.naturalWidth / el.naturalHeight;
     setImgAspect(prev => (prev[i] ? prev : { ...prev, [i]: a }));
   }, []);
- 
+
   /* viewport size */
   useEffect(() => {
     const size = () => { setVw(window.innerWidth); setVh(window.innerHeight); };
@@ -147,7 +147,7 @@ export default function FameoScrollHero() {
     window.addEventListener('resize', size);
     return () => window.removeEventListener('resize', size);
   }, []);
- 
+
   /* scroll progress across the runway — direct rAF-throttled scrub,
      identical to the ZoomDiscover section (tracks the wheel 1:1) */
   const raf = useRef(0);
@@ -171,22 +171,22 @@ export default function FameoScrollHero() {
       cancelAnimationFrame(raf.current);
     };
   }, []);
- 
+
   /* auto-cycle thumbnails while curator UI is visible */
   useEffect(() => {
     const t = setInterval(() => setThumbTick(k => k + 1), 2200);
     return () => clearInterval(t);
   }, []);
- 
+
   /* ── phase sub-progress ─────────────────────────────────────── */
   const p1 = seg(p, 0.00, 0.18);                 // scatter out + seed grow
   const p2raw = seg(p, 0.18, 0.52);              // seed → fullscreen (raw)
   const p2 = easeInOut(p2raw);                   // eased leader progress
-  const capIn  = seg(p, 0.52, 0.58);             // caption fade in
+  const capIn = seg(p, 0.52, 0.58);             // caption fade in
   const capOut = seg(p, 0.66, 0.74);             // caption fade out
   const p4 = seg(p, 0.76, 0.90);                 // curator UI in
   const dark = p2 > 0.55;                        // flip fixed labels
- 
+
   /* seed geometry — identical to the ZoomDiscover section: the seed sits
      inline between the words at its full seed size and only expands */
   //
@@ -196,16 +196,16 @@ export default function FameoScrollHero() {
   // 200x80 budget, so the seed is never larger than before, never crops, and
   // the line layout is unchanged.
   const seedMaxW = Math.min(200, vw * 0.14);
-  const seedMaxH = Math.min(80,  vh * 0.11);
-  const aspect   = imgAspect[cur] || seedMaxW / seedMaxH;   // w/h, 1.5 until measured
+  const seedMaxH = Math.min(80, vh * 0.11);
+  const aspect = imgAspect[cur] || seedMaxW / seedMaxH;   // w/h, 1.5 until measured
   const seedW = aspect > seedMaxW / seedMaxH ? seedMaxW : seedMaxH * aspect;
   const seedH = aspect > seedMaxW / seedMaxH ? seedMaxW / aspect : seedMaxH;
- 
+
   const gw = lerp(seedW, vw, p2);
   const gh = lerp(seedH, vh, p2);
   /* words pushed fully off-screen by end of expansion */
   const wordShift = p2 * vw * 0.55;
- 
+
   /* ── echo / fan-out — temporal trail ──────────────────────────
      Echo sizes are NOT derived from scroll position (that leaves
      frozen bands if you stop mid-scroll). Instead, each copy eases
@@ -222,7 +222,7 @@ export default function FameoScrollHero() {
     echoSizes.current = Array.from({ length: ECHOES }, () => ({ w: gw, h: gh }));
   }
   const [, setEchoTick] = useState(0);
- 
+
   useEffect(() => {
     let rafId;
     const step = () => {
@@ -243,22 +243,22 @@ export default function FameoScrollHero() {
     rafId = requestAnimationFrame(step);
     return () => cancelAnimationFrame(rafId);
   }, []);
- 
+
   const caption = clamp01(capIn) * (1 - clamp01(capOut));
   const curator = CURATORS[cur];
- 
+
   const goTo = useCallback(i => setCur((i + CURATORS.length) % CURATORS.length), []);
- 
+
   const scrollNudge = () => window.scrollBy({ top: vh * 0.9, behavior: 'smooth' });
- 
+
   return (
     <div className="tsc-wrap">
       <style>{CSS}</style>
- 
+
       {/* ── 500vh scroll runway with pinned stage ─────────────── */}
       <div className="tsc-runway" ref={runwayRef}>
         <div className={`tsc-stage${dark ? ' dark' : ''}`}>
- 
+
           {/* scattered floating images */}
           {SCATTER.map((s, i) => {
             const tx = s.dx * p1 * vw * 0.9;
@@ -280,7 +280,7 @@ export default function FameoScrollHero() {
               </div>
             );
           })}
- 
+
           {/* headline */}
           <div className="tsc-headline">
             <div
@@ -292,12 +292,12 @@ export default function FameoScrollHero() {
             >
               Real recommendations
             </div>
- 
+
             <div className="tsc-line tsc-line2">
               <span className="tsc-word" style={{ transform: `translateX(${-wordShift}px)` }}>
                 by real
               </span>
- 
+
               {/* the seed → fullscreen image (with echo fan-out) */}
               <div className="tsc-grow" style={{ width: gw, height: gh }}>
                 {/* leader (largest, back layer) — crossfades between curators */}
@@ -323,7 +323,7 @@ export default function FameoScrollHero() {
                     draggable={false}
                   />
                 ))}
- 
+
                 {/* temporal echo chain — each copy trails the one in front;
                     all converge onto the leader when scrolling pauses */}
                 {echoSizes.current.map((s, i) => (
@@ -335,45 +335,45 @@ export default function FameoScrollHero() {
                     <img src={CURATORS[cur].image} alt="" draggable={false} />
                   </div>
                 ))}
- 
+
                 <div className="tsc-grow-shade" style={{ opacity: p2 }} />
               </div>
- 
+
               <span className="tsc-word" style={{ transform: `translateX(${wordShift}px)` }}>
                 people
               </span>
             </div>
           </div>
- 
+
           {/* fullscreen caption */}
           <div className="tsc-caption" style={{ opacity: caption, transform: `translateY(${(1 - caption) * 14}px)` }}>
             Featuring curators from around the world
           </div>
- 
+
           {/* curator UI */}
           <div className={`tsc-curator${p4 <= 0.02 ? ' off' : ''}`} style={{ opacity: p4 }}>
             {/* annotation lines: name → face */}
             <svg className="tsc-cur-lines" viewBox={`0 0 ${vw} ${vh}`} preserveAspectRatio="none">
               <line
                 x1={vw * 0.245} y1={vh * 0.485}
-                x2={vw * 0.40}  y2={vh * 0.21}
+                x2={vw * 0.40} y2={vh * 0.21}
                 style={{ strokeDasharray: 800, strokeDashoffset: 800 * (1 - p4) }}
               />
               <line
                 x1={vw * 0.245} y1={vh * 0.515}
-                x2={vw * 0.42}  y2={vh * 0.83}
+                x2={vw * 0.42} y2={vh * 0.83}
                 style={{ strokeDasharray: 800, strokeDashoffset: 800 * (1 - p4) }}
               />
             </svg>
- 
+
             <div className="tsc-cur-name">{curator.name}</div>
- 
+
             <div className="tsc-cur-bio">{curator.bio}</div>
- 
+
             <div className="tsc-cur-cats">
               {curator.categories.map(c => <div key={c}>{c}</div>)}
             </div>
- 
+
             {/* pagination dots */}
             <div className="tsc-cur-dots">
               {CURATORS.map((_, i) => (
@@ -385,14 +385,14 @@ export default function FameoScrollHero() {
                 />
               ))}
             </div>
- 
+
             {/* prev button */}
             <button className="tsc-cur-btn" aria-label="Previous curator" onClick={() => goTo(cur - 1)}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <path d="M15 5l-7 7 7 7" />
               </svg>
             </button>
- 
+
             {/* auto-cycling thumbnail strip */}
             <div className="tsc-cur-thumbs">
               {[0, 1, 2, 3].map(slot => {
@@ -410,14 +410,14 @@ export default function FameoScrollHero() {
           </div>
         </div>
       </div>
- 
+
       {/* ── fixed chrome ──────────────────────────────────────── */}
       <div className="tsc-fixed">
         <span className="tsc-beta">CURRENTLY IN BETA</span>
- 
+
         <nav className="tsc-navbar">
           <Link href="/" className="tsc-navbar-brand">Fameo</Link>
- 
+
           {!auth.hydrated ? (
             /* store not read yet — reserve the space instead of flashing
                LOGIN / SIGN UP at someone who is already signed in */
@@ -443,7 +443,7 @@ export default function FameoScrollHero() {
             </>
           )}
         </nav>
- 
+
         <div className="tsc-scroll-cue">
           <span>SCROLL</span>
           <button className="tsc-scroll-btn" aria-label="Scroll down" onClick={scrollNudge}>

@@ -10,8 +10,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { PLANS } from '@/constants/membership';
-import { purchasePlan, newCheckoutAttemptId } from '@/services/subscriptionCheckout';
-import { quoteMarketingCoupon } from '@/services/subscription.service';
+import { purchasePlan, newCheckoutAttemptId, useQuoteMarketingCouponMutation, usePlans, useCurrentSubscription } from '@/lib/hooks/main/useSubscription';
 import { S } from '../styles'
 import { IcCheck, IcShield, IcRefresh, IcLock, IcArrow } from '../icons'
 import { BASE, PRICES, FROM_LABELS } from '../constants';
@@ -55,80 +54,58 @@ export default function PlansContainer() {
     // We MERGE backend data (prices, features, billing_options) with the static
     // PLANS design metadata (icon, color, appPlanCode, popular) matched by code,
     // so the backend drives pricing while YOUR design stays intact.
+    const { data: plansData } = usePlans({ enabled: !!token });
+    const { data: curData, refetch: refreshCurrent, error: curError } = useCurrentSubscription({ enabled: !!token });
+    const quoteCouponMutation = useQuoteMarketingCouponMutation();
+
     useEffect(() => {
-        if (!token) return;
-        fetch(`${BASE}/api/subscriptions/plans`, {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-            .then(r => (r.status === 401 ? null : r.json()))
-            .then(d => {
-                if (!Array.isArray(d?.data) || !d.data.length) return;
-                const codeOf = (p) =>
-                    (p?.plan_code || p?.code || p?.id || '').toString().toLowerCase();
-                const merged = d.data.map((apiPlan) => {
-                    const design = (PLANS || []).find((sp) => codeOf(sp) === codeOf(apiPlan)) || {};
-                    return {
-                        ...design,     // icon, color, appPlanCode, popular, features fallback…
-                        ...apiPlan,    // backend: prices, billing_options, real plan_code
-                        // keep a stable slug-ish id for the UI, prefer the design slug
-                        id: design.id || apiPlan.id,
-                        // preserve the NUMERIC backend id for create-order/subscribe
-                        backendPlanId: apiPlan.id,
-                        // ensure a display name exists
-                        name: apiPlan.plan_name || apiPlan.name || design.name,
-                        // ensure design-only visuals survive even if apiPlan lacks them
-                        icon: apiPlan.icon || design.icon,
-                        color: apiPlan.color || design.color,
-                        appPlanCode: apiPlan.plan_code || design.appPlanCode,
-                        popular: design.popular ?? apiPlan.popular,
-                        // keep design features if the API's features aren't a string array
-                        features: Array.isArray(apiPlan.features) ? apiPlan.features : design.features,
-                        notIncluded: design.notIncluded,
-                        discountRate: design.discountRate ?? apiPlan.discountRate,
-                        discountLabel: design.discountLabel ?? apiPlan.discountLabel,
-                        pricingTiers: apiPlan.pricingTiers || design.pricingTiers,
-                    };
-                });
-                // Include static-only plans the backend doesn't return (e.g. Free),
-                // so the free card still shows. Order: free, pro, popular, elite.
-                const mergedCodes = new Set(merged.map((m) => codeOf(m)));
-                const staticOnly = (PLANS || []).filter((sp) => !mergedCodes.has(codeOf(sp)));
-                const ORDER = { free: 0, pro: 1, popular: 2, elite: 3 };
-                const full = [...staticOnly, ...merged].sort(
-                    (a, b) => (ORDER[codeOf(a)] ?? 99) - (ORDER[codeOf(b)] ?? 99)
-                );
-                setPlans(full);
-            })
-            .catch(() => { }); // keep hardcoded fallback on failure
-    }, [token]);
+        if (!plansData) return;
+        const d = Array.isArray(plansData) ? plansData : plansData.data;
+        if (!Array.isArray(d) || !d.length) return;
+        
+        const codeOf = (p) => (p?.plan_code || p?.code || p?.id || '').toString().toLowerCase();
+        const merged = d.map((apiPlan) => {
+            const design = (PLANS || []).find((sp) => codeOf(sp) === codeOf(apiPlan)) || {};
+            return {
+                ...design,
+                ...apiPlan,
+                id: design.id || apiPlan.id,
+                backendPlanId: apiPlan.id,
+                name: apiPlan.plan_name || apiPlan.name || design.name,
+                icon: apiPlan.icon || design.icon,
+                color: apiPlan.color || design.color,
+                appPlanCode: apiPlan.plan_code || design.appPlanCode,
+                popular: design.popular ?? apiPlan.popular,
+                features: Array.isArray(apiPlan.features) ? apiPlan.features : design.features,
+                notIncluded: design.notIncluded,
+                discountRate: design.discountRate ?? apiPlan.discountRate,
+                discountLabel: design.discountLabel ?? apiPlan.discountLabel,
+                pricingTiers: apiPlan.pricingTiers || design.pricingTiers,
+            };
+        });
+        
+        const mergedCodes = new Set(merged.map((m) => codeOf(m)));
+        const staticOnly = (PLANS || []).filter((sp) => !mergedCodes.has(codeOf(sp)));
+        const ORDER = { free: 0, pro: 1, popular: 2, elite: 3 };
+        const full = [...staticOnly, ...merged].sort(
+            (a, b) => (ORDER[codeOf(a)] ?? 99) - (ORDER[codeOf(b)] ?? 99)
+        );
+        setPlans(full);
+    }, [plansData]);
 
-    // Determine the user's current plan for highlighting. We read /current (not
-    // just /membership) because a CANCELLED-but-still-within-access subscription
-    // should still show as the user's current plan until it actually expires.
-    const refreshCurrent = useCallback(() => {
-        if (!token) return;
-        fetch(`${BASE}/api/subscriptions/current`, {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-            .then(r => {
-                if (r.status === 401) { logout(); router.push('/login?reason=session_expired'); return null; }
-                return r.json();
-            })
-            .then(d => {
-                if (!d) return;
-                const raw = d?.data;
-                const cur = Array.isArray(raw)
-                    ? (raw.find((s) => s?.status === 'active' && !s?.is_cancelled) || raw[0])
-                    : raw;
-                if (!cur) return;
-                const code = (cur?.plan?.plan_code || cur?.membershipType || 'free').toLowerCase();
-                const isFree = code === 'free' || cur?.subscription_id === 'free';
-                setCurrent(isFree ? 'free' : code);
-            })
-            .catch(() => { });
-    }, [token]);
+    useEffect(() => {
+        if (!curData) return;
+        const cur = curData?.data || curData;
+        const code = (cur?.plan?.plan_code || cur?.membershipType || 'free').toLowerCase();
+        const isFree = code === 'free' || cur?.subscription_id === 'free';
+        setCurrent(isFree ? 'free' : code);
+    }, [curData]);
 
-    useEffect(() => { refreshCurrent(); }, [refreshCurrent]);
+    useEffect(() => {
+        if (curError?.name === 'SessionExpiredError' || curError?.message === 'SESSION_EXPIRED') {
+            logout(); router.push('/login?reason=session_expired');
+        }
+    }, [curError, logout, router]);
 
     // Option 2 sync: refresh the current plan when the user returns to this tab,
     // so a plan changed in the app shows here without a manual reload.
@@ -181,7 +158,7 @@ export default function PlansContainer() {
         if (!chosen) { setCouponError('No billing option for this plan.'); return; }
         setCouponBusy(true); setCouponError('');
         try {
-            const data = await quoteMarketingCoupon({ billing_id: chosen.id, coupon_code: code });
+            const data = await quoteCouponMutation.mutateAsync({ billing_id: chosen.id, coupon_code: code });
             if (!data?.valid) { setCoupon(null); setCouponError('Coupon is not valid for this plan.'); return; }
             setCoupon(data);
         } catch (err) {

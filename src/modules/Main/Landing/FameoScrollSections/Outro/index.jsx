@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import useAuthCta from '@/hooks/useAuthCta';
+import useAuthCta from '@/lib/hooks/custome/useAuthCta';
 import { TASTE_DOODLES, O_MEDIA } from '../constants';
 import { clamp01, lerp } from '../utils';
 

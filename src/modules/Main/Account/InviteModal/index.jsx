@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 
-import { shareCoupon } from '@/services/portal.service';
+import { useShareCouponMutation } from '@/lib/hooks/main/usePortal';
 import {
   Button, Chip,
   INK, GOLD, LINE, MUTED, FAINT, GREEN, AMBER, AMBER_BG,
@@ -21,8 +21,8 @@ import {
 // Friendly names for each tier, matching the walkthrough.
 const TIER_COPY = {
   A: { name: 'Short-term invite', blurb: 'Best for friends testing the water.' },
-  B: { name: 'Value invite',      blurb: 'A balance of discount and earnings.' },
-  C: { name: 'Committed invite',  blurb: 'Longest commitment — you earn most.' },
+  B: { name: 'Value invite', blurb: 'A balance of discount and earnings.' },
+  C: { name: 'Committed invite', blurb: 'Longest commitment — you earn most.' },
 };
 
 // Invite links land on the registration flow, which reads the code off the URL.
@@ -42,8 +42,9 @@ const inviteLink = (coupon) => {
 
 export default function InviteModal({ open, onClose, tiers = [], coupons = [], onShared }) {
   const [tierCode, setTierCode] = useState(null);
-  const [copied, setCopied]     = useState(false);
-  const [busy, setBusy]         = useState(false);
+  const [copied, setCopied] = useState(false);
+  const shareCouponMutation = useShareCouponMutation();
+  const busy = shareCouponMutation.isPending;
 
   // Only tiers with coupons left can be picked.
   const available = useMemo(
@@ -95,17 +96,14 @@ export default function InviteModal({ open, onClose, tiers = [], coupons = [], o
 
   // Copy the link and record the share.
   const handleCopy = async () => {
-    setBusy(true);
     try {
       await navigator.clipboard?.writeText(link);
       setCopied(true);
-      if (coupon) await shareCoupon(coupon.id);
+      if (coupon) await shareCouponMutation.mutateAsync(coupon.id);
       onShared?.(`Invite link copied — ${tier?.discount}% off`);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       onShared?.('Could not copy the link. Try again.');
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -113,7 +111,7 @@ export default function InviteModal({ open, onClose, tiers = [], coupons = [], o
   const handleShareVia = async (channel) => {
     const urls = {
       whatsapp: `https://wa.me/?text=${encodeURIComponent(message)}`,
-      email:    `mailto:?subject=${encodeURIComponent('Join me on Fameo')}&body=${encodeURIComponent(message)}`,
+      email: `mailto:?subject=${encodeURIComponent('Join me on Fameo')}&body=${encodeURIComponent(message)}`,
       telegram: `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Join me on Fameo')}`,
     };
 
@@ -130,7 +128,7 @@ export default function InviteModal({ open, onClose, tiers = [], coupons = [], o
     }
 
     if (coupon) {
-      try { await shareCoupon(coupon.id); } catch { /* non-blocking */ }
+      try { await shareCouponMutation.mutateAsync(coupon.id); } catch { /* non-blocking */ }
     }
     onShared?.('Invite shared');
   };
@@ -215,9 +213,9 @@ export default function InviteModal({ open, onClose, tiers = [], coupons = [], o
             <div style={S.shareBtns}>
               {[
                 { id: 'whatsapp', label: 'WhatsApp' },
-                { id: 'email',    label: 'Email' },
+                { id: 'email', label: 'Email' },
                 { id: 'telegram', label: 'Telegram' },
-                { id: 'more',     label: 'More' },
+                { id: 'more', label: 'More' },
               ].map((c) => (
                 <Button
                   key={c.id}

@@ -1,6 +1,6 @@
 'use client';
 // COD removed — products are prepaid only.
-import { inr } from '@/lib/formatCurrency';
+import { inr } from '@/utils/formatCurrency';
 import { S } from './styles';
 
 export default function OrderReview({

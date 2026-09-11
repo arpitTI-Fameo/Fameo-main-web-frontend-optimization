@@ -1,7 +1,7 @@
 'use client';
 // modules/Checkout/OrderConfirmation/index.jsx
 import Link    from 'next/link';
-import { inr } from '@/lib/formatCurrency';
+import { inr } from '@/utils/formatCurrency';
 import { S } from './styles';
 
 export default function OrderConfirmation({ order, addr }) {

@@ -1,397 +1,3 @@
-// // middleware.js
-// // /products          → login required (any plan)
-// // /community         → login + paid plan (pro/popular/elite)
-// // /talent-hire       → login + paid plan (pro/popular/elite)
-// // /account /checkout → login required
-
-// import { NextResponse } from 'next/server';
-
-// const AUTH_ONLY_ROUTES = [
-//   '/products',
-//   '/account',
-//   '/checkout',
-//   '/resources',
-//   '/resources/my-learnings',
-//   '/resources/saved',
-// ];
-
-// const PAID_ROUTES = [
-//   '/community',
-//   '/talent-hire',
-// ];
-
-// const PAID_PLANS = ['pro', 'popular', 'elite'];
-
-// export function middleware(request) {
-//   const { pathname } = request.nextUrl;
-
-//   const token      = request.cookies.get('fameo_token')?.value;
-//   const membership = request.cookies.get('fameo_membership')?.value || 'free';
-//   const isPaid     = PAID_PLANS.includes(membership);
-
-//   // ── Login required only ───────────────────────────────────────────────────
-//   const isAuthOnly = AUTH_ONLY_ROUTES.some(
-//     r => pathname === r || pathname.startsWith(r + '/')
-//   );
-//   if (isAuthOnly && !token) {
-//     const url = new URL('/login', request.url);
-//     url.searchParams.set('redirect', pathname);
-//     return NextResponse.redirect(url);
-//   }
-
-//   // ── Login + paid plan required ────────────────────────────────────────────
-//   const isPaidRoute = PAID_ROUTES.some(
-//     r => pathname === r || pathname.startsWith(r + '/')
-//   );
-//   if (isPaidRoute) {
-//     if (!token) {
-//       const url = new URL('/login', request.url);
-//       url.searchParams.set('redirect', pathname);
-//       return NextResponse.redirect(url);
-//     }
-//     if (!isPaid) {
-//       const url = new URL('/plans', request.url);
-//       url.searchParams.set('upgrade', 'true');
-//       url.searchParams.set('from', pathname);
-//       return NextResponse.redirect(url);
-//     }
-//   }
-
-//   return NextResponse.next();
-// }
-
-// export const config = {
-//   matcher: [
-//     '/products/:path*',
-//     '/community/:path*',
-//     '/talent-hire/:path*',
-//     '/account/:path*',
-//     '/checkout',
-//     '/resources',
-//     '/resources/:path*',
-//   ],
-// };
-
-
-// // // import { NextResponse } from "next/server";
-
-// // // export function middleware(request) {
-// // //   return NextResponse.next();
-// // // }
-
-
-// // // // middleware.js
-// // // // Protects routes that require authentication
-// // // // Next.js middleware runs on the edge before page renders
-
-// // // import { NextResponse } from 'next/server';
-// // // import { PROTECTED_ROUTES } from './constants/routes';
-
-// // // export function middleware(request) {
-// // //   const { pathname } = request.nextUrl;
-
-// // //   // Check if route needs protection
-// // //   const isProtected = PROTECTED_ROUTES.some(
-// // //     (route) => pathname === route || pathname.startsWith(route + '/')
-// // //   );
-
-// // //   if (!isProtected) return NextResponse.next();
-
-// // //   // Read token from cookie (set during login)
-// // //   // Note: Zustand localStorage is not available in middleware
-// // //   // So we use a cookie mirror of the token
-// // //   const token = request.cookies.get('fameo_token')?.value;
-
-// // //   if (!token) {
-// // //     const loginUrl = new URL('/login', request.url);
-// // //     loginUrl.searchParams.set('redirect', pathname);
-// // //     return NextResponse.redirect(loginUrl);
-// // //   }
-
-// // //   return NextResponse.next();
-// // // }
-
-// // // export const config = {
-// // //   matcher: [
-// // //     '/account/:path*',
-// // //     '/checkout',
-// // //     '/resources/my-learnings',
-// // //     '/resources/saved',
-// // //   ],
-// // // };
-
-
-// // // middleware.js
-// // // FREE users cannot access: products, community, talent-hire
-// // // PRO, POPULAR, ELITE users have full access
-// // // All logged-in users can access: account, checkout, saved, learnings
-
-// // import { NextResponse } from 'next/server';
-
-// // const AUTH_ROUTES = [
-// //   '/account',
-// //   '/checkout',
-// //   '/resources/my-learnings',
-// //   '/resources/saved',
-// // ];
-
-// // // Only FREE users are blocked from these
-// // const PAID_ROUTES = [
-// //   '/products',
-// //   '/community',
-// //   '/talent-hire',
-// // ];
-
-// // // Plans that have full access
-// // const PAID_PLANS = ['pro', 'popular', 'elite'];
-
-// // export function middleware(request) {
-// //   const { pathname } = request.nextUrl;
-
-// //   const token      = request.cookies.get('fameo_token')?.value;
-// //   const membership = request.cookies.get('fameo_membership')?.value || 'free';
-// //   const isPaid     = PAID_PLANS.includes(membership);
-
-// //   // ── Auth routes — require login ─────────────────────────────────────────────
-// //   const isAuthRoute = AUTH_ROUTES.some(
-// //     r => pathname === r || pathname.startsWith(r + '/')
-// //   );
-// //   if (isAuthRoute && !token) {
-// //     const url = new URL('/login', request.url);
-// //     url.searchParams.set('redirect', pathname);
-// //     return NextResponse.redirect(url);
-// //   }
-
-// //   // ── Paid routes — require Pro / Popular / Elite ───────────────────────────
-// //   const isPaidRoute = PAID_ROUTES.some(
-// //     r => pathname === r || pathname.startsWith(r + '/')
-// //   );
-// //   if (isPaidRoute) {
-// //     if (!token) {
-// //       const url = new URL('/login', request.url);
-// //       url.searchParams.set('redirect', pathname);
-// //       return NextResponse.redirect(url);
-// //     }
-// //     if (!isPaid) {
-// //       const url = new URL('/plans', request.url);
-// //       url.searchParams.set('upgrade', 'true');
-// //       url.searchParams.set('from', pathname);
-// //       return NextResponse.redirect(url);
-// //     }
-// //   }
-
-// //   return NextResponse.next();
-// // }
-
-// // export const config = {
-// //   matcher: [
-// //     '/products/:path*',
-// //     '/community/:path*',
-// //     '/talent-hire/:path*',
-// //     '/account/:path*',
-// //     '/checkout',
-// //     '/resources/my-learnings',
-// //     '/resources/saved',
-// //   ],
-// // };
-
-
-// // middleware.js
-// // /products          → login required (any plan)
-// // /community         → login + paid plan (pro/popular/elite)
-// // /talent-hire       → login + paid plan (pro/popular/elite)
-// // /account /checkout → login required
-
-// import { NextResponse } from 'next/server';
-
-// const AUTH_ONLY_ROUTES = [
-//   '/products',
-//   '/account',
-//   '/checkout',
-//   '/resources',
-//   '/resources/my-learnings',
-//   '/resources/saved',
-// ];
-
-// const PAID_ROUTES = [
-//   '/community',
-//   '/talent-hire',
-// ];
-
-// const PAID_PLANS = ['pro', 'popular', 'elite'];
-
-// export function middleware(request) {
-//   const { pathname } = request.nextUrl;
-
-//   const token      = request.cookies.get('fameo_token')?.value;
-//   const membership = request.cookies.get('fameo_membership')?.value || 'free';
-//   const isPaid     = PAID_PLANS.includes(membership);
-
-//   // ── Login required only ───────────────────────────────────────────────────
-//   const isAuthOnly = AUTH_ONLY_ROUTES.some(
-//     r => pathname === r || pathname.startsWith(r + '/')
-//   );
-//   if (isAuthOnly && !token) {
-//     const url = new URL('/login', request.url);
-//     url.searchParams.set('redirect', pathname);
-//     return NextResponse.redirect(url);
-//   }
-
-//   // ── Login + paid plan required ────────────────────────────────────────────
-//   const isPaidRoute = PAID_ROUTES.some(
-//     r => pathname === r || pathname.startsWith(r + '/')
-//   );
-//   if (isPaidRoute) {
-//     if (!token) {
-//       const url = new URL('/login', request.url);
-//       url.searchParams.set('redirect', pathname);
-//       return NextResponse.redirect(url);
-//     }
-//     if (!isPaid) {
-//       const url = new URL('/plans', request.url);
-//       url.searchParams.set('upgrade', 'true');
-//       url.searchParams.set('from', pathname);
-//       return NextResponse.redirect(url);
-//     }
-//   }
-
-//   return NextResponse.next();
-// }
-
-// export const config = {
-//   matcher: [
-//     '/products/:path*',
-//     '/community/:path*',
-//     '/talent-hire/:path*',
-//     '/account/:path*',
-//     '/checkout',
-//     '/resources/my-learnings',
-//     '/resources/saved',
-//   ],
-// };
-// // import { NextResponse } from "next/server";
-
-// // export function middleware(request) {
-// //   return NextResponse.next();
-// // }
-
-
-// // // middleware.js
-// // // Protects routes that require authentication
-// // // Next.js middleware runs on the edge before page renders
-
-// // import { NextResponse } from 'next/server';
-// // import { PROTECTED_ROUTES } from './constants/routes';
-
-// // export function middleware(request) {
-// //   const { pathname } = request.nextUrl;
-
-// //   // Check if route needs protection
-// //   const isProtected = PROTECTED_ROUTES.some(
-// //     (route) => pathname === route || pathname.startsWith(route + '/')
-// //   );
-
-// //   if (!isProtected) return NextResponse.next();
-
-// //   // Read token from cookie (set during login)
-// //   // Note: Zustand localStorage is not available in middleware
-// //   // So we use a cookie mirror of the token
-// //   const token = request.cookies.get('fameo_token')?.value;
-
-// //   if (!token) {
-// //     const loginUrl = new URL('/login', request.url);
-// //     loginUrl.searchParams.set('redirect', pathname);
-// //     return NextResponse.redirect(loginUrl);
-// //   }
-
-// //   return NextResponse.next();
-// // }
-
-// // export const config = {
-// //   matcher: [
-// //     '/account/:path*',
-// //     '/checkout',
-// //     '/resources/my-learnings',
-// //     '/resources/saved',
-// //   ],
-// // };
-
-
-// // middleware.js
-// // FREE users cannot access: products, community, talent-hire
-// // PRO, POPULAR, ELITE users have full access
-// // All logged-in users can access: account, checkout, saved, learnings
-
-// import { NextResponse } from 'next/server';
-
-// const AUTH_ROUTES = [
-//   '/account',
-//   '/checkout',
-//   '/resources/my-learnings',
-//   '/resources/saved',
-// ];
-
-// // Only FREE users are blocked from these
-// const PAID_ROUTES = [
-//   '/products',
-//   '/community',
-//   '/talent-hire',
-// ];
-
-// // Plans that have full access
-// const PAID_PLANS = ['pro', 'popular', 'elite'];
-
-// export function middleware(request) {
-//   const { pathname } = request.nextUrl;
-
-//   const token      = request.cookies.get('fameo_token')?.value;
-//   const membership = request.cookies.get('fameo_membership')?.value || 'free';
-//   const isPaid     = PAID_PLANS.includes(membership);
-
-//   // ── Auth routes — require login ─────────────────────────────────────────────
-//   const isAuthRoute = AUTH_ROUTES.some(
-//     r => pathname === r || pathname.startsWith(r + '/')
-//   );
-//   if (isAuthRoute && !token) {
-//     const url = new URL('/login', request.url);
-//     url.searchParams.set('redirect', pathname);
-//     return NextResponse.redirect(url);
-//   }
-
-//   // ── Paid routes — require Pro / Popular / Elite ───────────────────────────
-//   const isPaidRoute = PAID_ROUTES.some(
-//     r => pathname === r || pathname.startsWith(r + '/')
-//   );
-//   if (isPaidRoute) {
-//     if (!token) {
-//       const url = new URL('/login', request.url);
-//       url.searchParams.set('redirect', pathname);
-//       return NextResponse.redirect(url);
-//     }
-//     if (!isPaid) {
-//       const url = new URL('/plans', request.url);
-//       url.searchParams.set('upgrade', 'true');
-//       url.searchParams.set('from', pathname);
-//       return NextResponse.redirect(url);
-//     }
-//   }
-
-//   return NextResponse.next();
-// }
-
-// export const config = {
-//   matcher: [
-//     '/products/:path*',
-//     '/community/:path*',
-//     '/talent-hire/:path*',
-//     '/account/:path*',
-//     '/checkout',
-//     '/resources/my-learnings',
-//     '/resources/saved',
-//   ],
-// };
-
-
 // middleware.js
 // /products          → login required (any plan)
 // /community         → login + paid plan (pro/popular/elite)
@@ -400,6 +6,7 @@
 
 import { NextResponse } from 'next/server';
 import { verifyToken, isAdminRole, hasPaidPlan } from '@/lib/security/jwtEdge';
+import { REQUEST_HEADERS } from '@/lib/api/request-headers';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAST C-2 / C-3 / C-4 — rewritten.
@@ -455,22 +62,45 @@ const redirectTo = (request, path, params = {}) => {
  */
 const redirectAndClear = (request, path, params = {}) => {
   const res = redirectTo(request, path, params);
+  res.cookies.delete('fameo_session');
   res.cookies.delete('fameo_token');
   res.cookies.delete('fameo_membership');
   return res;
 };
 
+/**
+ * Forward context to Server Components.
+ *
+ * Defect #2 in CLAUDE.md: `response.headers.set()` puts the value on the way
+ * OUT — the browser sees it, Server Components never do. Values have to ride
+ * on the REQUEST, which is what NextResponse.next({ request: { headers } })
+ * does. lib/api/server/context.js reads them back.
+ *
+ * Host comes from the request itself, never from a client-supplied
+ * x-tenant-id header, which any caller can forge (defect #3).
+ */
+const nextWithContext = (request) => {
+  const headers = new Headers(request.headers);
+  headers.set(REQUEST_HEADERS.host, request.nextUrl.host);
+  headers.set(REQUEST_HEADERS.path, request.nextUrl.pathname);
+  return NextResponse.next({ request: { headers } });
+};
+
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  const token  = request.cookies.get('fameo_token')?.value;
+  // Prefer the httpOnly creator-session cookie; fall back to the legacy
+  // 'fameo_token' still written by the admin store and by pre-migration
+  // sessions. See lib/api/config.js for why the names differ.
+  const token = request.cookies.get('fameo_session')?.value
+    ?? request.cookies.get('fameo_token')?.value;
   const claims = await verifyToken(token);   // null unless the signature checks out
 
   // ── Admin ─────────────────────────────────────────────────────────────────
   if (pathname === '/admin/login') {
     // Already a valid admin? Skip the login screen.
     if (claims && isAdminRole(claims.role)) return redirectTo(request, '/admin');
-    return NextResponse.next();
+    return nextWithContext(request);
   }
 
   if (pathname.startsWith('/admin')) {
@@ -478,7 +108,7 @@ export async function middleware(request) {
     // A valid CREATOR token must not open the admin panel. Role comes from the
     // signed claim, not from sessionStorage (SAST H-8).
     if (!isAdminRole(claims.role)) return redirectTo(request, '/', { denied: 'admin' });
-    return NextResponse.next();
+    return nextWithContext(request);
   }
 
   // ── Signed-in creator routes ──────────────────────────────────────────────
@@ -494,7 +124,7 @@ export async function middleware(request) {
     }
   }
 
-  return NextResponse.next();
+  return nextWithContext(request);
 }
 
 export const config = {

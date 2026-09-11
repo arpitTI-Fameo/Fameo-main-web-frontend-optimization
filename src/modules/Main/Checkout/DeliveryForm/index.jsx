@@ -2,7 +2,8 @@
 // modules/Checkout/DeliveryForm/index.jsx
 import { useState, useEffect } from 'react';
 import { useAuthStore }        from '@/store/authStore';
-import { SHIPPING_RATES, shippingCostFor } from '@/lib/shipping';
+import { SHIPPING_RATES, shippingCostFor } from '@/utils/shipping';
+import { useAddresses } from '@/lib/hooks/main/useUser';
 import { S } from './styles';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -149,15 +150,10 @@ export default function DeliveryForm({ addr, onAddr, shipping, onShipping, cartT
   const [backendAddrs, setBackendAddrs] = useState([]);
 
   // Load saved addresses from backend
+  const { data: addrsData } = useAddresses({ enabled: !!token });
   useEffect(() => {
-    if (!token) return;
-    fetch(`${BASE}/api/user/addresses`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.json())
-      .then(d => { if (d.data?.length) setBackendAddrs(d.data); })
-      .catch(() => {});
-  }, [token]);
+    if (addrsData?.data?.length) setBackendAddrs(addrsData.data);
+  }, [addrsData]);
 
   const removeAddr = (index) => {
     try {

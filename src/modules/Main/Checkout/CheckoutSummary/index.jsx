@@ -1,7 +1,7 @@
 'use client';
 // modules/Checkout/CheckoutSummary/index.jsx
-import { inr } from '@/lib/formatCurrency';
-import { normalizePlan, planLabel, PLAN_DISCOUNTS } from '@/lib/planPricing';
+import { inr } from '@/utils/formatCurrency';
+import { normalizePlan, planLabel, PLAN_DISCOUNTS } from '@/utils/planPricing';
 import { S } from './styles';
 
 export default function CheckoutSummary({ cartItems, cartTotal, shippingCost, memberDiscount = 0, membershipType = 'free' }) {
