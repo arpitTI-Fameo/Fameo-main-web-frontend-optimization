@@ -4,16 +4,13 @@
 import { useState, useEffect } from "react";
 import { COURSES } from "@/constants/courses";
 
-import Nav from '../Nav';
 import Footer from '../Footer';
 import { HERO_FALLBACK, QUOTES } from '../constants';
 import { useReveals } from '../hooks';
 
 export default function CourseOverview({ course, allLessons, onOpenLesson, onHome }) {
-  const [scrolled, setScrolled] = useState(false);
   const [sticky, setSticky] = useState(false);
   useReveals([course.slug]);
-  console.log(course.heroThumb)
 
   useEffect(() => {
     let ticking = false;
@@ -21,7 +18,6 @@ export default function CourseOverview({ course, allLessons, onOpenLesson, onHom
       if (ticking) return; ticking = true;
       requestAnimationFrame(() => {
         const y = window.scrollY;
-        setScrolled(y > 60);
         setSticky(y > window.innerHeight * 0.55 &&
           y < document.body.scrollHeight - window.innerHeight * 2);
         ticking = false;

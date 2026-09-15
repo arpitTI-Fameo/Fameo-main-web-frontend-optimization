@@ -1,56 +1,104 @@
-'use client';
-
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
-import { userKeys } from '@/lib/services/user/user.keys';
 import {
-  changePassword, deleteAccount, getAddresses, getFavorites, getProfile, toggleFavorite, updateProfile, uploadAvatar,
-} from '@/lib/services/user/user.client';
+  getProfileAction,
+  getFavoritesAction,
+  getAddressesAction,
+  updateProfileAction,
+  changePasswordAction,
+  toggleFavoriteAction,
+  deleteAccountAction,
+  uploadAvatarAction
+} from '@/lib/services';
 
-export const useProfile = (opts = {}) => useQuery({
+// ── Keys ───────────────────────────────────────────────────────────────────
+export const userKeys = {
+  all: () => ['user'],
+  profile: () => [...userKeys.all(), 'profile'],
+  favorites: () => [...userKeys.all(), 'favorites'],
+  addresses: () => [...userKeys.all(), 'addresses'],
+};
+
+// ── Hooks ──────────────────────────────────────────────────────────────────
+export const useProfile = ({ initialData, ...opts } = {}) => useQuery({
   queryKey: userKeys.profile(),
-  queryFn: getProfile,
+  queryFn: async () => {
+    const response = await getProfileAction();
+    if (!response.code) throw response;
+    return response.result;
+  },
   staleTime: 60_000,
+  ...(initialData !== undefined ? { initialData } : {}),
   ...opts,
 });
 
-export const useFavorites = (opts = {}) => useQuery({
+export const useFavorites = ({ initialData, ...opts } = {}) => useQuery({
   queryKey: userKeys.favorites(),
-  queryFn: getFavorites,
+  queryFn: async () => {
+    const response = await getFavoritesAction();
+    if (!response.code) throw response;
+    return response.result;
+  },
   staleTime: 60_000,
+  ...(initialData !== undefined ? { initialData } : {}),
   ...opts,
 });
 
-export const useAddresses = (opts = {}) => useQuery({
+export const useAddresses = ({ initialData, ...opts } = {}) => useQuery({
   queryKey: userKeys.addresses(),
-  queryFn: getAddresses,
+  queryFn: async () => {
+    const response = await getAddressesAction();
+    if (!response.code) throw response;
+    return response.result;
+  },
+  ...(initialData !== undefined ? { initialData } : {}),
   ...opts,
 });
 
 export const useUpdateProfileMutation = (opts = {}) => useApiMutation({
-  mutationFn: updateProfile,
+  mutationFn: async (data) => {
+    const response = await updateProfileAction(data);
+    if (!response.code) throw response;
+    return response.result;
+  },
   invalidate: [userKeys.profile()],
   ...opts,
 });
 
 export const useChangePasswordMutation = (opts = {}) => useApiMutation({
-  mutationFn: changePassword,
+  mutationFn: async (data) => {
+    const response = await changePasswordAction(data);
+    if (!response.code) throw response;
+    return response.result;
+  },
   ...opts,
 });
 
 export const useToggleFavoriteMutation = (opts = {}) => useApiMutation({
-  mutationFn: toggleFavorite,
+  mutationFn: async (productId) => {
+    const response = await toggleFavoriteAction(productId);
+    if (!response.code) throw response;
+    return response.result;
+  },
   invalidate: [userKeys.favorites()],
   ...opts,
 });
 
 export const useDeleteAccountMutation = (opts = {}) => useApiMutation({
-  mutationFn: deleteAccount,
+  mutationFn: async () => {
+    const response = await deleteAccountAction();
+    if (!response.code) throw response;
+    return response.result;
+  },
   ...opts,
 });
 
 export const useUploadAvatarMutation = (opts = {}) => useApiMutation({
-  mutationFn: uploadAvatar,
+  mutationFn: async (formData) => {
+    const response = await uploadAvatarAction(formData);
+    if (!response.code) throw response;
+    return response.result;
+  },
   invalidate: [userKeys.profile()],
   ...opts,
 });

@@ -1,11 +1,41 @@
+import { adminEndpoints } from '@/lib/api/endpoints';
+import { createAdminAction } from '@/lib/services/admin/core';
 import { adminFetch } from './core';
 
-export const getAdminSupportTickets = (status) => adminFetch(`/admin/support/tickets?status=${status}`);
+export const getAdminSupportTicketsAction = async (status) => {
+  return createAdminAction({
+    url: adminEndpoints.supportTickets(status),
+    method: 'GET',
+  });
+};
 
-export const getAdminSupportFaqs = () => adminFetch("/admin/support/faqs");
+export const getAdminSupportFaqsAction = async () => {
+  return createAdminAction({
+    url: adminEndpoints.supportFaqs(),
+    method: 'GET',
+  });
+};
 
-export const replyAdminSupportTicket = (id, form) => adminFetch(`/admin/support/tickets/${id}/reply`, { method: 'POST', body: JSON.stringify(form), headers: { "Content-Type": "application/json" } });
+export const replyAdminSupportTicketAction = async (id, form) => {
+  return createAdminAction({
+    url: adminEndpoints.supportTicketReply(id),
+    method: 'POST',
+    body: form,
+  });
+};
 
-export const updateAdminSupportTicketStatus = (id, status) => adminFetch(`/admin/support/tickets/${id}`, { method: 'PATCH', body: JSON.stringify({status}), headers: { "Content-Type": "application/json" } });
+export const updateAdminSupportTicketStatusAction = async (id, status) => {
+  return createAdminAction({
+    url: adminEndpoints.supportTicket(id),
+    method: 'PATCH',
+    body: { status },
+  });
+};
 
-export const createAdminSupportFaq = (form) => adminFetch("/admin/support/faqs", { method: 'POST', body: JSON.stringify(form), headers: { "Content-Type": "application/json" } });
+export const createAdminSupportFaqAction = async (form) => {
+  return createAdminAction({
+    url: adminEndpoints.supportFaqs(),
+    method: 'POST',
+    body: form,
+  });
+};

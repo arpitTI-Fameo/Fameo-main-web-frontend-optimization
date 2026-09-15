@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
-import { useNotifications, useCommunitySearch, useReadNotificationsMutation } from '@/lib/hooks/main/useCommunity';
+import { useNotifications } from '@/lib/hooks/main/usePortal';
+import { useCommunitySearch, useReadNotificationsMutation } from '@/lib/hooks/main/useCommunity';
 import { useLiveEvent } from '@/lib/hooks/main/useEvent';
 import { showToast } from '../Toast';
 // SAST H-3 — notification bodies come from the backend and were rendered raw.

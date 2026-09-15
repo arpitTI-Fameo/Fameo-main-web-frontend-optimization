@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import logo from '@/app/assets/logo.png';
 import { CSS } from '../styles';
 import { Tick, GreenTick, EyeGlyph, Check } from '../icons';
@@ -13,8 +14,8 @@ import Step04Category from './Steps/Step04Category';
 import Step05Proof from './Steps/Step05Proof';
 import SuccessSummary from './Steps/SuccessSummary';
 import { masterEndpoints } from '@/lib/api/endpoints';
-import { appFetch, validateReferral, checkUsername } from '@/lib/hooks/main/useRegister';
-import { useSendOtpMutation, useVerifyOtpMutation, useVerifyEmailOtpMutation, useUploadLiveSelfieMutation, useUploadSelfieMutation, useUploadDocumentsMutation, useRegisterMutation } from '@/lib/hooks/main/useRegister';
+import { appFetch, validateReferralAction, checkUsernameAction } from '@/lib/services/auth/register.api';
+import { useSendOtpMutation, useVerifyOtpMutation, useVerifyEmailOtpMutation, useUploadLiveSelfieMutation, useUploadSelfieMutation, useUploadDocumentsMutation, useRegisterMutation } from '@/lib/hooks/auth/useRegister';
 import {
   MAX_GENERIC_FILES, MAX_FILE_BYTES, ACCEPTED_DOC_EXT, COUNTRY_CODES,
   mobileLenRange, validateMobile, PATTERNS, validateEmail, PIN_PATTERN,
@@ -177,9 +178,9 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     setForm(f => ({ ...f, referralCode: code }));
     setReferralFromLink(true);
     // Pass the code explicitly — setForm hasn't flushed yet, so the closure
-    // inside validateReferral would still see an empty referralCode.
-    validateReferral(code);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // inside validateReferralAction would still see an empty referralCode.
+    validateReferralAction(code);
+     
   }, []);
 
   /* load cities on state change */
@@ -268,7 +269,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
   /* Returns { ok, msg }. Callers (link prefill · blur · submit) can pass the
      code explicitly, so they never depend on form state having flushed. An
      in-flight check is reused rather than duplicated. */
-  const validateReferral = (codeArg) => {
+  const validateReferralAction = (codeArg) => {
     const code = String(codeArg ?? form.referralCode).trim();
     if (!code) { setReferralStatus({ state: 'idle', msg: '', data: null }); clearErr('referral'); return Promise.resolve({ ok: true, msg: '' }); }
     if (referralCheckRef.current?.code === code) return referralCheckRef.current.promise;
@@ -281,7 +282,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     setReferralStatus({ state: 'checking', msg: 'Checking code…', data: null });
     const promise = (async () => {
       try {
-        const data = await validateReferral(code);
+        const data = await validateReferralAction(code);
         const valid = data?.valid !== false;
         if (!valid) {
           const msg = data?.message || 'This referral code is not valid.';
@@ -414,7 +415,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
      first click did nothing. Now the check is debounced as you type, and
      Continue awaits the in-flight promise instead of racing it.
      -------------------------------------------------------------------- */
-  const checkUsername = (nameArg) => {
+  const checkUsernameAction = (nameArg) => {
     const username = String(nameArg ?? form.username).trim();
     if (!username) { setUsernameStatus(null); return Promise.resolve(null); }
     if (!PATTERNS.username.test(username)) {
@@ -426,7 +427,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     setUsernameStatus('checking');
     const promise = (async () => {
       try {
-        const data = await checkUsername(username);
+        const data = await checkUsernameAction(username);
         const available = data?.available === true;
         setUsernameStatus(available ? 'available' : 'taken');
         if (available) clearErr('username');
@@ -450,7 +451,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     const inflight = usernameCheckRef.current;
     if (inflight && inflight.username === name) return inflight.promise;
     if (usernameStatus === 'available' || usernameStatus === 'taken') return usernameStatus;
-    return checkUsername(name);
+    return checkUsernameAction(name);
   };
 
   /* live availability as they type */
@@ -458,9 +459,9 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     const name = form.username.trim();
     if (!name) { setUsernameStatus(null); return; }
     if (!PATTERNS.username.test(name)) { setUsernameStatus('invalid'); return; }
-    const t = setTimeout(() => checkUsername(name), 450);
+    const t = setTimeout(() => checkUsernameAction(name), 450);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [form.username]);
 
   /* ── pincode → state / district ───────────────────────────────────────── */
@@ -490,7 +491,6 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
       || cities.find(x => normName(x.city_name).includes(want) || want.includes(normName(x.city_name)));
     if (c) { setForm(f => ({ ...f, cityId: c.id, city: c.city_name })); clearErr('city'); }
     pendingCityRef.current = null;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cities]);
 
   const applyPinLocation = () => {
@@ -785,7 +785,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
       add('phone', !mobileOk, mobileErrMsg, 'mobile');
       add('email', !emailOk, emailErrMsg || 'Enter a valid email address', 'email');
       if (form.referralCode.trim() && referralStatus.state !== 'valid') {
-        const r = await validateReferral();
+        const r = await validateReferralAction();
         if (!r.ok) { e.referral = r.msg || 'Enter a valid referral code, or clear the field.'; order.push('referral'); }
       }
       if (!phoneVerified || !emailVerified) { e.verify = 'Please verify both mobile and email.'; order.push(otpSent ? 'otp-panel' : 'otp-send'); }
@@ -870,7 +870,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     ageOk, underage, onDobChange, age,
     phoneVerified, otpSent, resetOtp, setForm, clearErr, showMobileErr, mobileOk, onMobileChange, markTouched, mobileErrMsg, mobileHint,
     emailVerified, showEmailErr, emailWarn, onEmailChange, emailOk, emailErrMsg,
-    onReferralChange, validateReferral, removeReferral,
+    onReferralChange, validateReferralAction, removeReferral,
     sendOtp, otpSending: sendOtpMutation.isPending, mobileShake, getRaw, mobileOtp, mobileRefs, otpDigit, otpKey, mobileOtpStatus, mobileComplete, verifyMobile, resendIn,
     emailShake, emailOtp, emailRefs, emailOtpStatus, emailComplete, verifyEmail,
     consents, toggleConsent, setActivePolicy,
@@ -898,7 +898,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
 
         {/* brand header */}
         <div className="frg-brand">
-          <a className="frg-brand-mark" href="/" aria-label="Fameo home">
+          <Link className="frg-brand-mark" href="/" aria-label="Fameo home">
             {brandLogo ? (
               <img src={typeof brandLogo === 'string' ? brandLogo : brandLogo.src} alt="Fameo" />
             ) : (
@@ -906,7 +906,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
             )}
             <span className="frg-brand-rule" aria-hidden="true" />
             <span className="frg-brand-sub">Creator Network</span>
-          </a>
+          </Link>
           <a className="frg-brand-back" href="/login">ALREADY A MEMBER? LOG IN →</a>
         </div>
 

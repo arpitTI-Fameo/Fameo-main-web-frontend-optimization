@@ -7,7 +7,7 @@
 
 import { NextResponse } from 'next/server';
 
-import { API_ORIGIN } from '@/lib/api/config';
+import { API_ORIGIN } from '@/lib/api/server/origins';
 import { authEndpoints } from '@/lib/api/endpoints';
 import { getSessionToken, setSessionToken } from '@/lib/auth/session';
 

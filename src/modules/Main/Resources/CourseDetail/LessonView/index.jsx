@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from "react";
 
-import Nav from '../Nav';
 import Footer from '../Footer';
 import { QUOTES } from '../constants';
 import { toParagraphs } from '../helpers';
@@ -39,7 +38,7 @@ export default function LessonView({ course, lesson, allLessons, onNav, onBackTo
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
-  }, [sections.length, lesson.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sections.length, lesson.id]);  
 
   const jumpTo = i => e => {
     e.preventDefault();

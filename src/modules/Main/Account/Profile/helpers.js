@@ -1,9 +1,3 @@
-// The UAT token stored at login (separate from the Fameo JWT).
-export function getAppToken() {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("fameo_app_token");
-}
-
 // Pick a browser-usable image. The app's profile_picture is often a local
 // device path (/data/user/0/com.fameo.app...) that can't load on web, so prefer
 // an http(s) URL: remote profile_picture, then the registration selfie.

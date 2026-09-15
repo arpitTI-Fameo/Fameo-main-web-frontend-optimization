@@ -1,16 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
-import { getModuleMasters, inviteModuleMaster, updateModuleMasterModules, revokeModuleMaster } from '@/lib/services/admin/moduleMasters.service';
+import { getModuleMastersAction, inviteModuleMasterAction, updateModuleMasterModulesAction, revokeModuleMasterAction } from '@/lib/services/admin/moduleMasters.service';
 
 export const useAdminModuleMasters = (opts = {}) => useQuery({
     queryKey: ['admin', 'module-masters'],
-    queryFn: getModuleMasters,
+    queryFn: getModuleMastersAction,
     ...opts
 });
 
 export const useInviteModuleMasterMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: inviteModuleMaster,
+        mutationFn: inviteModuleMasterAction,
         ...opts
     });
     return { ...mutation, invite: mutation.mutateAsync };
@@ -18,7 +18,7 @@ export const useInviteModuleMasterMutation = (opts = {}) => {
 
 export const useUpdateModuleMasterModulesMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: ({ id, mods }) => updateModuleMasterModules(id, mods),
+        mutationFn: ({ id, mods }) => updateModuleMasterModulesAction(id, mods),
         ...opts
     });
     return { ...mutation, updateModules: mutation.mutateAsync };
@@ -26,7 +26,7 @@ export const useUpdateModuleMasterModulesMutation = (opts = {}) => {
 
 export const useRevokeModuleMasterMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: revokeModuleMaster,
+        mutationFn: revokeModuleMasterAction,
         ...opts
     });
     return { ...mutation, revoke: mutation.mutateAsync };

@@ -23,6 +23,17 @@ export default function RolesContainer() {
   const { user } = useAdminAuthStore();
   const router = useRouter();
 
+
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [modal, setModal] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, success = true) => {
+    setToast({ message: msg, success });
+    setTimeout(() => setToast(null), 3500);
+  };
+
   // Guard — superAdmin only
   useEffect(() => {
     if (user && user.role !== "superAdmin") router.replace("/admin");

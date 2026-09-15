@@ -20,7 +20,7 @@ const CAPTURE_SETTLE_MS = 500;     // settle before final selfie
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 function dataUrlToBlob(dataUrl) {
   const [header, b64] = dataUrl.split(',');
-  const mime = (header.match(/:(.*?);/) || [, 'image/jpeg'])[1];
+  const mime = (header.match(/:(.*?);/) || ['', 'image/jpeg'])[1];
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
@@ -110,7 +110,7 @@ export default function LiveSelfieCapture({ onCaptured, onClose }) {
     abortRef.current = false;
     startCamera();
     return () => { abortRef.current = true; stopStream(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   /* capture a mirrored frame — null if the video has no real pixels yet */

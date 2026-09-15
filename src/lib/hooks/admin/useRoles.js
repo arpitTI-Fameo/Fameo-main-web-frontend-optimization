@@ -1,16 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
-import { getAdminRoleUsers, updateAdminRole, toggleAdminRoleAccess, deleteAdminRoleUser, updateAdminRolePassword, createAdminRoleUser } from '@/lib/services/admin/roles.service';
+import { getAdminRoleUsersAction, updateAdminRoleAction, toggleAdminRoleAccessAction, deleteAdminRoleUserAction, updateAdminRolePasswordAction, createAdminRoleUserAction } from '@/lib/services/admin/roles.service';
 
 export const useAdminRoleUsers = (opts = {}) => useQuery({
     queryKey: ['admin', 'roles', 'users'],
-    queryFn: getAdminRoleUsers,
+    queryFn: getAdminRoleUsersAction,
     ...opts
 });
 
 export const useUpdateAdminRoleMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: ({ id, role }) => updateAdminRole(id, role),
+        mutationFn: ({ id, role }) => updateAdminRoleAction(id, role),
         ...opts
     });
     return { ...mutation, updateRole: mutation.mutateAsync };
@@ -18,7 +18,7 @@ export const useUpdateAdminRoleMutation = (opts = {}) => {
 
 export const useToggleAdminRoleAccessMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: ({ id, isActive }) => toggleAdminRoleAccess(id, isActive),
+        mutationFn: ({ id, isActive }) => toggleAdminRoleAccessAction(id, isActive),
         ...opts
     });
     return { ...mutation, toggleAccess: mutation.mutateAsync };
@@ -26,7 +26,7 @@ export const useToggleAdminRoleAccessMutation = (opts = {}) => {
 
 export const useDeleteAdminRoleUserMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: deleteAdminRoleUser,
+        mutationFn: deleteAdminRoleUserAction,
         ...opts
     });
     return { ...mutation, deleteUser: mutation.mutateAsync };
@@ -34,7 +34,7 @@ export const useDeleteAdminRoleUserMutation = (opts = {}) => {
 
 export const useUpdateAdminRolePasswordMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: ({ id, password }) => updateAdminRolePassword(id, password),
+        mutationFn: ({ id, password }) => updateAdminRolePasswordAction(id, password),
         ...opts
     });
     return { ...mutation, updatePassword: mutation.mutateAsync };
@@ -42,7 +42,7 @@ export const useUpdateAdminRolePasswordMutation = (opts = {}) => {
 
 export const useCreateAdminRoleUserMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: createAdminRoleUser,
+        mutationFn: createAdminRoleUserAction,
         ...opts
     });
     return { ...mutation, createUser: mutation.mutateAsync };

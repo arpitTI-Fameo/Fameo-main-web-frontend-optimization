@@ -53,7 +53,7 @@ const SLIDES = [
   { rows: ['Your realest', 'creator circle'], cap: "Riya is filming India's boldest wedding stories" },
   { rows: ['From one reel', 'to real reach'], cap: 'Arjun is turning street photography into a movement' },
   { rows: ['Verified faces', 'real collabs'], cap: 'Meera is styling the next wave of Indian fashion' },
-  { rows: ['Your fame', 'your terms'],        cap: 'Dev is plating stories from his Bengaluru kitchen' },
+  { rows: ['Your fame', 'your terms'], cap: 'Dev is plating stories from his Bengaluru kitchen' },
   { rows: ['Double the reach', 'zero fakes'], cap: "Zara is choreographing Chennai's street-dance scene" },
 ];
 const N = SLIDES.length;
@@ -120,14 +120,14 @@ export default function FameoLandingHero() {
   useEffect(() => {
     slideVids.current.forEach((v, k) => {
       if (!v) return;
-      if (k === cur && !env.rm) v.play().catch(() => {});
+      if (k === cur && !env.rm) v.play().catch(() => { });
       else v.pause();
     });
   }, [cur, env.rm]);
 
   /* keep the peek video playing (it previews the NEXT slide) */
   useEffect(() => {
-    if (!env.rm) peekVidRef.current?.play().catch(() => {});
+    if (!env.rm) peekVidRef.current?.play().catch(() => { });
   }, [next, env.rm]);
 
   /* ── timed auto-advance (tap/click resets the clock) ────────── */
@@ -217,7 +217,7 @@ export default function FameoLandingHero() {
   const bloom = (x, y, rect) => {
     const reveal = revealRef.current;
     if (!reveal) return;
-    if (!env.rm) revealVidRef.current?.play().catch(() => {});
+    if (!env.rm) revealVidRef.current?.play().catch(() => { });
 
     /* the inner star radius must clear the farthest corner */
     const maxDist = Math.hypot(Math.max(x, rect.width - x), Math.max(y, rect.height - y));

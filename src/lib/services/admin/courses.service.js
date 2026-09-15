@@ -1,17 +1,56 @@
+import { adminEndpoints } from '@/lib/api/endpoints';
+import { createAdminAction } from '@/lib/services/admin/core';
 import { adminFetch } from './core';
 
-export const getAdminCourses = () => adminFetch("/courses/admin/list");
+export const getAdminCoursesAction = async () => {
+  return createAdminAction({
+    url: adminEndpoints.coursesList(),
+    method: 'GET',
+  });
+};
 
-export const getAdminCourse = (id) => adminFetch(`/courses/admin/${id}`);
+export const getAdminCourseAction = async (id) => {
+  return createAdminAction({
+    url: adminEndpoints.course(id),
+    method: 'GET',
+  });
+};
 
-export const createAdminCourse = (form) => adminFetch("/courses/admin", { method: 'POST', body: JSON.stringify(form), headers: { "Content-Type": "application/json" } });
+export const createAdminCourseAction = async (form) => {
+  return createAdminAction({
+    url: adminEndpoints.coursesCreate(),
+    method: 'POST',
+    body: form,
+  });
+};
 
-export const updateAdminCourse = (id, form) => adminFetch(`/courses/admin/${id}`, { method: 'PUT', body: JSON.stringify(form), headers: { "Content-Type": "application/json" } });
+export const updateAdminCourseAction = async (id, form) => {
+  return createAdminAction({
+    url: adminEndpoints.course(id),
+    method: 'PUT',
+    body: form,
+  });
+};
 
-export const deleteAdminCourse = (id) => adminFetch(`/courses/admin/${id}`, { method: 'DELETE' });
+export const deleteAdminCourseAction = async (id) => {
+  return createAdminAction({
+    url: adminEndpoints.course(id),
+    method: 'DELETE',
+  });
+};
 
-export const togglePublishAdminCourse = (id) => adminFetch(`/courses/admin/${id}/toggle-publish`, { method: 'PATCH', headers: { "Content-Type": "application/json" } });
+export const togglePublishAdminCourseAction = async (id) => {
+  return createAdminAction({
+    url: adminEndpoints.courseTogglePublish(id),
+    method: 'PATCH',
+  });
+};
 
 // PATCH with an empty body, matching togglePublish. Endpoint confirmed against
 // the pre-refactor implementation: api.patch(`/courses/admin/${id}/feature`, {}).
-export const toggleFeatureAdminCourse = (id) => adminFetch(`/courses/admin/${id}/feature`, { method: 'PATCH', headers: { "Content-Type": "application/json" } });
+export const toggleFeatureAdminCourseAction = async (id) => {
+  return createAdminAction({
+    url: adminEndpoints.courseFeature(id),
+    method: 'PATCH',
+  });
+};

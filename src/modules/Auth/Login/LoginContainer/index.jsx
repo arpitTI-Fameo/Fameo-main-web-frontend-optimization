@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
-import { useLoginMutation } from '@/lib/hooks/main/useAuth';
+import { useLoginMutation } from '@/lib/hooks/auth/useAuth';
 import { toUserMessage } from "@/lib/api/errors";
 import { CSS } from "../styles";
 import { BUBBLES, SPARKLES, PARTICLES } from "../decor";
@@ -54,12 +54,10 @@ export default function LoginContainer() {
       const user = data?.user ?? null;
 
       if (typeof window !== "undefined") {
-        // LEGACY COMPATIBILITY — remove in Phase 4.
-        // ~20 call sites (admin services/api.js, Community, Checkout, Account)
-        // still read these directly. Dropping them now would sign those areas
-        // out. The httpOnly cookie above is already the real session; these are
-        // a shim, not a credential, and no longer include the session token.
-        if (data?.appToken) localStorage.setItem("fameo_app_token", data.appToken);
+        // No credential is written here any more. The session token and the app
+        // token are both httpOnly cookies set by /api/auth/login; `fameo_user`
+        // is the user OBJECT, read by the socket hooks for their handshake
+        // payload, and `fameo_just_logged_in` is a one-shot UI flag.
         if (user) sessionStorage.setItem("fameo_user", JSON.stringify(user));
         sessionStorage.setItem("fameo_just_logged_in", "1");
       }

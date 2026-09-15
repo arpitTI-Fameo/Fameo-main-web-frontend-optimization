@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
 import { useAdminCourses, useCreateAdminCourseMutation, useTogglePublishAdminCourseMutation, useToggleFeatureAdminCourseMutation, useDeleteAdminCourseMutation, useUpdateAdminCourseMutation } from "@/lib/hooks/admin/useCourses";
-import { getAdminCourse } from "@/lib/services/admin/courses.service";
+import { getAdminCourseAction } from '@/lib/services/admin/courses.service';
 import { useSocket } from "@/lib/hooks/custome/useSocket";
 import { COURSES as STATIC_COURSES } from "@/constants/courses";
 import { MediaPicker } from "@/components/admin/MediaPicker";
@@ -389,7 +389,7 @@ function CourseForm({ course, onClose, onSaved, showToast }) {
     useEffect(() => {
         if (!course || course._static || course.chapters?.length) return;
         setChLoading(true);
-        getAdminCourse(course._id)
+        getAdminCourseAction(course._id)
             .then(d => setChapters(d?.data?.course?.chapters || []))
             .catch(() => showToast("Couldn't load chapters", false))
             .finally(() => setChLoading(false));

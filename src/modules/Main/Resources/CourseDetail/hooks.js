@@ -20,6 +20,6 @@ export function useReveals(deps = []) {
     }, { threshold: 0.1 });
     document.querySelectorAll(".cx-reveal,.cx-rv,[data-stagger]").forEach(el => io.observe(el));
     return () => io.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, deps);
 }

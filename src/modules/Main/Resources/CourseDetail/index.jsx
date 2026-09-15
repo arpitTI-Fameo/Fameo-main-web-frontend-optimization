@@ -16,13 +16,11 @@ export default function CourseDetail({ params }) {
   const { courseSlug } = use(params);
   const router = useRouter();
 
-  const [course, setCourse] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [lessonId, setLessonId] = useState(null);   // null = overview
 
   const { data, isLoading: apiLoading } = useCourse(courseSlug);
-  
-  useEffect(() => {
+
+  const course = useMemo(() => {
     let resolved = null;
     const stat = getCourseBySlug(courseSlug);
     
@@ -31,10 +29,10 @@ export default function CourseDetail({ params }) {
     } else if (stat) {
       resolved = normalizeCourse(stat);
     }
-    
-    setCourse(resolved);
-    setLoading(apiLoading);
-  }, [courseSlug, data, apiLoading]);
+    return resolved;
+  }, [courseSlug, data]);
+  
+  const loading = apiLoading;
 
   /* hide the site nav for this immersive route */
   useEffect(() => {

@@ -23,7 +23,12 @@ export default function CommunitySidebar({ activePage, onNavigate, onOpenProfile
   };
 
   // Live unread count for chat badge
-  const { totalUnread } = useChatRooms();
+  // useRooms() is a plain query — the old useChatRooms() hook derived this and
+  // was removed in the TanStack refactor, leaving an undefined call behind.
+  // Same reduction as before: sum unreadCount across rooms.
+  const { data: roomsData } = useRooms();
+  const totalUnread = (Array.isArray(roomsData) ? roomsData : roomsData?.rooms || [])
+    .reduce((a, r) => a + (r.unreadCount || 0), 0);
   const joined = Object.values(SPACES_DATA).filter(s => s.joined);
 
   return (

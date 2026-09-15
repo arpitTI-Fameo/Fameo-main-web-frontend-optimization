@@ -10,13 +10,15 @@
 
 import Link from 'next/link';
 
-import { useWallet, useReferrals, useActivity, useProfile } from '@/lib/hooks/main/usePortal';
+import { useWallet, useReferrals, useActivity } from '@/lib/hooks/main/usePortal';
+import { useProfile } from '@/lib/hooks/main/useUser';
 import {
   Card, Section, StatTile, Chip, Button, linkButtonStyle,
   Skeleton, SkeletonTiles, ErrorBox, Empty,
   inr, INK, GOLD, LINE, MUTED, FAINT,
-  GREEN, GREEN_BG, AMBER, AMBER_BG, SLATE, SLATE_BG, FONT_DISPLAY,
+  GREEN, GREEN_BG, AMBER, AMBER_BG, SLATE, SLATE_BG,
 } from '../AccountUI';
+
 import { S } from './styles'
 
 // Activity icon + tint per activity type.
@@ -37,7 +39,7 @@ export default function AccountDashboard() {
 
   const loading = walletQuery.isPending || referralsQuery.isPending || activityQuery.isPending || portalQuery.isPending;
   const error = walletQuery.error?.message || referralsQuery.error?.message || activityQuery.error?.message || portalQuery.error?.message;
-  
+
   const refetch = () => {
     walletQuery.refetch();
     referralsQuery.refetch();

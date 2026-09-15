@@ -11,9 +11,10 @@
 
 import { NextResponse } from 'next/server';
 
-import { API_ORIGIN } from '@/lib/api/config';
+import { API_ORIGIN } from '@/lib/api/server/origins';
 import { authEndpoints } from '@/lib/api/endpoints';
-import { setSessionToken } from '@/lib/auth/session';
+import { setSessionToken, setAppToken } from '@/lib/auth/session';
+import { upstreamLoginSchema } from '@/lib/api/schemas';
 
 export async function POST(request) {
   let credentials;
@@ -49,27 +50,37 @@ export async function POST(request) {
     );
   }
 
-  const token = body?.data?.token;
-  if (!token) {
+  // Validate the upstream contract before trusting it. A rename of `token` or
+  // `user` would otherwise set an undefined cookie and hand the browser a
+  // "logged in" response for a session that does not exist.
+  const parsed = upstreamLoginSchema.safeParse(body?.data);
+  if (!parsed.success) {
+    console.error('[auth/login] upstream contract mismatch', {
+      issues: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`),
+    });
     return NextResponse.json(
       { success: false, message: 'Login succeeded but no token was returned' },
       { status: 502 }
     );
   }
 
+  const token = parsed.data.token;
+
   await setSessionToken(token);
+
+  // The "app" backend's token goes into its own httpOnly cookie so the profile
+  // and portal reads can authenticate through /api/bff-app without the browser
+  // ever holding it.
+  const appToken = parsed.data.appToken ?? null;
+  if (appToken) await setAppToken(appToken);
 
   // The token is deliberately NOT in this response. The client gets the user
   // object only — everything it legitimately needs to render.
   //
-  // `appToken` is returned to the caller during migration because the Register
-  // and Community flows still read it from localStorage. It is not a session
-  // credential for this app. Remove it once those migrate.
+  // `appToken` is NOT returned. It now rides in the httpOnly cookie set above
+  // and is attached by /api/bff-app server-side, so no client code needs it.
   return NextResponse.json({
     success: true,
-    data: {
-      user: body?.data?.user ?? null,
-      appToken: body?.data?.appToken ?? null,
-    },
+    data: { user: parsed.data.user ?? null },
   });
 }

@@ -1,28 +1,28 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
-import { getAdminStats, getAdminActivity, getAdminSettings, updateAdminFeatureFlag } from '@/lib/services/admin/overview.service';
+import { getAdminStatsAction, getAdminActivityAction, getAdminSettingsAction, updateAdminFeatureFlagAction } from '@/lib/services/admin/overview.service';
 
 export const useAdminStats = (opts = {}) => useQuery({
     queryKey: ['admin', 'stats'],
-    queryFn: getAdminStats,
+    queryFn: getAdminStatsAction,
     ...opts
 });
 
 export const useAdminActivity = (limit, opts = {}) => useQuery({
     queryKey: ['admin', 'activity', { limit }],
-    queryFn: () => getAdminActivity(limit),
+    queryFn: () => getAdminActivityAction(limit),
     ...opts
 });
 
 export const useAdminSettings = (opts = {}) => useQuery({
     queryKey: ['admin', 'settings'],
-    queryFn: getAdminSettings,
+    queryFn: getAdminSettingsAction,
     ...opts
 });
 
 export const useUpdateAdminFeatureFlagMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: updateAdminFeatureFlag,
+        mutationFn: updateAdminFeatureFlagAction,
         ...opts
     });
     return { ...mutation, toggleFlag: mutation.mutateAsync };

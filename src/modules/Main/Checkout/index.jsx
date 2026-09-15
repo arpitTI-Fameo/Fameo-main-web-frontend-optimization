@@ -12,14 +12,14 @@ import { useMembership } from '@/lib/hooks/custome/useMembership';
 import PaymentStep from './PaymentStep';
 import OrderReview from './OrderReview';
 import OrderConfirmation from './OrderConfirmation';
-import { useCreateRazorpayOrderMutation, useVerifyPaymentMutation } from '@/lib/hooks/main/useOrder';
-import { useSyncCartToServerMutation, useCheckoutMutation, useClearCartMutation } from '@/lib/hooks/main/useFameoProducts';
+import { useCreateRazorpayOrderMutation } from '@/lib/hooks/main/useSubscription';
+import { useVerifyPaymentMutation } from '@/lib/hooks/main/useOrder';
+import { useSyncCartToServerMutation, useCheckoutMutation, useClearCartMutation } from '@/lib/hooks/main/useProduct';
 import { S } from './styles';
 import { BFF_BASE } from '@/lib/api/config';
 
 // Same-origin via the BFF; the httpOnly session cookie is attached
 // server-side, so this module no longer builds an Authorization header.
-const BASE = BFF_BASE;
 
 // Razorpay's default per-transaction ceiling. Keep in sync with RAZORPAY_MAX_INR
 // on the backend — if Razorpay Support raises your account limit, raise both.
@@ -37,7 +37,7 @@ const loadRazorpay = () =>
     document.body.appendChild(s);
   });
 
-export default function Checkout() {
+export default function Checkout({ initialAddresses }) {
   const router = useRouter();
   const { user, token } = useAuthStore();
 
@@ -395,6 +395,7 @@ export default function Checkout() {
                 addr={addr} onAddr={handleAddrChange}
                 shipping={shipping} onShipping={setShipping}
                 savedAddr={savedAddr} cartTotal={dispPayable}
+                initialData={initialAddresses}
                 onNext={handleDeliveryNext} onBack={() => router.push('/cart')}
               />
             )}

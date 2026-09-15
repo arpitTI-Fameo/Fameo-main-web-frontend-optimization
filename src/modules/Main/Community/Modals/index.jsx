@@ -10,6 +10,7 @@ import { useState, useRef } from 'react';
 import { SPACES_DATA, NICHE_OPTIONS } from '@/constants/community';
 import { useCreatePostMutation, useCreateSubmissionMutation, useReportContentMutation } from '@/lib/hooks/main/useCommunity';
 
+
 // ── Shared primitives ─────────────────────────────────────────────────────────
 function Overlay({ onClose, children }) {
   return (
@@ -525,7 +526,11 @@ export function OnboardingModal({ onComplete }) {
             </div>
             <div style={{ padding: '16px 28px', borderTop: '1px solid var(--cm-border)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button className="cm-btn cm-btn-ghost" onClick={() => setStep(1)}>← Back</button>
-              <button className="cm-btn cm-btn-primary" style={{ height: 42 }}
+              {/* NOTE: this element had two `style` props. JSX keeps the last,
+                  so `height: 42` was never applied. The dead one is removed so
+                  what renders is unchanged — re-add height here if it was
+                  actually wanted. */}
+              <button className="cm-btn cm-btn-primary"
                 onClick={() => setStep(3)} disabled={niches.length === 0}
                 style={{ opacity: niches.length > 0 ? 1 : .5 }}>
                 Continue →

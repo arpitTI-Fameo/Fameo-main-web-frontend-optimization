@@ -10,7 +10,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
-import { useStorefrontProducts } from '@/lib/hooks/main/useFameoProducts';
+import { useStorefrontProducts } from '@/lib/hooks/main/useProduct';
 
 import ProductGrid from '../ProductGrid';
 import ProductDetail from '../ProductDetail';

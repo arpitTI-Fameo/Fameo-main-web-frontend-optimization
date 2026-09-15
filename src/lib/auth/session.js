@@ -7,7 +7,11 @@ import 'server-only';
 
 import { cookies } from 'next/headers';
 
-import { SESSION_COOKIE, LEGACY_SESSION_COOKIE } from '@/lib/api/config';
+import {
+  SESSION_COOKIE,
+  LEGACY_SESSION_COOKIE,
+  APP_SESSION_COOKIE,
+} from '@/lib/api/config';
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -44,6 +48,24 @@ export async function setSessionToken(token, { maxAge } = {}) {
   });
 }
 
+/**
+ * The "app" backend's token. Separate credential, separate cookie — see
+ * APP_SESSION_COOKIE. Read by the bff-app proxy so the browser never holds it.
+ * @returns {Promise<string | null>}
+ */
+export async function getAppToken() {
+  const store = await cookies();
+  return store.get(APP_SESSION_COOKIE)?.value ?? null;
+}
+
+export async function setAppToken(token, { maxAge } = {}) {
+  const store = await cookies();
+  store.set(APP_SESSION_COOKIE, token, {
+    ...COOKIE_OPTIONS,
+    ...(maxAge ? { maxAge } : {}),
+  });
+}
+
 export async function clearSessionToken() {
   const store = await cookies();
   store.delete(SESSION_COOKIE);
@@ -52,6 +74,7 @@ export async function clearSessionToken() {
   // Legacy cookie from the pre-migration client-side auth store. Cleared so a
   // stale value cannot be read by anything still looking for it.
   store.delete('fameo_membership');
+  store.delete(APP_SESSION_COOKIE);
 }
 
 export { COOKIE_OPTIONS };

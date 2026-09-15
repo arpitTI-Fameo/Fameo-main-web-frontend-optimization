@@ -11,11 +11,10 @@
 //   1. The cache is keyed per user. It used to be one global key, so if two
 //      accounts shared a browser the second one briefly rendered the first
 //      one's face.
-//   2. It no longer gives up forever when `fameo_app_token` isn't in
-//      localStorage yet. Right after login the token and the auth store land
-//      in different ticks, so the very first run often found no token and the
-//      photo never loaded until a full reload. It now retries a few times and
-//      also listens for the token being written in another tab.
+//   2. It no longer needs a token in localStorage at all. The request goes to
+//      /api/bff-app, which attaches the app token from an httpOnly cookie
+//      server-side — so the old "token written a tick later" race, the retry
+//      schedule and the cross-tab storage listener are all gone with it.
 //   3. The request is aborted on unmount instead of setting state after the
 //      component is gone.
 //   4. `clearProfilePhoto()` clears every cached user, so it still does the
@@ -28,12 +27,13 @@
 
 import { useState, useEffect } from "react";
 
-const PROFILE_URL = "https://uat-api.fameo.info/api/v1/user-config/web-profile";
-const CACHE_PREFIX = "fameo_profile_photo";
-const TOKEN_KEY = "fameo_app_token";
+import { BFF_APP_BASE } from "@/lib/api/config";
+import { userConfigEndpoints } from "@/lib/api/endpoints";
 
-// Retry schedule for the case where the app token hasn't been written yet.
-const TOKEN_RETRY_MS = [400, 1200, 3000];
+// Same-origin. The upstream host used to be hardcoded here, which shipped it in
+// the client bundle and could not be changed per environment.
+const PROFILE_URL = `${BFF_APP_BASE}${userConfigEndpoints.webProfile()}`;
+const CACHE_PREFIX = "fameo_profile_photo";
 
 const isWebUrl = (u) => typeof u === "string" && /^https?:\/\//i.test(u);
 
@@ -68,13 +68,13 @@ export function useProfilePhoto(userOrEnabled = true) {
     if (!enabled || typeof window === "undefined") return;
 
     let cancelled = false;
-    const timers = [];
     const controller = new AbortController();
 
-    const fetchPhoto = async (token) => {
+    const fetchPhoto = async () => {
       try {
         const res = await fetch(PROFILE_URL, {
-          headers: { accept: "application/json", Authorization: `Bearer ${token}` },
+          headers: { accept: "application/json" },
+          credentials: "same-origin",
           signal: controller.signal,
         });
         const json = await res.json().catch(() => ({}));
@@ -102,34 +102,13 @@ export function useProfilePhoto(userOrEnabled = true) {
       }
     };
 
-    // The app token can be written a tick after the auth store rehydrates,
-    // so don't treat a missing token on the first pass as final.
-    const attempt = (i = 0) => {
-      if (cancelled) return;
-
-      let token = null;
-      try { token = localStorage.getItem(TOKEN_KEY); } catch { /* ignore */ }
-
-      if (token) { fetchPhoto(token); return; }
-
-      if (i < TOKEN_RETRY_MS.length) {
-        timers.push(setTimeout(() => attempt(i + 1), TOKEN_RETRY_MS[i]));
-      }
-    };
-
-    attempt();
-
-    // Token written in another tab (or by a parallel login flow).
-    const onStorage = (e) => {
-      if (e.key === TOKEN_KEY && e.newValue) fetchPhoto(e.newValue);
-    };
-    window.addEventListener("storage", onStorage);
+    // The cookie is already set by the time any component mounts, so a single
+    // attempt is enough — no token-arrival race left to wait out.
+    fetchPhoto();
 
     return () => {
       cancelled = true;
       controller.abort();
-      timers.forEach(clearTimeout);
-      window.removeEventListener("storage", onStorage);
     };
   }, [enabled, cacheKey]);
 

@@ -6,7 +6,6 @@ import { SHIPPING_RATES, shippingCostFor } from '@/utils/shipping';
 import { useAddresses } from '@/lib/hooks/main/useUser';
 import { S } from './styles';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 // Rates moved to lib/shipping.js — the old table here held pseudo-USD figures
 // (0 / 18 / 35, free_above 200) that three different files interpreted three
@@ -107,7 +106,7 @@ export function focusFirstError(errors = {}, root = null) {
   return key;
 }
 
-export default function DeliveryForm({ addr, onAddr, shipping, onShipping, cartTotal, onNext, onBack }) {
+export default function DeliveryForm({ addr, onAddr, shipping, onShipping, cartTotal, onNext, onBack, initialData }) {
   const { token }                = useAuthStore();
 
   // Which fields the shopper has interacted with, and whether they've tried to
@@ -150,7 +149,7 @@ export default function DeliveryForm({ addr, onAddr, shipping, onShipping, cartT
   const [backendAddrs, setBackendAddrs] = useState([]);
 
   // Load saved addresses from backend
-  const { data: addrsData } = useAddresses({ enabled: !!token });
+  const { data: addrsData } = useAddresses({ initialData, enabled: !!token });
   useEffect(() => {
     if (addrsData?.data?.length) setBackendAddrs(addrsData.data);
   }, [addrsData]);
@@ -161,7 +160,11 @@ export default function DeliveryForm({ addr, onAddr, shipping, onShipping, cartT
       localStorage.setItem('fameo_saved_addresses', JSON.stringify(updated));
       // Force re-read from parent
       window.dispatchEvent(new Event('storage'));
-    } catch (_) {}
+    } catch (err) {
+      // Private mode / quota. Was silent, so the address simply appeared not to
+      // delete with no explanation anywhere.
+      console.warn('[DeliveryForm] could not update saved addresses:', err?.message);
+    }
   };
 
   return (

@@ -14,6 +14,7 @@ import { showToast } from '../Toast';
 import { useAuthStore } from '@/store/authStore';
 import { useSubmissions, useMentorsOnline, useSubmitReviewMutation } from '@/lib/hooks/main/useCommunity';
 
+
 const CHECKLIST_ITEMS = [
   { key: 'hook', label: 'Strong Hook', sub: 'First 3 seconds captivate' },
   { key: 'pacing', label: 'Good Pacing', sub: 'Content flows naturally' },

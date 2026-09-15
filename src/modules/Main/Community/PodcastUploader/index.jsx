@@ -15,6 +15,7 @@ import { useAuthStore } from '@/store/authStore';
 import { BFF_BASE } from '@/lib/config';
 import { useCreateEpisodeMutation, useUpdateEpisodeMutation, usePublishEpisodeMutation } from '@/lib/hooks/main/usePodcast';
 
+
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
   bg:         '#ffffff',
@@ -38,7 +39,6 @@ const T = {
   fontDisplay:'"Fraunces", Georgia, serif',
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 function getToken() { return useAuthStore.getState().token || null; }
 
 const fmtSec = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;

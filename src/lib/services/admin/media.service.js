@@ -1,12 +1,35 @@
+import { adminEndpoints } from '@/lib/api/endpoints';
+import { createAdminAction } from '@/lib/services/admin/core';
 import { adminFetch } from './core';
 
-export const getMedia = () => adminFetch("/admin/media");
+export const getMediaAction = async () => {
+  return createAdminAction({
+    url: adminEndpoints.mediaList(),
+    method: 'GET',
+  });
+};
 
 // The picker reads the whole library in one go. Kept as its own function
 // because the URL differs from getMedia() above — preserving the exact request
 // the component made before the restructure.
-export const getMediaLibrary = (limit = 200) => adminFetch(`/media?limit=${limit}`);
+export const getMediaLibraryAction = async (limit = 200) => {
+  return createAdminAction({
+    url: adminEndpoints.mediaListPagination(limit),
+    method: 'GET',
+  });
+};
 
-export const uploadMedia = (form) => adminFetch("/media/upload", { method: 'POST', body: form });
+export const uploadMediaAction = async (form) => {
+  return createAdminAction({
+    url: adminEndpoints.mediaUpload(),
+    method: 'POST',
+    body: form,
+  });
+};
 
-export const deleteMediaItem = (id) => adminFetch(`/media/${id}`, { method: 'DELETE' });
+export const deleteMediaItemAction = async (id) => {
+  return createAdminAction({
+    url: adminEndpoints.media(id),
+    method: 'DELETE',
+  });
+};

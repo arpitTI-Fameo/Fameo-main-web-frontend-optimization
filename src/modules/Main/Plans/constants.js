@@ -1,4 +1,3 @@
-export const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 // NOTE: DISPLAY FALLBACKS only, used when the backend hasn't supplied
 // billing_options. Real prices + billing_id come from Plan.billing_options.

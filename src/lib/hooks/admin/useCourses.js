@@ -1,22 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
-import { getAdminCourses, getAdminCourse, createAdminCourse, updateAdminCourse, deleteAdminCourse, togglePublishAdminCourse, toggleFeatureAdminCourse } from '@/lib/services/admin/courses.service';
+import { getAdminCoursesAction, getAdminCourseAction, createAdminCourseAction, updateAdminCourseAction, deleteAdminCourseAction, togglePublishAdminCourseAction, toggleFeatureAdminCourseAction } from '@/lib/services/admin/courses.service';
 
 export const useAdminCourses = (opts = {}) => useQuery({
     queryKey: ['admin', 'courses'],
-    queryFn: getAdminCourses,
+    queryFn: getAdminCoursesAction,
     ...opts
 });
 
 export const useAdminCourse = (id, opts = {}) => useQuery({
     queryKey: ['admin', 'courses', id],
-    queryFn: () => getAdminCourse(id),
+    queryFn: () => getAdminCourseAction(id),
     ...opts
 });
 
 export const useCreateAdminCourseMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: createAdminCourse,
+        mutationFn: createAdminCourseAction,
         ...opts
     });
     return { ...mutation, createCourse: mutation.mutateAsync };
@@ -24,7 +24,7 @@ export const useCreateAdminCourseMutation = (opts = {}) => {
 
 export const useUpdateAdminCourseMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: ({ id, form }) => updateAdminCourse(id, form),
+        mutationFn: ({ id, form }) => updateAdminCourseAction(id, form),
         ...opts
     });
     return { ...mutation, updateCourse: mutation.mutateAsync };
@@ -32,7 +32,7 @@ export const useUpdateAdminCourseMutation = (opts = {}) => {
 
 export const useDeleteAdminCourseMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: deleteAdminCourse,
+        mutationFn: deleteAdminCourseAction,
         ...opts
     });
     return { ...mutation, deleteCourse: mutation.mutateAsync };
@@ -40,7 +40,7 @@ export const useDeleteAdminCourseMutation = (opts = {}) => {
 
 export const useTogglePublishAdminCourseMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: togglePublishAdminCourse,
+        mutationFn: togglePublishAdminCourseAction,
         ...opts
     });
     return { ...mutation, togglePublish: mutation.mutateAsync };
@@ -48,7 +48,7 @@ export const useTogglePublishAdminCourseMutation = (opts = {}) => {
 
 export const useToggleFeatureAdminCourseMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: toggleFeatureAdminCourse,
+        mutationFn: toggleFeatureAdminCourseAction,
         ...opts
     });
     return { ...mutation, toggleFeature: mutation.mutateAsync };

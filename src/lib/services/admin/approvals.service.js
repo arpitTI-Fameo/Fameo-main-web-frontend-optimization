@@ -1,5 +1,18 @@
+import { adminEndpoints } from '@/lib/api/endpoints';
+import { createAdminAction } from '@/lib/services/admin/core';
 import { adminFetch } from './core';
 
-export const getAdminApprovals = (status) => adminFetch(`/admin/approvals?status=${status}`);
+export const getAdminApprovalsAction = async (status) => {
+  return createAdminAction({
+    url: adminEndpoints.approvalsList(status),
+    method: 'GET',
+  });
+};
 
-export const reviewAdminApproval = (id, form) => adminFetch(`/admin/approvals/${id}`, { method: 'PATCH', body: JSON.stringify(form), headers: { "Content-Type": "application/json" } });
+export const reviewAdminApprovalAction = async (id, form) => {
+  return createAdminAction({
+    url: adminEndpoints.approval(id),
+    method: 'PATCH',
+    body: form,
+  });
+};

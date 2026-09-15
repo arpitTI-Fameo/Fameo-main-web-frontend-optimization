@@ -1,16 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
-import { getAdminProducts, createAdminProduct, updateAdminProduct, updateProductStatus } from '@/lib/services/admin/products.service';
+import { getAdminProductsAction, createAdminProductAction, updateAdminProductAction, updateProductStatusAction } from '@/lib/services/admin/products.service';
 
 export const useAdminProducts = (opts = {}) => useQuery({
     queryKey: ['admin', 'products'],
-    queryFn: getAdminProducts,
+    queryFn: getAdminProductsAction,
     ...opts
 });
 
 export const useSaveProductMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: ({ id, form }) => id ? updateAdminProduct(id, form) : createAdminProduct(form),
+        mutationFn: ({ id, form }) => id ? updateAdminProductAction(id, form) : createAdminProductAction(form),
         ...opts
     });
     return { ...mutation, saveProduct: mutation.mutateAsync };
@@ -18,7 +18,7 @@ export const useSaveProductMutation = (opts = {}) => {
 
 export const useUpdateProductStatusMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: ({ id, status }) => updateProductStatus(id, status),
+        mutationFn: ({ id, status }) => updateProductStatusAction(id, status),
         ...opts
     });
     return { ...mutation, updateStatus: mutation.mutateAsync };

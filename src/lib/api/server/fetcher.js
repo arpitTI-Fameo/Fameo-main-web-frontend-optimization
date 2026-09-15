@@ -8,7 +8,7 @@ import 'server-only';
 // Touching a cookie on a public page makes the route dynamic: static
 // generation is lost, TTFB rises and crawl budget suffers. Keep them apart.
 
-import { API_ORIGIN } from '../config';
+import { API_ORIGIN } from './origins';
 import { request, qs } from '../core';
 import { getSessionToken } from '@/lib/auth/session';
 

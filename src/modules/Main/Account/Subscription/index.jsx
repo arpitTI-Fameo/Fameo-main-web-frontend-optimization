@@ -7,16 +7,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { useCurrentSubscription, useSubscriptionHistory, useCancelSubscriptionMutation, useSetAutoRenewMutation } from '@/lib/hooks/main/useSubscription';
 
 // Subscriptions go through the web backend, which proxies to the central
 // subscription API (shared with the app) and verifies Razorpay on writes.
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 const PLAN_COLORS = { free: '#9898a8', pro: '#7c9ec9', popular: '#d4a0c0', elite: '#e8457a' };
 const PLAN_ICONS = { free: '○', pro: '✦', popular: '◈', elite: '★' };
 import { S } from './styles';
 import { fmtINR, fmtDate, fmtShort, printInvoice } from './helpers';
+import { useCurrentSubscription, useSubscriptionHistory, useCancelSubscriptionMutation, useSetAutoRenewMutation } from '@/lib/hooks/main/useSubscription';
+
 
 export default function Subscription() {
   const router = useRouter();

@@ -14,6 +14,7 @@
 
 import { NextResponse } from 'next/server';
 import { verifyToken } from './jwtEdge';
+import { SESSION_COOKIE, LEGACY_SESSION_COOKIE } from '@/lib/api/config';
 
 /**
  * Require a valid session. Returns `{ user }` or `{ error }` — never throws.
@@ -27,8 +28,14 @@ import { verifyToken } from './jwtEdge';
  */
 export async function requireUser(req) {
   const bearer = req.headers.get('authorization') || '';
+  // Read the CURRENT cookie name first. This used to check only 'fameo_token',
+  // which is the pre-migration name — so once login started issuing
+  // 'fameo_session' these routes stopped recognising a cookie session at all
+  // and silently fell through to the bearer header. The legacy name is still
+  // accepted so sessions issued before the rename keep working.
   const token =
-    req.cookies?.get?.('fameo_token')?.value ||
+    req.cookies?.get?.(SESSION_COOKIE)?.value ||
+    req.cookies?.get?.(LEGACY_SESSION_COOKIE)?.value ||
     (bearer.toLowerCase().startsWith('bearer ') ? bearer.slice(7).trim() : null);
 
   const claims = await verifyToken(token);

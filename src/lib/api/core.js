@@ -9,6 +9,53 @@ import { ApiError } from './errors';
 import { REQUEST_TIMEOUT } from './config';
 
 /**
+ * Runtime response validation.
+ *
+ * CLAUDE.md calls this out as a deliberate decision rather than a default:
+ * "Add zod and parse in unwrap() if your backend contract is not stable. It
+ * costs a few ms per request and catches an entire class of production bug."
+ *
+ * The bug class is a backend field rename surfacing as `undefined` five layers
+ * down inside a component, where it looks like a frontend bug.
+ *
+ * The policy below is the important part, and it is asymmetric on purpose:
+ *
+ *   development / test  → THROW. A contract drift must be impossible to miss
+ *                         while someone is looking at the screen.
+ *   production          → LOG AND PASS THROUGH. A schema that rejects a real
+ *                         response would turn a partially-degraded page into a
+ *                         total outage for users. Detection belongs before the
+ *                         deploy, not on top of the user.
+ *
+ * Schemas are opt-in per call. A call with no `schema` behaves exactly as it
+ * did before, so this can be adopted one endpoint at a time.
+ */
+const STRICT_SCHEMA = process.env.NODE_ENV !== 'production';
+
+function validate(payload, schema, url) {
+  if (!schema) return payload;
+
+  const result = schema.safeParse(payload);
+  if (result.success) return result.data;
+
+  const issues = result.error.issues
+    .map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`)
+    .join('; ');
+
+  if (STRICT_SCHEMA) {
+    throw new ApiError(`Response did not match the expected shape — ${issues}`, {
+      status: 0,
+      code: 'SCHEMA_MISMATCH',
+      details: { issues: result.error.issues, payload },
+      url,
+    });
+  }
+
+  console.error('[api] response schema mismatch', { url, issues });
+  return payload;
+}
+
+/**
  * THE definition of success for this backend. Every call site depends on it,
  * so it lives in exactly one place.
  *
@@ -71,12 +118,23 @@ function fieldErrorsFrom(body) {
  * One fetch wrapper for server and browser alike.
  *
  * @param {string} url  absolute URL (server) or same-origin path (browser)
- * @param {RequestInit & { timeout?: number, rawResponse?: boolean, rawEnvelope?: boolean }} [init]
+ * @param {RequestInit & {
+ *   timeout?: number,
+ *   rawResponse?: boolean,
+ *   rawEnvelope?: boolean,
+ *   schema?: import('zod').ZodType,
+ * }} [init]
  * @returns {Promise<any>} the unwrapped payload
  * @throws {ApiError}
  */
 export async function request(url, init = {}) {
-  const { timeout = REQUEST_TIMEOUT, rawResponse = false, rawEnvelope = false, ...rest } = init;
+  const {
+    timeout = REQUEST_TIMEOUT,
+    rawResponse = false,
+    rawEnvelope = false,
+    schema,
+    ...rest
+  } = init;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
@@ -131,7 +189,10 @@ export async function request(url, init = {}) {
 
   // rawEnvelope: hand back { success, message, data } untouched. The
   // registration flow inspects those fields itself.
-  return rawEnvelope ? body : unwrap(body);
+  //
+  // The schema validates the payload the CALLER receives, so it describes the
+  // same thing whichever mode is in use.
+  return validate(rawEnvelope ? body : unwrap(body), schema, url);
 }
 
 /** Build a query string, skipping null/undefined/''. */

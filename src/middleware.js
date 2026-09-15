@@ -7,6 +7,11 @@
 import { NextResponse } from 'next/server';
 import { verifyToken, isAdminRole, hasPaidPlan } from '@/lib/security/jwtEdge';
 import { REQUEST_HEADERS } from '@/lib/api/request-headers';
+import {
+  AUTH_ONLY_ROUTES,
+  PAID_ROUTES,
+  matchesRoute,
+} from '@/lib/auth/gated-routes';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAST C-2 / C-3 / C-4 — rewritten.
@@ -30,24 +35,10 @@ import { REQUEST_HEADERS } from '@/lib/api/request-headers';
 // is only protected here is protected only against browsers.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Signed-in creators only.
-const AUTH_ONLY_ROUTES = [
-  '/products',
-  '/account',
-  '/checkout',
-  '/resources',
-  '/resources/my-learnings',
-  '/resources/saved',
-];
-
-// Signed in AND on a paid tier.
-const PAID_ROUTES = [
-  '/community',
-  '/talent-hire',
-];
-
-const matches = (pathname, routes) =>
-  routes.some((r) => pathname === r || pathname.startsWith(r + '/'));
+// The lists themselves live in lib/auth/gated-routes.js so app/sitemap.js and
+// app/robots.js can read the same answer instead of keeping a second copy that
+// drifts. Enforcement stays here.
+const matches = matchesRoute;
 
 const redirectTo = (request, path, params = {}) => {
   const url = new URL(path, request.url);

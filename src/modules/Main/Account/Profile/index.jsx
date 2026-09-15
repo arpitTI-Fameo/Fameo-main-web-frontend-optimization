@@ -11,8 +11,8 @@ import Field from "./Field";
 import Section from "./Section";
 import { useProfile } from '@/lib/hooks/main/useUser';
 
-export default function Profile() {
-  const { data: json, isLoading: loading, error: apiError } = useProfile();
+export default function Profile({ initialData }) {
+  const { data: json, isLoading: loading, error: apiError } = useProfile({ initialData });
   const [profile, setProfile] = useState(null);
   
   const error = apiError?.message || "";

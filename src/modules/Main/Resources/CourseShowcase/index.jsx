@@ -1,12 +1,12 @@
 'use client';
 // modules/Resources/CourseShowcase/index.jsx
 
-export default function CourseShowcase({ showPaused, showTrackRef, showcase, showIdx, prefetchCourse, openCourse, goShow }) {
+export default function CourseShowcase({ showPausedRef, showTrackRef, showcase, showIdx, prefetchCourse, openCourse, goShow }) {
     return (
     <section
       className="rp-showcase"
-      onMouseEnter={() => { showPaused.current = true; }}
-      onMouseLeave={() => { showPaused.current = false; }}
+      onMouseEnter={() => { showPausedRef.current = true; }}
+      onMouseLeave={() => { showPausedRef.current = false; }}
     >
       <div className="rp-show-track" ref={showTrackRef}>
         {showcase.map((c, i) => (

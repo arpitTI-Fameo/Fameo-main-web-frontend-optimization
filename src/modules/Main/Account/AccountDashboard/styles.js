@@ -1,3 +1,9 @@
+
+import {
+    INK, GOLD, LINE, MUTED, FAINT, FONT_DISPLAY,
+} from '../AccountUI';
+
+
 export const S = {
     cardHead: {
         display: 'flex', justifyContent: 'space-between',

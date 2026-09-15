@@ -10,24 +10,24 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ─── Tokens ──────────────────────────────────────────────────────────────────
-export const INK     = '#1a1208';
-export const GOLD    = '#C9A96E';
-export const LINE    = '#ece8de';
-export const MUTED   = '#8a8275';
-export const FAINT   = '#a8a092';
-export const EMPTY   = '#c8c2b4';
+export const INK = '#1a1208';
+export const GOLD = '#C9A96E';
+export const LINE = '#ece8de';
+export const MUTED = '#8a8275';
+export const FAINT = '#a8a092';
+export const EMPTY = '#c8c2b4';
 export const SURFACE = '#fff';
 
-export const GREEN     = '#2f7030';
-export const GREEN_BG  = '#6cae6c22';
-export const AMBER     = '#8a6a1e';
-export const AMBER_BG  = GOLD + '22';
-export const RED       = '#9a3030';
-export const RED_BG    = '#c0505022';
-export const SLATE     = '#5a6b7a';
-export const SLATE_BG  = '#5a6b7a1a';
+export const GREEN = '#2f7030';
+export const GREEN_BG = '#6cae6c22';
+export const AMBER = '#8a6a1e';
+export const AMBER_BG = GOLD + '22';
+export const RED = '#9a3030';
+export const RED_BG = '#c0505022';
+export const SLATE = '#5a6b7a';
+export const SLATE_BG = '#5a6b7a22';
 
-export const FONT_BODY    = "'DM Sans',sans-serif";
+export const FONT_BODY = "'DM Sans',sans-serif";
 export const FONT_DISPLAY = "'Cormorant Garamond',serif";
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
@@ -53,19 +53,19 @@ export function shortDate(value) {
 
 // ─── Status → chip colours ───────────────────────────────────────────────────
 const STATUS_MAP = {
-  active:     { bg: GREEN_BG, fg: GREEN, label: 'Active' },
-  released:   { bg: GREEN_BG, fg: GREEN, label: 'Released' },
+  active: { bg: GREEN_BG, fg: GREEN, label: 'Active' },
+  released: { bg: GREEN_BG, fg: GREEN, label: 'Released' },
   subscribed: { bg: GREEN_BG, fg: GREEN, label: 'Subscribed' },
-  paid:       { bg: GREEN_BG, fg: GREEN, label: 'Paid' },
-  done:       { bg: GREEN_BG, fg: GREEN, label: 'Verified' },
-  credit:     { bg: GREEN_BG, fg: GREEN, label: 'Credit' },
-  holding:    { bg: AMBER_BG, fg: AMBER, label: 'Holding' },
-  hold:       { bg: AMBER_BG, fg: AMBER, label: 'On hold' },
-  pending:    { bg: AMBER_BG, fg: AMBER, label: 'Pending' },
-  no_sub:     { bg: AMBER_BG, fg: AMBER, label: 'No sub yet' },
-  shared:     { bg: SLATE_BG, fg: SLATE, label: 'Shared' },
-  rejected:   { bg: RED_BG,   fg: RED,   label: 'Rejected' },
-  debit:      { bg: RED_BG,   fg: RED,   label: 'Debit' },
+  paid: { bg: GREEN_BG, fg: GREEN, label: 'Paid' },
+  done: { bg: GREEN_BG, fg: GREEN, label: 'Verified' },
+  credit: { bg: GREEN_BG, fg: GREEN, label: 'Credit' },
+  holding: { bg: AMBER_BG, fg: AMBER, label: 'Holding' },
+  hold: { bg: AMBER_BG, fg: AMBER, label: 'On hold' },
+  pending: { bg: AMBER_BG, fg: AMBER, label: 'Pending' },
+  no_sub: { bg: AMBER_BG, fg: AMBER, label: 'No sub yet' },
+  shared: { bg: SLATE_BG, fg: SLATE, label: 'Shared' },
+  rejected: { bg: RED_BG, fg: RED, label: 'Rejected' },
+  debit: { bg: RED_BG, fg: RED, label: 'Debit' },
 };
 
 export function statusMeta(status) {
@@ -201,9 +201,9 @@ const btnBase = {
 export function Button({ variant = 'primary', block, disabled, style, children, ...rest }) {
   const variants = {
     primary: { background: INK, color: '#fff', borderColor: INK },
-    gold:    { background: GOLD, color: '#fff', borderColor: GOLD },
-    ghost:   { background: 'transparent', color: INK, borderColor: LINE },
-    danger:  { background: 'transparent', color: RED, borderColor: '#d9b4b4' },
+    gold: { background: GOLD, color: '#fff', borderColor: GOLD },
+    ghost: { background: 'transparent', color: INK, borderColor: LINE },
+    danger: { background: 'transparent', color: RED, borderColor: '#d9b4b4' },
   };
   return (
     <button
@@ -227,8 +227,8 @@ export function Button({ variant = 'primary', block, disabled, style, children, 
 export function linkButtonStyle(variant = 'primary', block) {
   const variants = {
     primary: { background: INK, color: '#fff', borderColor: INK },
-    gold:    { background: GOLD, color: '#fff', borderColor: GOLD },
-    ghost:   { background: 'transparent', color: INK, borderColor: LINE },
+    gold: { background: GOLD, color: '#fff', borderColor: GOLD },
+    ghost: { background: 'transparent', color: INK, borderColor: LINE },
   };
   return { ...btnBase, ...variants[variant], width: block ? '100%' : undefined };
 }

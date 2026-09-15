@@ -12,14 +12,14 @@ import { useState, useEffect, useCallback } from 'react';
 import CommunitySidebar from './CommunitySidebar';
 import CommunityTopbar from './CommunityTopbar';
 import CommunityHome from './CommunityHome';
-import CommunitySpaces from './CommunitySpaces';
+// import CommunitySpaces from './CommunitySpaces';
 import CommunityFeedback from './CommunityFeedback';
 import CommunityEvents from './CommunityEvents';
-import CommunityModerationAndProfile from './CommunityModerationAndProfile';
+// import CommunityModerationAndProfile from './CommunityModerationAndProfile';
 import { PostModal, SubmitFeedbackModal, ReportModal, OnboardingModal } from './Modals';
 import { ToastContainer, showToast as globalShowToast } from './Toast';
-import ChatPage from './ChatPage';
-import PodcastPage from './PodcastPage';
+// import ChatPage from './ChatPage';
+// import PodcastPage from './PodcastPage';
 import '@/app/community.css';
 // SAST H-5 (extended). This read localStorage's `fameo_token` — the ADMIN
 // key set by adminAuthStore, not the creator session. Regular users sent an
@@ -28,16 +28,16 @@ import { useAuthStore } from '@/store/authStore';
 
 // Current user — in production pull from your authStore / session
 const MOCK_USER = {
-  _id:   'user_priya',
-  id:    'user_priya',
-  name:  'Priya Sharma',
+  _id: 'user_priya',
+  id: 'user_priya',
+  name: 'Priya Sharma',
   token: useAuthStore.getState().token || '',
 };
 
 export default function Community({ initialPage = 'home', searchParams = {} }) {
 
   // ── Navigation state ──────────────────────────────────────────────────────
-  const [activePage, setActivePage]   = useState(initialPage);
+  const [activePage, setActivePage] = useState(initialPage);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Profile drill-down stack  [{userId, name, niche}]
@@ -47,11 +47,11 @@ export default function Community({ initialPage = 'home', searchParams = {} }) {
   const [chatTarget, setChatTarget] = useState(null); // {userId, name}
 
   // ── Modal states ──────────────────────────────────────────────────────────
-  const [postModal,     setPostModal]     = useState(false);
+  const [postModal, setPostModal] = useState(false);
   const [feedbackModal, setFeedbackModal] = useState(false);
-  const [reportModal,   setReportModal]   = useState(false);
-  const [reportTarget,  setReportTarget]  = useState(null);
-  const [onboarding,    setOnboarding]    = useState(false);
+  const [reportModal, setReportModal] = useState(false);
+  const [reportTarget, setReportTarget] = useState(null);
+  const [onboarding, setOnboarding] = useState(false);
 
   // ── Onboarding ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -110,14 +110,14 @@ export default function Community({ initialPage = 'home', searchParams = {} }) {
 
   // Shared props for all page components
   const pageProps = {
-    onNavigate:    navigate,
+    onNavigate: navigate,
     onOpenProfile: openProfile,
-    onOpenReport:  openReport,
-    onOpenPost:    () => setPostModal(true),
-    onOpenFeedback:() => setFeedbackModal(true),
-    onOpenDM:      openDM,
-    showToast:     globalShowToast,
-    currentUser:   MOCK_USER,
+    onOpenReport: openReport,
+    onOpenPost: () => setPostModal(true),
+    onOpenFeedback: () => setFeedbackModal(true),
+    onOpenDM: openDM,
+    showToast: globalShowToast,
+    currentUser: MOCK_USER,
   };
 
   // Pages that should NOT show the community topbar
@@ -132,7 +132,7 @@ export default function Community({ initialPage = 'home', searchParams = {} }) {
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div
-            style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.5)', zIndex:180 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 180 }}
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -165,10 +165,10 @@ export default function Community({ initialPage = 'home', searchParams = {} }) {
           {activePage === 'home' && (
             <CommunityHome {...pageProps} />
           )}
-
+          {/* 
           {activePage === 'spaces' && (
             <CommunitySpaces {...pageProps} />
-          )}
+          )} */}
 
           {activePage === 'feedback' && (
             <CommunityFeedback {...pageProps} />
@@ -178,7 +178,7 @@ export default function Community({ initialPage = 'home', searchParams = {} }) {
             <CommunityEvents {...pageProps} />
           )}
 
-          {(activePage === 'moderation' || activePage === 'safety') && (
+          {/* {(activePage === 'moderation' || activePage === 'safety') && (
             <CommunityModerationAndProfile
               page={activePage}
               onNavigate={navigate}
@@ -196,25 +196,25 @@ export default function Community({ initialPage = 'home', searchParams = {} }) {
               showToast={globalShowToast}
               {...pageProps}
             />
-          )}
+          )} */}
 
           {/* ── CHAT ── */}
-          {activePage === 'chat' && (
+          {/* {activePage === 'chat' && (
             <ChatPage
               currentUser={MOCK_USER}
               targetUserId={chatTarget?.userId}
               targetUserName={chatTarget?.name}
               onBack={() => navigate('home')}
             />
-          )}
+          )} */}
 
           {/* ── PODCAST ── */}
-          {activePage === 'podcast' && (
+          {/* {activePage === 'podcast' && (
             <PodcastPage
               currentUser={MOCK_USER}
               onBack={() => navigate('home')}
             />
-          )}
+          )} */}
 
         </div>
       </div>

@@ -40,7 +40,7 @@ export function useReveal(deps = []) {
     const t = setTimeout(() => targets.forEach(reveal), 1400);
 
     return () => { io.disconnect(); clearTimeout(t); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, deps);
   return ref;
 }

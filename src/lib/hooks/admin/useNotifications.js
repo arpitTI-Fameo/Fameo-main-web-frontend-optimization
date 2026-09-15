@@ -1,17 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
-import { getNotifications, sendNotification } from '@/lib/services/admin/notifications.service';
+import { getNotificationsAction, sendNotificationAction } from '@/lib/services/admin/notifications.service';
 
 export const useAdminNotifications = (opts = {}) => useQuery({
     queryKey: ['admin', 'notifications'],
-    queryFn: getNotifications,
+    queryFn: getNotificationsAction,
     ...opts
 });
 
 export const useSendNotificationMutation = (opts = {}) => {
     const mutation = useApiMutation({
-        mutationFn: sendNotification,
+        mutationFn: sendNotificationAction,
         ...opts
     });
-    return { ...mutation, sendNotification: mutation.mutateAsync };
+    return { ...mutation, sendNotificationAction: mutation.mutateAsync };
 };

@@ -14,8 +14,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import PostCard, { PostCardSkeleton, EventHighlightCard } from '../PostCard';
 import { FEED_TABS, MOCK_EVENTS } from '@/constants/community';
 import { useAuthStore } from '@/store/authStore';
+import { showToast } from '../Toast';
+import { toUserMessage } from '@/lib/api/errors';
 import { useCommunityHero, useFeed, useTopCreators } from '@/lib/hooks/main/useCommunity';
 import { useLiveEvent, useEvents, useRSVPMutation } from '@/lib/hooks/main/useEvent';
+
 
 const QUICK_LINKS = [
   { icon: '📚', label: 'Brand Guide' },
@@ -143,7 +146,15 @@ export default function CommunityHome({ onNavigate, onOpenProfile, onReport, onO
 
   async function handleRSVP(eventId) {
     if (!eventId || rsvped[eventId]) return;
-    try { await rsvpMutation(eventId); } catch { }
+    // The catch used to be empty, so a failed RSVP still marked the event saved
+    // and still showed the success toast — the user was told it worked when it
+    // had not. The success path below is unchanged.
+    try {
+      await rsvpMutation(eventId);
+    } catch (err) {
+      showToast(toUserMessage(err), 'error');
+      return;
+    }
     setRsvped(p => ({ ...p, [eventId]: true }));
     showToast('📅 Event saved! Reminder 24h before + 15min before.', 'success');
   }

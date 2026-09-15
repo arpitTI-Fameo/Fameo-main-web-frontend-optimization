@@ -1,53 +1,24 @@
 // store/adminAuthStore.js
+//
+// The admin session token is NOT in this file, and that is the point.
+//
+// It used to be. `localStorage.setItem("fameo_token", token)` plus a
+// script-written `document.cookie` meant any XSS on the admin panel read a
+// full superAdmin session with one line — and a client-written cookie is not a
+// credential the server can trust anyway.
+//
+// Now: POST /api/auth/admin-login does the upstream call server-side and the
+// token comes back only as an httpOnly Set-Cookie. This store holds the `user`
+// object for rendering and nothing else. Every admin API call goes through
+// /api/bff, which attaches the cookie server-side.
+//
+// The `user.role` kept here is COSMETIC — it decides which nav items render.
+// Authorisation is the `role` claim in the signed token, checked by middleware
+// and re-checked by the backend on every privileged call. A tampered store
+// value gets a 403 from the API, not access.
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
-const ADMIN_ROLES = ["superAdmin", "contentManager", "moduleMaster", "supportAgent"];
-// Every other file in this codebase treats NEXT_PUBLIC_API_URL as the ORIGIN
-// (http://localhost:5000) and appends /api at the call site. Normalise here so
-// this store works whether or not the env var already carries an /api suffix —
-// getting it wrong produces "Route not found: POST /auth/login", which looks
-// like a backend problem but is a base-URL problem.
-const ORIGIN = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000")
-  .replace(/\/+$/, "")
-  .replace(/\/api$/, "");
-const BASE = `${ORIGIN}/api`;
-
-// SAST H-1 / H-8, and the wiring C-2 needs.
-//
-// Three problems here:
-//
-//   H-1  The admin JWT went into localStorage, where any XSS on the admin panel
-//        reads it with one line.
-//   H-8  The admin ROLE went into sessionStorage, where any XSS overwrites it
-//        with "superAdmin". Client-stored roles are cosmetic; they must never
-//        be the thing that decides what an admin can do.
-//   C-2  The token was never written to a COOKIE at all — so once /admin is in
-//        the middleware matcher, Edge middleware has nothing to verify and
-//        every admin gets bounced to the login page.
-//
-// Fixed here: the token is written as a cookie (SameSite=Strict, Secure in
-// production) so middleware can verify it, and sessionStorage is no longer
-// used for the role. The role the UI renders from comes back from the server
-// on every login and is re-checked server-side on each privileged call.
-//
-// Still outstanding, and requiring a backend change: the token remains
-// script-readable. Only a server-issued HttpOnly Set-Cookie closes H-1
-// completely.
-const isSecure = () =>
-  typeof window !== "undefined" && window.location.protocol === "https:";
-
-const setCookie = (name, value, days = 1) => {
-  if (typeof document === "undefined") return;
-  document.cookie =
-    `${name}=${value}; path=/; max-age=${days * 24 * 60 * 60}; SameSite=Strict` +
-    (isSecure() ? "; Secure" : "");
-};
-
-const clearCookie = (name) => {
-  if (typeof document === "undefined") return;
-  document.cookie = `${name}=; path=/; max-age=0; SameSite=Strict`;
-};
 
 export const useAdminAuthStore = create(
   persist(
@@ -59,32 +30,24 @@ export const useAdminAuthStore = create(
       login: async (email, password) => {
         set({ loading: true, error: null });
         try {
-          const res = await fetch(`${BASE}/auth/login`, {
+          const res = await fetch("/api/auth/admin-login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
+            credentials: "same-origin",
           });
-          const json = await res.json();
+          const json = await res.json().catch(() => ({}));
 
-          const token = json?.data?.token;
           const user = json?.data?.user;
 
-          if (!token || !user) {
-            set({ loading: false, error: "Login failed — no token returned" });
+          if (!res.ok || json?.success === false || !user) {
+            set({
+              loading: false,
+              error: json?.message || "Login failed — no token returned",
+            });
             return { success: false };
           }
 
-          // Advisory only: keeps a non-admin out of an admin-shaped UI. The
-          // authoritative check is the `role` claim inside the signed token,
-          // enforced by middleware (C-2/C-3) and by the backend on every
-          // privileged call.
-          if (!ADMIN_ROLES.includes(user.role)) {
-            set({ loading: false, error: "No admin access for this account." });
-            return { success: false };
-          }
-
-          localStorage.setItem("fameo_token", token);
-          setCookie("fameo_token", token);
           set({ user, loading: false, error: null });
           return { success: true, user };
         } catch (e) {
@@ -95,18 +58,24 @@ export const useAdminAuthStore = create(
 
       logout: async () => {
         try {
-          const token = localStorage.getItem("fameo_token");
-          await fetch(`${BASE}/auth/logout`, {
+          await fetch("/api/auth/admin-logout", {
             method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: "same-origin",
           });
-        } catch { }
-        localStorage.removeItem("fameo_token");
-        localStorage.removeItem("fameo_refresh");
-        // Clear the legacy key too — H-8's sessionStorage role must not survive
-        // an upgrade and get picked up by anything still reading it.
-        sessionStorage.removeItem("fameo_user");
-        clearCookie("fameo_token");
+        } catch {
+          // Network failure must not trap the admin in a signed-in UI. The
+          // local state is cleared below either way; the cookie is httpOnly
+          // and short-lived, so the worst case is a stale server session.
+        }
+        // Sweep pre-migration keys so an upgrade cannot leave a readable token
+        // behind for anything still looking for one.
+        try {
+          localStorage.removeItem("fameo_token");
+          localStorage.removeItem("fameo_refresh");
+          sessionStorage.removeItem("fameo_user");
+        } catch {
+          // Private mode / disabled storage — nothing to clean up.
+        }
         set({ user: null });
       },
 

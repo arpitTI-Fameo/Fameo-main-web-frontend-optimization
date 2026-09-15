@@ -14,7 +14,7 @@ import {
   PROMISES, MARQUEE_WORDS,
 } from '@/constants/mockData';
 import { PRODUCT_BRANDS } from '@/constants/megaMenu';
-import { useStorefrontProducts } from '@/lib/hooks/main/useFameoProducts';
+import { useStorefrontProducts } from '@/lib/hooks/main/useProduct';
 
 import ProductDetail from '../ProductDetail';
 import ShopSection from '../ShopSection';

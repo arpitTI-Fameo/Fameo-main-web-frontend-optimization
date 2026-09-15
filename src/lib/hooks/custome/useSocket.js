@@ -5,12 +5,14 @@
 import { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 
+import { SOCKET_ORIGIN } from "@/lib/api/config";
+
 let _socket = null;
 
 function getSocket() {
   if (!_socket) {
     const user = (() => { try { return JSON.parse(sessionStorage.getItem("fameo_user") || "null"); } catch { return null; } })();
-    _socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000", {
+    _socket = io(SOCKET_ORIGIN, {
       auth: { user },
       transports: ["websocket"],
       reconnectionAttempts: 5,

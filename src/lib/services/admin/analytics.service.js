@@ -1,5 +1,17 @@
+import { adminEndpoints } from '@/lib/api/endpoints';
+import { createAdminAction } from '@/lib/services/admin/core';
 import { adminFetch } from './core';
 
-export const getAnalyticsOverview = () => adminFetch("/admin/analytics/overview");
+export const getAnalyticsOverviewAction = async () => {
+  return createAdminAction({
+    url: adminEndpoints.analyticsOverview(),
+    method: 'GET',
+  });
+};
 
-export const getAnalyticsTopics = () => adminFetch("/admin/analytics/topics");
+export const getAnalyticsTopicsAction = async () => {
+  return createAdminAction({
+    url: adminEndpoints.analyticsTopics(),
+    method: 'GET',
+  });
+};

@@ -1,13 +1,48 @@
+import { adminEndpoints } from '@/lib/api/endpoints';
+import { createAdminAction } from '@/lib/services/admin/core';
 import { adminFetch } from './core';
 
-export const getAdminContent = (params) => adminFetch(`/admin/content?${params}`);
+export const getAdminContentAction = async (params) => {
+  return createAdminAction({
+    url: adminEndpoints.contentList(params),
+    method: 'GET',
+  });
+};
 
-export const updateAdminContentStatus = (id, status) => adminFetch(`/admin/content/${id}/status`, { method: 'PATCH', body: JSON.stringify({status}), headers: { "Content-Type": "application/json" } });
+export const updateAdminContentStatusAction = async (id, status) => {
+  return createAdminAction({
+    url: adminEndpoints.contentStatus(id),
+    method: 'PATCH',
+    body: { status },
+  });
+};
 
-export const deleteAdminContent = (id) => adminFetch(`/admin/content/${id}`, { method: 'DELETE' });
+export const deleteAdminContentAction = async (id) => {
+  return createAdminAction({
+    url: adminEndpoints.content(id),
+    method: 'DELETE',
+  });
+};
 
-export const getAdminContentById = (id) => adminFetch(`/admin/content/${id}`);
+export const getAdminContentByIdAction = async (id) => {
+  return createAdminAction({
+    url: adminEndpoints.content(id),
+    method: 'GET',
+  });
+};
 
-export const createAdminContent = (form) => adminFetch(`/admin/content`, { method: 'POST', body: JSON.stringify(form), headers: { "Content-Type": "application/json" } });
+export const createAdminContentAction = async (form) => {
+  return createAdminAction({
+    url: adminEndpoints.contentCreate(),
+    method: 'POST',
+    body: form,
+  });
+};
 
-export const updateAdminContent = (id, form) => adminFetch(`/admin/content/${id}`, { method: 'PUT', body: JSON.stringify(form), headers: { "Content-Type": "application/json" } });
+export const updateAdminContentAction = async (id, form) => {
+  return createAdminAction({
+    url: adminEndpoints.content(id),
+    method: 'PUT',
+    body: form,
+  });
+};

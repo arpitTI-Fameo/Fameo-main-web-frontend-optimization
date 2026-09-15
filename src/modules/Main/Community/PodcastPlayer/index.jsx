@@ -9,8 +9,12 @@
 //          POST /api/podcast/episodes/:id/save
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { showToast } from '../Toast';
+import { toUserMessage } from '@/lib/api/errors';
 import { useAuthStore } from '@/store/authStore';
-import { useEpisode, useEpisodeTranscription, useEpisodeComments, useToggleEpisodeLikeMutation, useToggleEpisodeSaveMutation, useAddEpisodeCommentMutation, useShow, useEpisodes } from '@/lib/hooks/main/usePodcast';
+import { useAddEpisodeCommentMutation } from '@/lib/services/main/podcast.api';
+import { useEpisode, useEpisodeTranscription, useEpisodeComments, useToggleEpisodeLikeMutation, useToggleEpisodeSaveMutation, useShow, useEpisodes } from '@/lib/hooks/main/usePodcast';
+
 
 // ── Design tokens (white theme) ───────────────────────────────────────────────
 const T = {
@@ -36,7 +40,6 @@ const T = {
   fontDisplay: '"Fraunces", Georgia, serif',
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 const fmt = s => { const t=Math.max(0,Math.floor(s||0)); const h=Math.floor(t/3600),m=Math.floor((t%3600)/60),sc=t%60; return h>0?`${h}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${m}:${String(sc).padStart(2,'0')}`; };
 
@@ -148,7 +151,11 @@ export default function PodcastPlayer({ episodeId, episode: episodeProp, current
     try {
       const res = await addCommentMutation({ id: episode._id, data: body });
       if(res.data) { setComments(prev=>[...prev,res.data]); setCommentInput(''); }
-    } catch {}
+    } catch (err) {
+      // Was an empty catch: the comment vanished with no message and the box
+      // stayed full, which reads as the app ignoring the click.
+      showToast(toUserMessage(err), 'error');
+    }
   }
 
   const progress = duration>0?(currentTime/duration)*100:0;
@@ -425,7 +432,6 @@ export default function PodcastPlayer({ episodeId, episode: episodeProp, current
 // ── Episode List ──────────────────────────────────────────────────────────────
 export function EpisodeList({ showId, onSelect }) {
   const [episodes, setEpisodes] = useState([]);
-  const [loading, setLoading]   = useState(true);
   const [show, setShow]         = useState(null);
 
   const { data: showData, isLoading: showLoading } = useShow(showId, { enabled: !!showId });

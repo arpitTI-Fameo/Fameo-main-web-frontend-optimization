@@ -10,10 +10,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { PLANS } from '@/constants/membership';
-import { purchasePlan, newCheckoutAttemptId, useQuoteMarketingCouponMutation, usePlans, useCurrentSubscription } from '@/lib/hooks/main/useSubscription';
+import { purchasePlan, newCheckoutAttemptId } from '@/lib/services/main/subscription.api';
+import { useQuoteMarketingCouponMutation, usePlans, useCurrentSubscription } from '@/lib/hooks/main/useSubscription';
 import { S } from '../styles'
 import { IcCheck, IcShield, IcRefresh, IcLock, IcArrow } from '../icons'
-import { BASE, PRICES, FROM_LABELS } from '../constants';
+import { PRICES, FROM_LABELS } from '../constants';
 import { inr } from '../helpers';
 import DurationSelector from '../DurationSelector';
 

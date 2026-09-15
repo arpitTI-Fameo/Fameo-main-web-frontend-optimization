@@ -8,7 +8,7 @@
 // If access tokens become short-lived, the refresh attempt belongs in
 // createProxy() — it is the only code that holds the cookie.
 
-import { API_ORIGIN } from '@/lib/api/config';
+import { API_ORIGIN } from '@/lib/api/server/origins';
 import { createProxy } from '@/lib/api/server/proxy';
 
 const proxy = createProxy(API_ORIGIN);

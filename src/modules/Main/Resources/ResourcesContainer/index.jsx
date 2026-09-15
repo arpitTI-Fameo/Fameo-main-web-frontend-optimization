@@ -1,7 +1,7 @@
 "use client";
 // modules/Resources/ResourcesContainer/index.jsx
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { COURSES } from "@/constants/courses";
 import { useCourses } from '@/lib/hooks/main/useResource';
@@ -21,7 +21,6 @@ import { CSS } from "../styles";
 export default function ResourcesContainer() {
   const router = useRouter();
 
-  const [courses, setCourses] = useState(COURSES);
   const [activeCat, setActiveCat] = useState("All");
   const [goalCat, setGoalCat] = useState(null);
   const [showIdx, setShowIdx] = useState(0);
@@ -31,20 +30,19 @@ export default function ResourcesContainer() {
   const showTrackRef = useRef(null);
   const loopRef = useRef(null);
   const browseRef = useRef(null);
-  const showPaused = useRef(false);
+  const showPausedRef = useRef(false);
   const loopPaused = useRef(false);
 
   /* Live content: published DB courses override the static seed by slug */
   const { data } = useCourses({ limit: 100 });
-  useEffect(() => {
+  const courses = useMemo(() => {
     const dbCourses = Array.isArray(data) ? data : data?.data?.courses || [];
-    if (!dbCourses.length) return;
+    if (!dbCourses.length) return COURSES;
     const dbBySlug = new Map(dbCourses.map(c => [c.slug, c]));
-    const merged = [
+    return [
       ...dbCourses.map(c => normalizeCourse(c)),
       ...COURSES.filter(c => !dbBySlug.has(c.slug)),
     ];
-    setCourses(merged);
   }, [data]);
 
   /* derived collections */
@@ -116,7 +114,7 @@ export default function ResourcesContainer() {
   useEffect(() => {
     const n = Math.min(6, courses.length) || 1;
     const t = setInterval(() => {
-      if (!showPaused.current) setShowIdx(i => (i + 1) % n);
+      if (!showPausedRef.current) setShowIdx(i => (i + 1) % n);
     }, 4600);
     return () => clearInterval(t);
   }, [courses.length]);
@@ -190,7 +188,7 @@ export default function ResourcesContainer() {
 
         {/* ── 4 · SHOWCASE CAROUSEL ── */}
         <CourseShowcase
-          showPaused={showPaused}
+          showPausedRef={showPausedRef}
           showTrackRef={showTrackRef}
           showcase={showcase}
           showIdx={showIdx}

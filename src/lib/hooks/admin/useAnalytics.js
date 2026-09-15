@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { getAnalyticsOverview, getAnalyticsTopics } from '@/lib/services/admin/analytics.service';
+import { getAnalyticsOverviewAction, getAnalyticsTopicsAction } from '@/lib/services/admin/analytics.service';
 
 export const useAnalyticsOverview = (opts = {}) => useQuery({
     queryKey: ['admin', 'analytics', 'overview'],
-    queryFn: getAnalyticsOverview,
+    queryFn: getAnalyticsOverviewAction,
     ...opts
 });
 
 export const useAnalyticsTopics = (opts = {}) => useQuery({
     queryKey: ['admin', 'analytics', 'topics'],
-    queryFn: getAnalyticsTopics,
+    queryFn: getAnalyticsTopicsAction,
     ...opts
 });

@@ -16,10 +16,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { showToast } from '../Toast';
 import { useAuthStore } from '@/store/authStore';
+import { SOCKET_ORIGIN } from '@/lib/api/config';
 import { useLiveEvent, useEvents, useEventQA, useRSVPMutation, useReplay, useEventDiscussion, useEventRoomMutation, useEventQAMutation, useRaiseHandMutation, useEventDiscussionMutation } from '@/lib/hooks/main/useEvent';
 
+
 // ── Constants ─────────────────────────────────────────────────────────────────
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API = SOCKET_ORIGIN;
 const getToken = () => useAuthStore.getState().token || '';
 
 // ── Socket singleton for events ───────────────────────────────────────────────

@@ -4,7 +4,7 @@
 // once its auth guard passes, so hooks here only run for a valid admin.
 
 import { useEffect } from "react";
-import { getAdminApprovals } from "@/lib/services/admin/approvals.service";
+import { getAdminApprovalsAction } from '@/lib/services/admin/approvals.service';
 import { useSocket } from "@/lib/hooks/custome/useSocket";
 
 import AdminSidebar from "./AdminSidebar";
@@ -21,9 +21,14 @@ export default function AdminShell({
   const fetchPending = async () => {
     if (!canFetchPending) return;  // ← fix: skip for supportAgent + moduleMaster
     try {
-      const d = await getAdminApprovals("pending&limit=1");
+      const d = await getAdminApprovalsAction("pending&limit=1");
       setPending(d?.data?.total ?? d?.data?.approvals?.length ?? 0);
-    } catch { }
+    } catch (err) {
+      // Deliberately not surfaced: this runs every 30s and a toast storm would
+      // be worse than a stale badge. Logged so a persistent failure is still
+      // findable instead of invisible.
+      console.warn("[AdminShell] pending-approvals poll failed:", err?.message);
+    }
   };
 
   useEffect(() => {

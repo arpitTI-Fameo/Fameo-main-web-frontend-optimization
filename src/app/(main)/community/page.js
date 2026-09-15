@@ -1,18 +1,21 @@
-// import CommunityLayout from '@/modules/Main/Community';
-
-// export const metadata = {
-//   title: 'Community — Fameo',
-//   description: 'Connect, collaborate, and grow with creators on Fameo Community.',
-// };
-
-// export default function CommunityPage({ searchParams }) {
-//   return <CommunityLayout initialPage="home" searchParams={searchParams} />;
-// }
-// app/(main)/community/page.js
+import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import CommunityLayout from '@/modules/Main/Community';
+import { communityKeys } from '@/lib/hooks/main/useCommunity';
+import { getSpacesAction } from '@/lib/services/main/community.api';
 
 export const metadata = { title: 'Community — Fameo' };
 
-export default function CommunityPage({ searchParams }) {
-  return <CommunityLayout initialPage="home" searchParams={searchParams} />;
+export default async function CommunityPage({ searchParams }) {
+  const queryClient = new QueryClient();
+
+  await queryClient.prefetchQuery({
+    queryKey: communityKeys.spaces(),
+    queryFn: () => getSpacesAction(),
+  });
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <CommunityLayout initialPage="home" searchParams={searchParams} />
+    </HydrationBoundary>
+  );
 }

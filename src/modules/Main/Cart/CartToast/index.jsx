@@ -70,7 +70,7 @@ export default function CartToast() {
       unit,
       saved: isMember && listed > unit ? (listed - unit) * lastAdded.qty : 0,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [lastAdded?.at]);
 
   // Failures routed through uiStore
@@ -82,7 +82,7 @@ export default function CartToast() {
       name: uiToast.message,
     });
     clearToast();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [uiToast]);
 
   // The drawer already shows the bag contents — a toast on top of it is
