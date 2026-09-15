@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import { useLoginMutation } from '@/lib/hooks/auth/useAuth';
 import { toUserMessage } from "@/lib/api/errors";
+import { safeRedirect } from "@/lib/security/safeRedirect";
 import { CSS } from "../styles";
 import { BUBBLES, SPARKLES, PARTICLES } from "../decor";
 import LoginHeader from "../LoginHeader";
@@ -63,8 +64,9 @@ export default function LoginContainer() {
       }
 
       login(user, null);
-      const dest = params.get("redirect") || "/";
-      window.location.assign(dest);
+      // Never navigate to a raw query-string value — that is an open redirect.
+      // safeRedirect() reduces it to a same-origin path or falls back to "/".
+      window.location.assign(safeRedirect(params.get("redirect")));
     } catch (err) {
       // Error is handled by loginMutation.error
     }

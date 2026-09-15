@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
 import {
   getProfileAction,
+  getWebProfileAction,
   getFavoritesAction,
   getAddressesAction,
   updateProfileAction,
@@ -15,11 +16,25 @@ import {
 export const userKeys = {
   all: () => ['user'],
   profile: () => [...userKeys.all(), 'profile'],
+  webProfile: () => [...userKeys.all(), 'web-profile'],
   favorites: () => [...userKeys.all(), 'favorites'],
   addresses: () => [...userKeys.all(), 'addresses'],
 };
 
 // ── Hooks ──────────────────────────────────────────────────────────────────
+/** The app-backend profile the /account/profile page renders. */
+export const useWebProfile = ({ initialData, ...opts } = {}) => useQuery({
+  queryKey: userKeys.webProfile(),
+  queryFn: async () => {
+    const response = await getWebProfileAction();
+    if (!response.code) throw response;
+    return response.result;
+  },
+  staleTime: 60_000,
+  ...(initialData !== undefined ? { initialData } : {}),
+  ...opts,
+});
+
 export const useProfile = ({ initialData, ...opts } = {}) => useQuery({
   queryKey: userKeys.profile(),
   queryFn: async () => {

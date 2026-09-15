@@ -164,3 +164,52 @@ describe('response schemas are loose', () => {
     expect(schemas.code).not.toMatch(/\bz\.object\(/);
   });
 });
+
+describe('the browser transport stays in the browser', () => {
+  it('lib/api/client/fetcher.js never touches next/headers', () => {
+    // A previous revision imported next/headers here to forward cookies for
+    // SSR. `cookies()` is a Promise in Next 16, so it forwarded the string
+    // "[object Promise]" — and it made the server call its own BFF over HTTP.
+    const fetcher = FILES.find((f) => f.rel === 'src/lib/api/client/fetcher.js');
+    expect(fetcher).toBeDefined();
+    expect(fetcher.code).not.toMatch(/next\/headers/);
+    expect(fetcher.code).not.toMatch(/\brequire\(/);
+  });
+
+  it('no client-side module builds an absolute URL to our own app for fetching', () => {
+    const offenders = FILES
+      .filter((f) => !isServerFile(f))
+      .filter((f) => /NEXT_PUBLIC_(APP_URL|SITE_URL)/.test(f.code))
+      // Share/invite links legitimately need the public origin; fetch bases do not.
+      .filter((f) => /fetch\(|request\(|clientFetch\(/.test(f.code))
+      .map((f) => f.rel);
+
+    expect(offenders).toEqual([]);
+  });
+});
+
+describe('navigation cannot be steered off-origin', () => {
+  it('no location assignment takes a raw query-string value', () => {
+    const offenders = FILES
+      .filter((f) => /location\.(assign|replace|href\s*=)/.test(f.code))
+      .filter((f) => {
+        // Flag only the dangerous shape: a searchParams value going straight
+        // into a navigation without passing through safeRedirect().
+        const raw = /location\.(?:assign|replace)\(\s*(?:\w+\.)?(?:params|searchParams)\.get\(/;
+        return raw.test(f.code);
+      })
+      .map((f) => f.rel);
+
+    expect(offenders).toEqual([]);
+  });
+});
+
+describe('tokens must be able to expire', () => {
+  it('jwtEdge requires an exp claim', () => {
+    // jose validates `exp` when present but does not insist on it, so an
+    // exp-less token verified forever — confirmed by test before the fix.
+    const jwt = FILES.find((f) => f.rel === 'src/lib/security/jwtEdge.js');
+    expect(jwt).toBeDefined();
+    expect(jwt.code).toMatch(/requiredClaims:\s*\[\s*'exp'\s*\]/);
+  });
+});

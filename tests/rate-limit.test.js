@@ -41,11 +41,15 @@ describe('hit', () => {
 describe('clientKey', () => {
   const req = (headers) => new Request('https://x.test/', { headers });
 
-  it('takes the FIRST hop of x-forwarded-for — the real client', () => {
-    expect(clientKey(req({ 'x-forwarded-for': '1.1.1.1, 2.2.2.2, 3.3.3.3' }))).toBe('1.1.1.1');
+  // This test previously asserted the FIRST hop, which encoded the bug rather
+  // than the requirement: proxies APPEND the peer address, so the first entry
+  // is client-supplied and rotating it defeated every rate limit in the app.
+  // See tests/client-key.test.js for the full bypass regression suite.
+  it('takes the hop our own proxy appended, not the client-supplied prefix', () => {
+    expect(clientKey(req({ 'x-forwarded-for': '1.1.1.1, 2.2.2.2, 3.3.3.3' }))).toBe('3.3.3.3');
   });
 
-  it('falls back through the other proxy headers', () => {
+  it('prefers proxy headers the edge sets and a client cannot forge', () => {
     expect(clientKey(req({ 'x-real-ip': '9.9.9.9' }))).toBe('9.9.9.9');
     expect(clientKey(req({ 'cf-connecting-ip': '8.8.8.8' }))).toBe('8.8.8.8');
   });

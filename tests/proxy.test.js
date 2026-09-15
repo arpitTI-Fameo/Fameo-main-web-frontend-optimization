@@ -205,3 +205,53 @@ describe('rate limiting', () => {
     expect(third.headers.get('retry-after')).toBeTruthy();
   });
 });
+
+describe('the upstream cannot reach past the proxy', () => {
+  it('strips Set-Cookie so an upstream cannot set cookies on our domain', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', {
+      status: 200,
+      headers: {
+        'content-type': 'application/json',
+        'set-cookie': 'fameo_session=attacker-chosen; Path=/; HttpOnly',
+      },
+    })));
+
+    const res = await createProxy('https://upstream.test')(
+      req('https://x.test/api/bff/me'), ctx(['api', 'me']),
+    );
+
+    expect(res.headers.get('set-cookie')).toBeNull();
+  });
+
+  it('does not leak a 5xx body to the browser', async () => {
+    const leak = 'Error: connect ECONNREFUSED 10.0.0.5:5432\n  at Connection._handleError';
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(leak, {
+      status: 500,
+      headers: { 'content-type': 'text/plain' },
+    })));
+
+    const res = await createProxy('https://upstream.test')(
+      req('https://x.test/api/bff/me'), ctx(['api', 'me']),
+    );
+    const body = await res.text();
+
+    expect(res.status).toBe(500);
+    expect(body).not.toContain('ECONNREFUSED');
+    expect(body).not.toContain('10.0.0.5');
+    expect(body).toContain('The server had a problem');
+  });
+
+  it('DOES pass a 4xx body through — those carry validation messages', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(
+      JSON.stringify({ success: false, message: 'Email already registered' }),
+      { status: 422, headers: { 'content-type': 'application/json' } },
+    )));
+
+    const res = await createProxy('https://upstream.test')(
+      req('https://x.test/api/bff/register'), ctx(['api', 'register']),
+    );
+
+    expect(res.status).toBe(422);
+    expect(await res.text()).toContain('Email already registered');
+  });
+});

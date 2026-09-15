@@ -2,7 +2,7 @@ import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query
 import Products from '@/modules/Main/Products';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { fameoProductsKeys } from '@/lib/hooks/main/useProduct';
-import { getStorefrontProductsAction } from '@/lib/services/main/product.api';
+import { getStorefrontProductsServer } from '@/lib/services/main/prefetch.server';
 
 export const metadata = buildMetadata({
   title: 'Products',
@@ -16,7 +16,7 @@ export default async function ProductsPage() {
 
   await queryClient.prefetchQuery({
     queryKey: fameoProductsKeys.storefrontProducts(),
-    queryFn: () => getStorefrontProductsAction(),
+    queryFn: () => getStorefrontProductsServer(),
   });
 
   return (

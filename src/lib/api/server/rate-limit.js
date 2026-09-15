@@ -54,21 +54,64 @@ export function hit(key, limit, windowMs) {
 }
 
 /**
- * Best-effort client identity.
+ * Client identity for rate limiting.
  *
- * x-forwarded-for is client-controllable, so this is NOT an authentication
- * signal — it is a spreading function. It only has to make the common case
- * (one real client) share a bucket. Take the FIRST hop, which is what every
- * proxy in front of this app appends the real client IP as.
+ * THE TRAP THIS AVOIDS: the obvious implementation takes the first entry of
+ * X-Forwarded-For. That entry is whatever the CLIENT sent, because proxies
+ * APPEND the peer address rather than replacing the header. So
+ *
+ *     curl -H "x-forwarded-for: $RANDOM.1.1.1"
+ *
+ * lands in a fresh bucket every time and the limit never fires. This was a
+ * real, verified bypass of every limit in this app.
+ *
+ * Order of preference:
+ *
+ *   1. A platform header the edge sets and does not let a client forge
+ *      (Cloudflare, Vercel, common ingress controllers). Always correct when
+ *      present, so it wins.
+ *   2. X-Forwarded-For counted from the RIGHT, skipping TRUSTED_PROXY_HOPS
+ *      appended by our own infrastructure. Everything left of that is
+ *      client-supplied and ignored.
+ *
+ * TRUSTED_PROXY_HOPS must match the deployment. 1 is right for a single
+ * managed proxy (Vercel, Railway, a lone nginx). Set TRUSTED_PROXY_HOPS in the
+ * environment if traffic passes through more. Too HIGH is the dangerous
+ * direction — it starts trusting client-supplied entries again.
  */
+const TRUSTED_PROXY_HOPS = Math.max(
+  1,
+  Number.parseInt(process.env.TRUSTED_PROXY_HOPS ?? '1', 10) || 1,
+);
+
+// Set by the edge, stripped from inbound requests by the platform.
+const TRUSTED_IP_HEADERS = [
+  'cf-connecting-ip',       // Cloudflare
+  'true-client-ip',         // Cloudflare Enterprise / Akamai
+  'x-vercel-forwarded-for', // Vercel
+  'x-real-ip',              // nginx / common ingress
+];
+
 export function clientKey(request) {
+  for (const header of TRUSTED_IP_HEADERS) {
+    const value = request.headers.get(header);
+    if (value) return value.trim();
+  }
+
   const xff = request.headers.get('x-forwarded-for');
-  if (xff) return xff.split(',')[0].trim();
-  return (
-    request.headers.get('x-real-ip') ||
-    request.headers.get('cf-connecting-ip') ||
-    'unknown'
-  );
+  if (xff) {
+    const hops = xff.split(',').map((h) => h.trim()).filter(Boolean);
+    if (hops.length) {
+      // Count from the right: the last entry was appended by the proxy nearest
+      // to us and is the only one we can vouch for.
+      const index = Math.max(0, hops.length - TRUSTED_PROXY_HOPS);
+      return hops[index];
+    }
+  }
+
+  // No usable header. One shared bucket is the SAFE failure mode: it limits
+  // too aggressively rather than not at all.
+  return 'unknown';
 }
 
 /** Standard headers so a client can back off politely instead of hammering. */

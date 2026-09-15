@@ -12,7 +12,8 @@
     "lint:report": "eslint . -f json -o eslint-report.json || true",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify": "npm run lint:ci && npm run test && npm run build"
+    "verify": "npm run codemap && npm run lint:ci && npm run test && npm run build",
+    "codemap": "node scripts/gen-codemap.mjs"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",

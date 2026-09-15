@@ -23,6 +23,21 @@
 
 import DOMPurify from 'isomorphic-dompurify';
 
+// Any anchor that opens a new tab gets rel="noopener noreferrer".
+//
+// Without it the opened page receives a `window.opener` handle back to ours and
+// can navigate it somewhere else — reverse tabnabbing. Current browsers imply
+// noopener for target=_blank, but this content is attacker-influenced (topic
+// bodies, notification text) and the guarantee should not depend on which
+// browser the reader happens to use.
+//
+// Registered once at module load, not per call.
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  if (node.tagName === 'A' && node.getAttribute('target')) {
+    node.setAttribute('rel', 'noopener noreferrer');
+  }
+});
+
 // Rich text: what a content editor legitimately produces. No <script>, no
 // <iframe>, no <style>, no event handlers, no <form>.
 const RICH_TEXT = {

@@ -80,10 +80,7 @@ const nextConfig = {
 
               connect-src
                 'self'
-                ws://localhost:3000
-                http://localhost:3000
-                http://localhost:5000
-                http://localhost:5001
+                ${isDev ? "ws://localhost:3000 http://localhost:3000 http://localhost:5000 http://localhost:5001" : ''}
                 https://api.fameo.vip
                 https://api.fameo.info
                 https://uat-api.fameo.info

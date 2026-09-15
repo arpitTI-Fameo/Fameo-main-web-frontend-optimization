@@ -1,7 +1,7 @@
 import { createServerAction } from '@/lib/api/action';
 import 'server-only';
-import { privateFetch } from '@/lib/api/server/fetcher';
-import { userEndpoints } from '@/lib/api/endpoints';
+import { privateFetch, appPrivateFetch } from '@/lib/api/server/fetcher';
+import { userEndpoints, userConfigEndpoints } from '@/lib/api/endpoints';
 
 // ── Actions (Server-side) ───────────────────────────────────────────────────
 
@@ -13,3 +13,10 @@ export const getFavoritesServerAction = () =>
 
 export const getAddressesServerAction = () =>
   privateFetch(userEndpoints.addresses());
+
+/**
+ * SSR counterpart of getWebProfileAction. Returns the SAME unwrapped payload
+ * the client hook produces, so `initialData` and a later refetch agree.
+ */
+export const getWebProfileServerAction = () =>
+  appPrivateFetch(userConfigEndpoints.webProfile());

@@ -9,10 +9,10 @@ import Avatar from "./Avatar";
 import Verified from "./Verified";
 import Field from "./Field";
 import Section from "./Section";
-import { useProfile } from '@/lib/hooks/main/useUser';
+import { useWebProfile } from '@/lib/hooks/main/useUser';
 
 export default function Profile({ initialData }) {
-  const { data: json, isLoading: loading, error: apiError } = useProfile({ initialData });
+  const { data: json, isLoading: loading, error: apiError } = useWebProfile({ initialData });
   const [profile, setProfile] = useState(null);
   
   const error = apiError?.message || "";
@@ -20,7 +20,12 @@ export default function Profile({ initialData }) {
   useEffect(() => {
     if (!json) return;
     try {
-      const entry = Array.isArray(json?.data) ? json.data[0] : json?.data;
+      // `json` is ALREADY the unwrapped payload — the transport strips the
+      // { success, message, data } envelope before the hook ever sees it. This
+      // used to read json.data, which is undefined once unwrapped, so `entry`
+      // was undefined and every field below fell back to empty. The API had
+      // returned 200 with correct data the whole time.
+      const entry = Array.isArray(json) ? json[0] : json;
       const up = entry?.user_profile || entry || {};
       const registration = entry?.registration || {};
       const merged = {

@@ -18,8 +18,21 @@ export { REQUEST_HEADERS };
  */
 export async function getRequestContext() {
   const h = await headers();
+
+  // `host` comes from the real Host header, NOT from x-request-host.
+  //
+  // Middleware overwrites x-request-host with headers.set(), but middleware
+  // only runs on the paths in its matcher. On any other route ("/", "/plans",
+  // "/support", every /api route) nothing overwrites it, so a caller can send
+  // `x-request-host: evil.example` and have it read back here verbatim. That
+  // is harmless while getTenantId() returns a constant and becomes tenant
+  // spoofing the moment it does not — which is exactly the kind of latent trap
+  // worth removing before someone builds on it.
+  //
+  // The Host header is set by the platform from the request line and is what
+  // the TLS/vhost layer already routed on.
   return {
-    host: h.get(REQUEST_HEADERS.host),
+    host: h.get('host') ?? h.get(REQUEST_HEADERS.host),
     path: h.get(REQUEST_HEADERS.path),
   };
 }

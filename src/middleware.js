@@ -12,6 +12,7 @@ import {
   PAID_ROUTES,
   matchesRoute,
 } from '@/lib/auth/gated-routes';
+import { SESSION_COOKIE, LEGACY_SESSION_COOKIE } from '@/lib/api/config';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAST C-2 / C-3 / C-4 — rewritten.
@@ -53,8 +54,8 @@ const redirectTo = (request, path, params = {}) => {
  */
 const redirectAndClear = (request, path, params = {}) => {
   const res = redirectTo(request, path, params);
-  res.cookies.delete('fameo_session');
-  res.cookies.delete('fameo_token');
+  res.cookies.delete(SESSION_COOKIE);
+  res.cookies.delete(LEGACY_SESSION_COOKIE);
   res.cookies.delete('fameo_membership');
   return res;
 };
@@ -83,8 +84,8 @@ export async function middleware(request) {
   // Prefer the httpOnly creator-session cookie; fall back to the legacy
   // 'fameo_token' still written by the admin store and by pre-migration
   // sessions. See lib/api/config.js for why the names differ.
-  const token = request.cookies.get('fameo_session')?.value
-    ?? request.cookies.get('fameo_token')?.value;
+  const token = request.cookies.get(SESSION_COOKIE)?.value
+    ?? request.cookies.get(LEGACY_SESSION_COOKIE)?.value;
   const claims = await verifyToken(token);   // null unless the signature checks out
 
   // ── Admin ─────────────────────────────────────────────────────────────────

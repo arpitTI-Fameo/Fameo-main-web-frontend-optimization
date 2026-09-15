@@ -38,6 +38,13 @@ export const BFF_BASE = '/api/bff';
 export const BFF_PRODUCTS_BASE = '/api/bff-products';
 export const BFF_APP_BASE = '/api/bff-app';
 
+/**
+ * Our OWN Next route handlers (src/app/api/**) are already same-origin, so they
+ * take no prefix. Named rather than written as a bare '' at call sites, because
+ * an empty string there reads like an oversight.
+ */
+export const LOCAL_BASE = '';
+
 /** Default request timeout (ms). */
 export const REQUEST_TIMEOUT = 15_000;
 

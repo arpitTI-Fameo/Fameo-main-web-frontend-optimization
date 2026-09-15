@@ -18,6 +18,29 @@ export const authEndpoints = {
 };
 
 /**
+ * OUR OWN Next route handlers, NOT upstream paths.
+ *
+ * These exist because some auth steps must run server-side: /api/auth/login
+ * calls the upstream and converts the response into an httpOnly Set-Cookie, so
+ * the token never reaches client JavaScript. Posting to the upstream directly
+ * skips that and leaves the browser with no session at all.
+ *
+ * They are listed apart from `authEndpoints` on purpose. `authEndpoints.login()`
+ * is the UPSTREAM path '/api/auth/login' and our route happens to sit at the
+ * same string — sending the first through the BFF reaches the wrong server with
+ * the wrong body shape, which is exactly the bug this split prevents.
+ *
+ * Always call these with `base: LOCAL_BASE` so they are not prefixed with /api/bff.
+ */
+export const localAuthRoutes = {
+  login: () => '/api/auth/login',
+  logout: () => '/api/auth/logout',
+  adminLogin: () => '/api/auth/admin-login',
+  adminLogout: () => '/api/auth/admin-logout',
+  refreshSession: () => '/api/auth/refresh-session',
+};
+
+/**
  * Registration flow — the "app" backend (APP_ORIGIN).
  * Unauthenticated; a signed-in session does not exist yet at these steps.
  */

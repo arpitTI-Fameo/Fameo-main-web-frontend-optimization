@@ -1,10 +1,20 @@
+// lib/api/apiHandler.js
+// The shared request builder behind createServerAction (lib/api/action.js).
+//
+// This is the BROWSER transport. It is imported by client hooks, so it cannot
+// reach anything marked `server-only` — not even behind a lazy import, because
+// Turbopack still pulls it into the Client Component SSR graph.
+//
+// A Server Component that needs the same data uses a sibling `*.server.js`
+// module built on publicFetch/privateFetch, which talks to the upstream
+// directly. See services/main/user.server.js for the established shape.
+
 import { clientFetch } from '@/lib/api/client/fetcher';
 import { qs } from '@/lib/api/core';
 
 export const sendRequest = async ({
   url,
   body = null,
-  authToken = null,
   params = null,
   method = "GET",
   ...rest
@@ -30,15 +40,16 @@ export const sendRequest = async ({
       finalUrl += qs(body);
     }
 
-    if (authToken) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${authToken}`,
-      };
-    }
+    // NOTE: there is deliberately no `authToken` option any more.
+    //
+    // It used to set an `Authorization: Bearer …` header, which the BFF now
+    // strips — the credential comes from the httpOnly cookie, never from the
+    // caller. Leaving the option in place would have been worse than useless:
+    // it looked like authentication while doing nothing, so a call site could
+    // "add auth" and still get a 401 with no clue why.
 
     const result = await clientFetch(finalUrl, config);
-    
+
     return {
       code: true,
       status: 200,

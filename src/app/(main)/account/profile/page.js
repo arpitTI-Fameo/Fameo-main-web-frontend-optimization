@@ -1,7 +1,10 @@
 import Profile from '@/modules/Main/Account/Profile';
-import { getProfileServerAction } from '@/lib/services/main/user.server';
+import { getWebProfileServerAction } from '@/lib/services/main/user.server';
 
 export default async function ProfilePage() {
-  const profile = await getProfileServerAction().catch(() => null);
+  // Must be the SAME shape the client hook returns, or initialData hands the
+  // component something it cannot read. This used to prefetch the MAIN API's
+  // account record while the component parsed the APP backend's web profile.
+  const profile = await getWebProfileServerAction().catch(() => null);
   return <Profile initialData={profile} />;
 }

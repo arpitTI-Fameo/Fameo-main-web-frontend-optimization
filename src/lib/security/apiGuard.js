@@ -14,6 +14,7 @@
 
 import { NextResponse } from 'next/server';
 import { verifyToken } from './jwtEdge';
+import { clientKey } from '@/lib/api/server/rate-limit';
 import { SESSION_COOKIE, LEGACY_SESSION_COOKIE } from '@/lib/api/config';
 
 /**
@@ -93,11 +94,15 @@ export function rateLimit(key, { limit = 5, windowMs = 60_000 } = {}) {
   return { ok: true, remaining: limit - hit.count, retryAfter: 0 };
 }
 
-/** Best-effort client IP, for limiting requests that have no user yet. */
-export const clientIp = (req) =>
-  req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-  req.headers.get('x-real-ip') ||
-  'unknown';
+/**
+ * Client IP for limiting requests that have no user yet.
+ *
+ * Delegates to lib/api/server/rate-limit.js so there is ONE implementation.
+ * This used to take the first X-Forwarded-For entry, which is client-supplied
+ * (proxies append, they do not replace) and therefore trivially rotated to get
+ * a fresh bucket per request.
+ */
+export const clientIp = clientKey;
 
 /** 429 response with the standard header. */
 export const tooManyRequests = (retryAfter) =>

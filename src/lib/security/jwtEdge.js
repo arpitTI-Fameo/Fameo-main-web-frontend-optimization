@@ -49,10 +49,27 @@ export async function verifyToken(token) {
       // signed with a different family — can be accepted by permissive
       // verifiers. The backend signs HS256.
       algorithms: ['HS256'],
+
+      // Require an expiry. jose validates `exp` when it is PRESENT but does
+      // not insist on it, so a token minted without one verified forever —
+      // confirmed by test: an exp-less superAdmin token was accepted. A
+      // session that cannot expire also cannot be revoked by waiting.
+      requiredClaims: ['exp'],
     });
     if (!payload?.id) return null;
     return payload;
-  } catch {
+  } catch (err) {
+    // Rejecting a token is normal (expired, forged, absent) and must stay
+    // quiet. A MISSING `exp` is different: it means the backend is minting
+    // tokens with no expiry, and everyone would be signed out at once with no
+    // obvious cause. Name it in the logs so that is a five-second diagnosis
+    // rather than an outage hunt.
+    if (err?.code === 'ERR_JWT_CLAIM_VALIDATION_FAILED' && err?.claim === 'exp') {
+      console.error(
+        '[jwtEdge] Rejected a token with no `exp` claim. The backend is issuing ' +
+        'non-expiring tokens — fix the signer, or sessions cannot be timed out.'
+      );
+    }
     return null;
   }
 }

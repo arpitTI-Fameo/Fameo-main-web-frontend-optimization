@@ -44,7 +44,11 @@ export const upstreamLoginSchema = obj({
   token: z.string().min(1, 'upstream returned no session token'),
   user: userSchema,
   appToken: z.string().nullable().optional(),
-});
+  app_token: z.string().nullable().optional(),
+}).transform(val => ({
+  ...val,
+  appToken: val.appToken ?? val.app_token ?? null
+}));
 
 // ── Master / reference data ──────────────────────────────────────────────────
 // Registration renders these as <select> options. An array is the only thing

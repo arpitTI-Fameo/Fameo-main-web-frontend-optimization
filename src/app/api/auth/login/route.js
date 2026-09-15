@@ -29,6 +29,17 @@ export async function POST(request) {
 
   let upstream, body;
   try {
+    // app-login, NOT login.
+    //
+    // The upstream has two credential endpoints and they are not
+    // interchangeable: /api/auth/login authenticates by EMAIL, while
+    // /api/auth/app-login authenticates by USERNAME — which is what this form
+    // collects. Pointing at the wrong one answers "Invalid email or password"
+    // for a perfectly valid username/password pair, which reads like a bad
+    // credential rather than a wrong endpoint.
+    //
+    // app-login is also the only one that returns `appToken`, which the profile
+    // and referral reads need.
     upstream = await fetch(`${API_ORIGIN}${authEndpoints.appLogin()}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -185,10 +185,35 @@ export function createProxy(origin, options = {}) {
     const resHeaders = new Headers(upstream.headers);
     resHeaders.delete('content-encoding');
     resHeaders.delete('content-length');
+
+    // The upstream must NOT be able to set cookies on this app's domain.
+    // Anything it sends here would land scoped to our origin, which is a
+    // session-fixation primitive if the upstream is ever compromised or
+    // misconfigured. This app's session is issued only by /api/auth/*.
+    resHeaders.delete('set-cookie');
+
     // Never let an upstream cache directive make a per-user response cacheable.
     resHeaders.set('cache-control', 'no-store');
     for (const [k, v] of Object.entries(limitHeaders(gate, rateLimit.limit))) {
       resHeaders.set(k, v);
+    }
+
+    // A 5xx body is the upstream's internals — stack traces, driver errors,
+    // query fragments. Useful in a log, never in a browser. 4xx bodies ARE
+    // passed through: they carry the validation messages the UI renders.
+    if (upstream.status >= 500) {
+      const detail = await upstream.text().catch(() => '');
+      console.error('[bff] upstream error', {
+        target,
+        status: upstream.status,
+        detail: detail.slice(0, 2000),
+      });
+
+      resHeaders.delete('content-type');
+      return NextResponse.json(
+        { success: false, message: 'The server had a problem. Please try again shortly.' },
+        { status: upstream.status, headers: resHeaders },
+      );
     }
 
     return new NextResponse(upstream.body, {
