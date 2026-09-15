@@ -199,7 +199,7 @@ function adaptTransactions(referralsData) {
 // not part of the referral guide. They stay on mock until their own endpoints
 // exist; wire them here the same way when they do.
 
-export const getProfileAction = async () => {
+export const getPortalProfileAction = async () => {
   if (USE_MOCK) { await delay(); return MOCK_PROFILE; }
   return MOCK_PROFILE; // TODO: replace with real profile endpoint when available
 };

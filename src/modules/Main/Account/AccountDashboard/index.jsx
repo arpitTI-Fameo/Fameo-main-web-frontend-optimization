@@ -10,8 +10,7 @@
 
 import Link from 'next/link';
 
-import { useWallet, useReferrals, useActivity } from '@/lib/hooks/main/usePortal';
-import { useProfile } from '@/lib/hooks/main/useUser';
+import { useWallet, useReferrals, useActivity, useProfile } from '@/lib/hooks/main/usePortal';
 import {
   Card, Section, StatTile, Chip, Button, linkButtonStyle,
   Skeleton, SkeletonTiles, ErrorBox, Empty,
