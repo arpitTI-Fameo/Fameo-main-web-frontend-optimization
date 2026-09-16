@@ -12,15 +12,15 @@ export const metadata = {
 
 export default function AccountLayout({ children }) {
   return (
-    // <div className="fa-page">
-    <div className="fa-wrap">
-
-      <aside className="fa-side">
-        <AccountNav />
-      </aside>
-      <div className="fa-body">{children}</div>
-    </div>
-  // </div>
-    
+    <>
+      <div className="fa-page">
+        <div className="fa-wrap">
+          <aside className="fa-side">
+            <AccountNav />
+          </aside>
+          <div className="fa-body">{children}</div>
+        </div>
+      </div>
+    </>
   );
 }

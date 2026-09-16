@@ -192,12 +192,12 @@ export default function WelcomeBanner({ showReturning = true }) {
     title = `Welcome to Fameo, ${name}`;
     message = 'Add a photo and a short bio so brands can find you. It takes about a minute.';
     ctaLabel = 'Set up your profile';
-    ctaHref = ROUTES.PROFILE;
+    ctaHref = ROUTES.ACCOUNT_PROFILE;
   } else if (!photo) {
     title = `Welcome back, ${name}`;
     message = 'Your profile still has no photo — profiles with one get opened far more often.';
     ctaLabel = 'Add a photo';
-    ctaHref = ROUTES.PROFILE;
+    ctaHref = ROUTES.ACCOUNT_PROFILE;
   } else if (tier === 'free') {
     title = `Welcome back, ${name}`;
     message = "You're on the free plan. See what a membership unlocks.";
@@ -207,7 +207,7 @@ export default function WelcomeBanner({ showReturning = true }) {
     title = `Welcome back, ${name}`;
     message = 'Pick up where you left off.';
     ctaLabel = 'Go to your account';
-    ctaHref = ROUTES.ACCOUNT;
+    ctaHref = ROUTES.ACCOUNT_PROFILE;
   }
 
   return (

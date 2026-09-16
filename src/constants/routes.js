@@ -33,12 +33,12 @@ export const ROUTES = {
   CHECKOUT: '/checkout',
 
   // Account
-  ACCOUNT: '/account/profile',
+  ACCOUNT: '/account',
+  ACCOUNT_PROFILE: '/account/profile',
   ORDERS: '/account/orders',
   ORDER: (id) => `/account/orders/${id}`,
   TRACK_ORDER: '/account/track-order',
   FAVORITES: '/account/favorites',
-  PROFILE: '/account/profile',
   SETTINGS: '/account/settings',
 };
 

@@ -2,9 +2,7 @@
 // components/MainFooter.jsx
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import logo from "@/app/assets/logo_fameo_2.png";
 import { ROUTES } from "@/constants/routes";
 
 const S = `
@@ -492,21 +490,21 @@ const COLS = [
   {
     heading: "Platform",
     links: [
-      { label: "Home",            href: "/" },
-      { label: "Products",        href: "/products" },
-      { label: "Resources",       href: "/resources" },
-      { label: "Community",       href: "/community" },
-      { label: "Talent Hire",     href: "/talent-hire" },
+      { label: "Home", href: "/" },
+      { label: "Products", href: "/products" },
+      { label: "Resources", href: "/resources" },
+      { label: "Community", href: "/community" },
+      { label: "Talent Hire", href: "/talent-hire" },
     ],
   },
   {
     heading: "Creators",
     links: [
-      { label: "Creator Hub",     href: "/resources",  badge:"new",  badgeClass:"ft-badge-new" },
-      { label: "Learning Center", href: "/resources",  badge:"new",  badgeClass:"ft-badge-new" },
-      { label: "Brand Deals",     href: "/products" },
-      { label: "Fameo Community", href: "/community",  badge:"beta", badgeClass:"ft-badge-beta" },
-      { label: "Talent Network",  href: "/talent-hire" },
+      { label: "Creator Hub", href: "/resources", badge: "new", badgeClass: "ft-badge-new" },
+      { label: "Learning Center", href: "/resources", badge: "new", badgeClass: "ft-badge-new" },
+      { label: "Brand Deals", href: "/products" },
+      { label: "Fameo Community", href: "/community", badge: "beta", badgeClass: "ft-badge-beta" },
+      { label: "Talent Network", href: "/talent-hire" },
     ],
   },
   {
@@ -516,32 +514,32 @@ const COLS = [
       // { label: "Careers",         href: "/careers" },
       // { label: "Blog",            href: "/blog" },
       // { label: "Press Kit",       href: "/press" },
-      { label: "Contact Us",      href: ROUTES.SUPPORT },
+      { label: "Contact Us", href: ROUTES.SUPPORT },
     ],
   },
   {
     heading: "Account",
     links: [
-      { label: "Login",           href: "/login" },
-      { label: "Register",        href: "/register" },
-      { label: "My Profile",      href: "/account/profile" },
-      { label: "My Orders",       href: "/account/orders" },
-      { label: "Settings",        href: "/account/settings" },
+      { label: "Login", href: "/login" },
+      { label: "Register", href: "/register" },
+      { label: "My Profile", href: "/account/profile" },
+      { label: "My Orders", href: "/account/orders" },
+      { label: "Settings", href: "/account/settings" },
     ],
   },
 ];
 
 const SOCIALS = [
   { label: "Instagram", href: "https://instagram.com", icon: "📸" },
-  { label: "Twitter/X", href: "https://x.com",         icon: "𝕏"  },
-  { label: "LinkedIn",  href: "https://linkedin.com",  icon: "in" },
-  { label: "YouTube",   href: "https://youtube.com",   icon: "▶"  },
+  { label: "Twitter/X", href: "https://x.com", icon: "𝕏" },
+  { label: "LinkedIn", href: "https://linkedin.com", icon: "in" },
+  { label: "YouTube", href: "https://youtube.com", icon: "▶" },
 ];
 
 const LEGAL_LINKS = [
-{ label: 'Privacy Policy',   href: 'https://uat.fameo.info/privacy-policy.html',       icon: '🔒' },
+  { label: 'Privacy Policy', href: 'https://uat.fameo.info/privacy-policy.html', icon: '🔒' },
   { label: 'Terms of Service', href: 'https://uat.fameo.info/terms-and-conditions.html', icon: '📋' },
-  { label: 'Cookie Policy',    href: 'https://uat.fameo.info/cookie-policy.html',        icon: '🍪' },
+  { label: 'Cookie Policy', href: 'https://uat.fameo.info/cookie-policy.html', icon: '🍪' },
 
 
 
@@ -622,7 +620,7 @@ function PolicyModal({ policy, onClose }) {
               title="Close (Esc)"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
             </button>
           </div>
@@ -672,23 +670,25 @@ export default function MainFooter() {
 
       <footer className="ft-root" role="contentinfo">
         <div className="ft-topline" aria-hidden="true" />
-        <div className="ft-glow1"  aria-hidden="true" />
-        <div className="ft-glow2"  aria-hidden="true" />
-        <div className="ft-glow3"  aria-hidden="true" />
+        <div className="ft-glow1" aria-hidden="true" />
+        <div className="ft-glow2" aria-hidden="true" />
+        <div className="ft-glow3" aria-hidden="true" />
 
         <div className="ft-inner">
 
           {/* ── TOP: brand + newsletter ── */}
           {/* <div className="ft-top">
             {/* Brand */}
-            <div>
-              {/* <img src={logo.src} alt="Fameo" className="ft-brand-logo" /> */}
-              {/* <p className="ft-brand-desc">
+          <div>
+            {/* <Link href={ROUTES.HOME} className="ft-brand" aria-label="Fameo Home">
+                <img src={logo.src} alt="Fameo" className="ft-brand-logo" />
+              </Link> */}
+            {/* <p className="ft-brand-desc">
                 India's premier creator-brand collaboration platform. Connecting
                 verified creators with brands that matter — powered by data,
                 driven by authenticity.
               </p> */}
-              {/* <div className="ft-socials">
+            {/* <div className="ft-socials">
                 {SOCIALS.map(s => (
                   <a key={s.label} href={s.href} className="ft-social"
                     aria-label={s.label} target="_blank" rel="noopener noreferrer">
@@ -722,7 +722,7 @@ export default function MainFooter() {
           </div>
 
           {/* ── LINK GRID ── */}
-           {/* <div className="ft-links">
+          {/* <div className="ft-links">
             {COLS.map(col => (
               <div key={col.heading}>
                 <span className="ft-col-heading">{col.heading}</span>

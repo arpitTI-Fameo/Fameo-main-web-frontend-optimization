@@ -54,11 +54,11 @@ export function useAuthCta() {
   if (!isLoggedIn) {
     cta = { label: 'SIGN UP', href: ROUTES.REGISTER };
   } else if (!photo) {
-    cta = { label: 'FINISH PROFILE', href: ROUTES.PROFILE };
+    cta = { label: 'FINISH PROFILE', href: ROUTES.ACCOUNT_PROFILE };
   } else if (tier === 'free') {
     cta = { label: 'SEE PLANS', href: ROUTES.PLANS };
   } else {
-    cta = { label: 'MY PROFILE', href: ROUTES.PROFILE };
+    cta = { label: 'MY PROFILE', href: ROUTES.ACCOUNT_PROFILE };
   }
 
   return {
@@ -70,7 +70,7 @@ export function useAuthCta() {
     firstName: isLoggedIn ? firstNameOf(user.name) : '',
     initials: isLoggedIn ? initialsOf(user.name) : '',
     cta,               // { label, href }
-    profileHref: ROUTES.PROFILE,
+    profileHref: ROUTES.ACCOUNT_PROFILE,
     loginHref: ROUTES.LOGIN,
   };
 }

@@ -11,12 +11,13 @@ body {
   margin: 0;
 }
 
-.fa-page{
+.fa-page {
   font-family: 'DM Sans', sans-serif;
   font-size: 16px;
   line-height: 1.5;
-  color: var(--ink);
-  background-color: var(--bg);
+  color: #181820;
+  background-color: #f5f5dc;
+  min-height: 100vh;
 }
 .fa-wrap {
   
@@ -24,13 +25,11 @@ body {
   grid-template-columns: 220px minmax(0, 1fr);
 
   gap: 32px;
-  background-color: beige;
-  /* max-width: 1180px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 36px 32px; */
-    min-height: 100vh;
+  padding: 80px 32px 36px;
+  min-height: 100vh;
   align-items: start;
-  padding-top: 80px;
 }
 
 .fa-side {
