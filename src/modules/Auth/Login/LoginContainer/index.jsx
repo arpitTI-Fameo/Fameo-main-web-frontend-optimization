@@ -1,11 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import { useLoginMutation } from '@/lib/hooks/auth/useAuth';
 import { toUserMessage } from "@/lib/api/errors";
 import { safeRedirect } from "@/lib/security/safeRedirect";
+import { loginSchema, LOGIN_DEFAULT_VALUES } from "../schema";
 import { CSS } from "../styles";
 import { BUBBLES, SPARKLES, PARTICLES } from "../decor";
 import LoginHeader from "../LoginHeader";
@@ -17,11 +20,23 @@ export default function LoginContainer() {
   const router = useRouter();
   const { login, user } = useAuthStore();
   const loginMutation = useLoginMutation();
-  const [form, setForm] = useState({ username: "", password: "" });
-  const [localError, setLocalError] = useState("");
+
+  /* React Hook Form owns the field state; zod owns the rules. `onSubmit` for
+     both modes keeps the old timing exactly — nothing goes red while you type,
+     and a message stays put until the next submit attempt. */
+  /** @type {import('react-hook-form').UseFormReturn<import('../schema').LoginValues>} */
+  const { register, handleSubmit, formState: { errors: fieldErrors } } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: LOGIN_DEFAULT_VALUES,
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
+  });
 
   const isPending = loginMutation.isPending;
-  const error = localError || (loginMutation.error ? toUserMessage(loginMutation.error) : "");
+  // One line, one message — the required-field rule and the server error can
+  // never both be live, because submit resets the mutation before validating.
+  const validationError = fieldErrors.username?.message || fieldErrors.password?.message || "";
+  const error = validationError || (loginMutation.error ? toUserMessage(loginMutation.error) : "");
 
   // Compute this AFTER mount so server and first client render agree (both
   // false), avoiding a hydration mismatch. It flips to true on the client only.
@@ -37,20 +52,12 @@ export default function LoginContainer() {
     if (user) router.replace("/");
   }, [user, router]);
 
-  const handleLogin = async () => {
-    setLocalError("");
-    loginMutation.reset();
-    if (!form.username || !form.password)
-      return setLocalError("Username and password are required");
-    
+  const onValid = async ({ username, password }) => {
     try {
       // Posts to our own /api/auth/login, which calls upstream server-side and
       // returns ONLY a Set-Cookie. The session token never reaches this code —
       // that is the point of the httpOnly cookie (defect #4).
-      const data = await loginMutation.mutateAsync({
-        username: form.username,
-        password: form.password,
-      });
+      const data = await loginMutation.mutateAsync({ username, password });
 
       const user = data?.user ?? null;
 
@@ -70,6 +77,14 @@ export default function LoginContainer() {
     } catch (err) {
       // Error is handled by loginMutation.error
     }
+  };
+
+  // The card has no <form> element, so the button and the Enter key call this
+  // directly — same entry point as before. Clearing the previous server error
+  // ahead of validation preserves the old ordering.
+  const handleLogin = () => {
+    loginMutation.reset();
+    return handleSubmit(onValid)();
   };
 
   return (
@@ -148,8 +163,7 @@ export default function LoginContainer() {
         <div className="lg-divider" />
 
         <LoginForm
-          form={form}
-          setForm={setForm}
+          register={register}
           loading={isPending}
           error={error}
           isSessionExpired={isSessionExpired}

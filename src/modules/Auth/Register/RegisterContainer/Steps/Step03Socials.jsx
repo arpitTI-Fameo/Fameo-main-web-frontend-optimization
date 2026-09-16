@@ -1,5 +1,6 @@
 import React from 'react';
 import { cleanUrl } from '../../helpers';
+import SelectPicker from '../../../../../components/Common/SelectPicker';
 
 export default function Step03Socials({ ctx }) {
   const { form, setForm, clearErr, errors, setField, registerFieldRef, ytOk, igOk } = ctx;
@@ -10,14 +11,12 @@ export default function Step03Socials({ ctx }) {
       <div className="frg-rule">PRIMARY PLATFORM</div>
       <div className="frg-field" ref={registerFieldRef('platform')}>
         <label className="frg-label" htmlFor="frg-plat">Primary platform <span className="req">*</span></label>
-        <div className={`frg-uline${errors.platform ? ' err' : ''}`}><div className="frg-selwrap">
-          <select id="frg-plat" className="frg-select2" value={form.primaryPlatform} onChange={e => { setForm(f => ({ ...f, primaryPlatform: e.target.value })); clearErr('platform', 'youtube', 'instagram'); }}>
-            <option value="">Select platform</option>
-            <option value="YouTube">YouTube</option>
-            <option value="Instagram">Instagram</option>
-            <option value="Both">Both</option>
-          </select>
-        </div></div>
+        <div className={`frg-uline${errors.platform ? ' err' : ''}`}>
+          <SelectPicker id="frg-plat" className="frg-select2" value={form.primaryPlatform} 
+            onChange={e => { setForm(f => ({ ...f, primaryPlatform: e.target.value })); clearErr('platform', 'youtube', 'instagram'); }}
+            placeholder="Select platform"
+            options={['YouTube', 'Instagram', 'Both']} />
+        </div>
         {errors.platform && <div className="frg-help err">{errors.platform}</div>}
       </div>
 

@@ -11,7 +11,9 @@ import {
   uploadLiveSelfieAction,
   uploadSelfieAction,
   uploadDocumentsAction,
-  submitRegistrationAction
+  submitRegistrationAction,
+  checkUsernameAction,
+  validateReferralAction
 } from '@/lib/services/auth/register.api.js';
 
 // ── Keys ───────────────────────────────────────────────────────────────────
@@ -146,5 +148,23 @@ export const useRegisterMutation = (o = {}) => useApiMutation({
     return response.result;
   },
   invalidate: [registerKeys.all()],
+  ...o,
+});
+
+export const useCheckUsernameMutation = (o = {}) => useApiMutation({
+  mutationFn: async (username) => {
+    const response = await checkUsernameAction(username);
+    if (!response.code) throw response;
+    return response.result;
+  },
+  ...o,
+});
+
+export const useValidateReferralMutation = (o = {}) => useApiMutation({
+  mutationFn: async (code) => {
+    const response = await validateReferralAction(code);
+    if (!response.code) throw response;
+    return response.result;
+  },
   ...o,
 });

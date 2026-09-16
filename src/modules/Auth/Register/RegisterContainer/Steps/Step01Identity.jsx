@@ -2,6 +2,8 @@ import React from 'react';
 import { Tick, Check } from '../../icons';
 import { COUNTRY_CODES, mobileLenRange, OTP_LENGTH, POLICY_LINKS } from '../../constants';
 import { minDobISO, maxDobISO } from '../../helpers';
+import CalendarPicker from '../../../../../components/Common/CalendarPicker';
+import SelectPicker from '../../../../../components/Common/SelectPicker';
 
 export default function Step01Identity({ ctx }) {
   const {
@@ -59,14 +61,14 @@ export default function Step01Identity({ ctx }) {
           {underage && <span className="frg-pill err"><span className="dot" /> UNDER 18</span>}
         </label>
         <div className={`frg-uline${underage || errors.dob ? ' err' : ''}`}>
-          <input id="frg-dob" className="frg-input" type="date" value={form.dob} onChange={onDobChange}
+          <CalendarPicker id="frg-dob" className="frg-input" value={form.dob} onChange={onDobChange}
             min={minDobISO()} max={maxDobISO()} aria-invalid={underage || undefined} aria-describedby="frg-dob-help" />
         </div>
         <div id="frg-dob-help" className={`frg-help${underage || errors.dob ? ' err' : ageOk ? ' ok' : ''}`} role={underage ? 'alert' : undefined}>
           {underage ? `You're ${age} — Fameo is only for people 18 and older. You won't be able to continue with this date of birth.`
             : ageOk ? `You're ${age} — eligibility confirmed. We've checked the 18+ box for you.`
-            : errors.dob ? errors.dob
-            : 'You must be 18 or older to create a Fameo account.'}
+              : errors.dob ? errors.dob
+                : 'You must be 18 or older to create a Fameo account.'}
         </div>
       </div>
 
@@ -81,11 +83,10 @@ export default function Step01Identity({ ctx }) {
         <div className="frg-mobile">
           <div className="frg-cc">
             <span className="iso">{COUNTRY_CODES.find(x => x.d === form.cc)?.c}</span>
-            <select className="frg-select" value={form.cc}
+            <SelectPicker className="frg-select" value={form.cc}
               onChange={e => { const cc = e.target.value; setForm(f => ({ ...f, cc, mobile: f.mobile.slice(0, mobileLenRange(cc)[1]) })); clearErr('phone'); }}
-              disabled={otpSent} aria-label="Country code">
-              {COUNTRY_CODES.map(x => <option key={x.c + x.d} value={x.d}>{x.d}</option>)}
-            </select>
+              disabled={otpSent} aria-label="Country code"
+              options={COUNTRY_CODES.map(x => ({ value: x.d, label: x.d }))} />
           </div>
           <div className={`frg-uline${showMobileErr ? ' err' : mobileOk ? ' ok' : ''}`}>
             <input id="frg-mobile" className="frg-input" type="tel" inputMode="numeric" autoComplete="tel"
@@ -98,7 +99,7 @@ export default function Step01Identity({ ctx }) {
         <div className={`frg-help${showMobileErr ? ' err' : mobileOk ? ' ok' : ''}`}>
           {showMobileErr ? (errors.phone || mobileErrMsg)
             : mobileOk ? 'Looks good'
-            : `Digits only · ${mobileHint} for ${form.cc}`}
+              : `Digits only · ${mobileHint} for ${form.cc}`}
         </div>
       </div>
 
@@ -115,8 +116,8 @@ export default function Step01Identity({ ctx }) {
         <div className={`frg-help${showEmailErr ? ' err' : emailWarn ? ' warn' : form.email && emailOk ? ' ok' : ''}`}>
           {showEmailErr ? (errors.email || emailErrMsg)
             : emailWarn ? emailWarn
-            : form.email && emailOk ? 'Looks good'
-            : "We'll send a verification code to this address"}
+              : form.email && emailOk ? 'Looks good'
+                : "We'll send a verification code to this address"}
         </div>
       </div>
 
@@ -135,8 +136,8 @@ export default function Step01Identity({ ctx }) {
         <div className={`frg-help${errors.referral ? ' err' : referralStatus.state === 'valid' ? ' ok' : ''}`}>
           {referralStatus.state === 'checking' ? 'Checking code…'
             : referralStatus.state === 'valid' ? referralStatus.msg
-            : errors.referral ? errors.referral
-            : 'Have a code from a friend? Enter it to get your joining discount.'}
+              : errors.referral ? errors.referral
+                : 'Have a code from a friend? Enter it to get your joining discount.'}
         </div>
 
         {referralStatus.state === 'valid' && (

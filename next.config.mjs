@@ -105,7 +105,11 @@ const nextConfig = {
                 https://api.razorpay.com
                 https://cdn.razorpay.com
                 https://www.google.com
-                https://*.razorpay.com;
+                https://*.razorpay.com
+                https://uat.fameo.info
+                https://uat-api.fameo.info
+                https://api.fameo.info
+                https://fameo.vip;
 
               media-src
                 'self'

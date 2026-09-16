@@ -9,7 +9,7 @@
 // module built on publicFetch/privateFetch, which talks to the upstream
 // directly. See services/main/user.server.js for the established shape.
 
-import { clientFetch } from '@/lib/api/client/fetcher';
+import { clientFetch, clientUpload } from '@/lib/api/client/fetcher';
 import { qs } from '@/lib/api/core';
 
 export const sendRequest = async ({
@@ -48,7 +48,10 @@ export const sendRequest = async ({
     // it looked like authentication while doing nothing, so a call site could
     // "add auth" and still get a 401 with no clue why.
 
-    const result = await clientFetch(finalUrl, config);
+    const isFormData = body instanceof FormData;
+    const result = isFormData 
+      ? await clientUpload(finalUrl, config.body, config)
+      : await clientFetch(finalUrl, config);
 
     return {
       code: true,
@@ -61,6 +64,9 @@ export const sendRequest = async ({
       code: false,
       status: err?.status || 500,
       error: err?.message || "Failed to fetch",
+      serverMessage: err?.serverMessage || "",
+      details: err?.details || null,
+      fieldErrors: err?.fieldErrors || [],
       result: null,
     };
   }

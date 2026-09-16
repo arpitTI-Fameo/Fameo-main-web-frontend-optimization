@@ -77,7 +77,7 @@ export const CSS = `
 /* ════ brand header ══════════════════════════════════════════════ */
 .frg-brand { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--line-soft); }
 .frg-brand-mark { display: flex; align-items: center; gap: 13px; text-decoration: none; }
-.frg-brand-mark img { height: 32px; width: auto; max-width: 200px; display: block; object-fit: contain; }
+.frg-brand-mark img { height: 48px; width: auto; max-width: 240px; display: block; object-fit: contain; }
 .frg-brand-word { font-family:'Schibsted Grotesk',sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -.035em; color: var(--ink); position: relative; }
 .frg-brand-word .dot { display: inline-block; width: .5em; height: .5em; border-radius: 50%; background: var(--grad); margin-left: .06em; vertical-align: .04em; transform: scale(0); animation: frgDotPop .55s var(--ease) .35s forwards; }
 @keyframes frgDotPop { to { transform: scale(1); } }
@@ -667,4 +667,74 @@ export const CSS = `
   .cam-overlay, .cam-modal, .cam-sweep, .cam-eye, .cam-count span,
   .cam-coach-msg, .cam-blink-flash, .cam-live-dot, .cam-coach-frames i { animation: none; }
 }
+/* ════ custom calendar picker ════════════════════════════════════ */
+.frg-cal-wrap { position: relative; width: 100%; }
+.frg-cal-input { cursor: pointer; padding-right: 40px; }
+.frg-cal-icon { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.frg-cal-icon svg { width: 18px; height: 18px; }
+.frg-cal-popover {
+  position: absolute; top: calc(100% + 8px); left: 0; z-index: 100;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 16px; width: 300px;
+  box-shadow: 0 14px 40px rgba(26,26,26,.15);
+  animation: frgUp .3s var(--ease) both;
+}
+.frg-cal-header { display: flex; gap: 8px; margin-bottom: 16px; }
+.frg-cal-selwrap { position: relative; flex: 1; min-width: 0; }
+.frg-cal-selwrap .frg-select-input {
+  background: var(--tint); border: 1px solid transparent; border-radius: 8px;
+  padding: 6px 20px 6px 12px; font-size: 13px; font-weight: 500; width: 100%;
+}
+.frg-cal-selwrap .frg-select-input:hover { background: #fff; border-color: var(--line); }
+.frg-cal-selwrap .frg-select-icon { right: 4px; }
+.frg-cal-selwrap .frg-select-icon svg { width: 14px; height: 14px; }
+.frg-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.frg-cal-day-label {
+  font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  color: var(--muted); text-align: center; padding-bottom: 8px;
+}
+.frg-cal-cell {
+  background: transparent; border: 1px solid transparent; border-radius: 8px;
+  height: 34px; display: grid; place-items: center;
+  font-family: 'Schibsted Grotesk', sans-serif; font-size: 14px; color: var(--ink);
+  cursor: pointer; transition: background .2s, color .2s, border-color .2s;
+}
+.frg-cal-cell:hover:not(:disabled):not(.on) { background: var(--tint); border-color: rgba(212,90,121,.3); color: var(--p2); }
+.frg-cal-cell.on { background: var(--grad); color: #fff; font-weight: 600; box-shadow: 0 4px 12px rgba(212,90,121,.4); }
+.frg-cal-cell:disabled { opacity: .2; cursor: not-allowed; 
+
+}
+/* ════ custom select picker ════════════════════════════════════ */
+.frg-select-wrap { position: relative; width: 100%; }
+.frg-select-wrap.disabled { opacity: .5; pointer-events: none; }
+.frg-select-input { width: 100%; cursor: pointer; padding-right: 40px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+.frg-select-icon { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.frg-select-icon svg { width: 16px; height: 16px; }
+.frg-select-popover {
+  position: absolute; top: calc(100% + 4px); left: 0; z-index: 100;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  width: 100%; max-height: 260px; overflow-y: auto;
+  box-shadow: 0 14px 40px rgba(26,26,26,.15);
+  animation: frgUp .2s var(--ease) both;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.frg-select-popover::-webkit-scrollbar {
+  display: none;
+}
+.frg-select-list { display: flex; flex-direction: column; padding: 8px; }
+.frg-select-empty { padding: 12px; text-align: center; color: var(--muted); font-size: 13px; font-weight: 300; }
+.frg-select-option {
+  background: transparent; border: none; border-radius: 8px;
+  padding: 12px 14px; text-align: left;
+  font-family: 'Schibsted Grotesk', sans-serif; font-size: 14px; color: var(--ink);
+  cursor: pointer; transition: background .2s, color .2s;
+}
+.frg-select-option:hover:not(.on) { background: var(--tint); color: var(--p2); }
+.frg-select-option.on { background: var(--grad); color: #fff; font-weight: 600; box-shadow: 0 4px 12px rgba(212,90,121,.4); }
+
+/* Fix Country Code Dropdown Size */
+.frg-cc .frg-select-wrap { width: 85px; }
+.frg-cc .frg-select-input { padding-right: 28px; padding-left: 0; background: transparent; border: none; font-size: 16px; font-weight: 600; }
+.frg-cc .frg-select-icon { right: 0; }
 `;

@@ -1,5 +1,6 @@
 import React from 'react';
 import { GENDER_OPTIONS } from '../../constants';
+import SelectPicker from '../../../../../components/Common/SelectPicker';
 
 export default function Step02Profile({ ctx }) {
   const {
@@ -35,12 +36,11 @@ export default function Step02Profile({ ctx }) {
       <div className="frg-rule">PERSONAL DETAILS</div>
       <div className="frg-field" ref={registerFieldRef('gender')}>
         <label className="frg-label" htmlFor="frg-gender">Gender <span className="req">*</span></label>
-        <div className={`frg-uline${errors.gender ? ' err' : ''}`}><div className="frg-selwrap">
-          <select id="frg-gender" className="frg-select2" value={form.gender} onChange={e => setField('gender', e.target.value)}>
-            <option value="">Select gender</option>
-            {GENDER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        </div></div>
+        <div className={`frg-uline${errors.gender ? ' err' : ''}`}>
+          <SelectPicker id="frg-gender" className="frg-select2" value={form.gender} onChange={e => setField('gender', e.target.value)}
+            placeholder="Select gender"
+            options={GENDER_OPTIONS} />
+        </div>
         {errors.gender && <div className="frg-help err">{errors.gender}</div>}
       </div>
 
@@ -50,24 +50,22 @@ export default function Step02Profile({ ctx }) {
         <div className="frg-field" ref={registerFieldRef('state')}>
           <label className="frg-label" htmlFor="frg-state">State <span className="req">*</span></label>
           {statesError && <div className="frg-note red">{statesError}</div>}
-          <div className={`frg-uline${errors.state ? ' err' : ''}`}><div className="frg-selwrap">
-            <select id="frg-state" className="frg-select2" value={form.stateId || ''} onChange={e => onStateChange(e.target.value)} disabled={statesLoading}>
-              <option value="">{statesLoading ? 'Loading states…' : 'Select state'}</option>
-              {states.map(s => <option key={s.id} value={s.id}>{s.state_name}</option>)}
-            </select>
-          </div></div>
+          <div className={`frg-uline${errors.state ? ' err' : ''}`}>
+            <SelectPicker id="frg-state" className="frg-select2" value={form.stateId || ''} onChange={e => onStateChange(e.target.value)} disabled={statesLoading}
+              placeholder={statesLoading ? 'Loading states…' : 'Select state'}
+              options={states.map(s => ({ value: s.id, label: s.state_name }))} />
+          </div>
           {errors.state && <div className="frg-help err">{errors.state}</div>}
         </div>
 
         <div className="frg-field" ref={registerFieldRef('city')}>
           <label className="frg-label" htmlFor="frg-city">City <span className="req">*</span></label>
           {citiesError && <div className="frg-help err">{citiesError}</div>}
-          <div className={`frg-uline${errors.city ? ' err' : ''}`}><div className="frg-selwrap">
-            <select id="frg-city" className="frg-select2" value={form.cityId || ''} onChange={e => onCityChange(e.target.value)} disabled={!form.stateId || citiesLoading}>
-              <option value="">{!form.stateId ? 'Select a state first' : citiesLoading ? 'Loading cities…' : cities.length === 0 ? 'No cities found' : 'Select city'}</option>
-              {cities.map(c => <option key={c.id} value={c.id}>{c.city_name}</option>)}
-            </select>
-          </div></div>
+          <div className={`frg-uline${errors.city ? ' err' : ''}`}>
+            <SelectPicker id="frg-city" className="frg-select2" value={form.cityId || ''} onChange={e => onCityChange(e.target.value)} disabled={!form.stateId || citiesLoading}
+              placeholder={!form.stateId ? 'Select a state first' : citiesLoading ? 'Loading cities…' : cities.length === 0 ? 'No cities found' : 'Select city'}
+              options={cities.map(c => ({ value: c.id, label: c.city_name }))} />
+          </div>
           {errors.city && <div className="frg-help err">{errors.city}</div>}
         </div>
       </div>

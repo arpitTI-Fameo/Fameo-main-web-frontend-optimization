@@ -2,8 +2,11 @@
 // app/admin/login/page.js
 
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
+import { adminLoginSchema, ADMIN_LOGIN_DEFAULT_VALUES } from './schema';
 import { S } from './styles';
 import LoginForm from './LoginForm';
 import LoginRoles from './LoginRoles';
@@ -23,10 +26,24 @@ import LoginRoles from './LoginRoles';
 
 export function AdminLogin() {
     const router = useRouter();
-    const { login, user, loading, error, clearError } = useAdminAuthStore();
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const { login, user, loading, error: authError, clearError } = useAdminAuthStore();
     const [hydrated, setHydrated] = useState(false);
+
+    /* React Hook Form owns the two fields; zod restates the rules the input
+       attributes already carry. Both modes are 'onSubmit' so nothing reddens
+       while typing — the card has never validated before a submit. */
+    /** @type {import('react-hook-form').UseFormReturn<import('./schema').AdminLoginValues>} */
+    const { register, handleSubmit, formState: { errors: fieldErrors } } = useForm({
+        resolver: zodResolver(adminLoginSchema),
+        defaultValues: ADMIN_LOGIN_DEFAULT_VALUES,
+        mode: "onSubmit",
+        reValidateMode: "onSubmit",
+    });
+
+    // One line, one message. The store's error is cleared before validating,
+    // so a field message and a sign-in failure are never live at once.
+    const validationError = fieldErrors.email?.message || fieldErrors.password?.message || "";
+    const error = validationError || authError;
 
     // Wait for Zustand to load persisted state before redirecting
     useEffect(() => { setHydrated(true); }, []);
@@ -39,11 +56,15 @@ export function AdminLogin() {
     // Show nothing until hydrated — avoids black flash
     if (!hydrated) return null;
 
-    const submit = async (e) => {
-        e?.preventDefault();
-        clearError();
+    const onValid = async ({ email, password }) => {
         const res = await login(email, password);
         if (res?.success) router.replace("/admin");
+    };
+
+    const submit = (e) => {
+        e?.preventDefault();
+        clearError();
+        return handleSubmit(onValid)();
     };
 
     return (
@@ -58,10 +79,7 @@ export function AdminLogin() {
                 <LoginForm 
                     submit={submit} 
                     loading={loading} 
-                    email={email} 
-                    setEmail={setEmail} 
-                    password={password} 
-                    setPassword={setPassword} 
+                    register={register} 
                     error={error} 
                 />
 

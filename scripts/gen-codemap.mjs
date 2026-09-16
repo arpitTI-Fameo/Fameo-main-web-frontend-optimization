@@ -355,10 +355,4 @@ if (runAsScript) {
   mkdirSync(join(ROOT, 'docs'), { recursive: true });
   writeFileSync(OUT, codemap.markdown);
 
-  console.log(`docs/CODEMAP.md written`);
-  console.log(`  modules            ${modules.length}`);
-  console.log(`  exports            ${totalExports}`);
-  console.log(`  cross-layer dupes  ${crossLayer.length}`);
-  console.log(`  module repeats     ${inModules.length}`);
-  console.log(`  near-synonyms      ${nearDupes.length}`);
 }

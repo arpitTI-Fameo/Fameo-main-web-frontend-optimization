@@ -641,7 +641,7 @@ function PolicyModal({ policy, onClose }) {
           </div>
           <iframe
             className="pm-iframe"
-            src={policy.href}
+            src={`${process.env.NEXT_PUBLIC_APP_ORIGIN || 'https://uat.fameo.info'}${new URL(policy.href, 'https://uat.fameo.info').pathname}`}
             title={policy.label}
             onLoad={() => setLoaded(true)}
             sandbox="allow-same-origin allow-scripts allow-popups allow-forms"

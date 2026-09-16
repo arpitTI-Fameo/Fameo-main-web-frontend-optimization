@@ -13,7 +13,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import emailjs from '@emailjs/browser';
+import { supportSchema, firstSupportError } from './schema';
 import { S } from './styles';
 import { MailIcon, ClockIcon, CalendarIcon, CheckIcon, ChevronIcon, PlusIcon } from './icons';
 
@@ -79,17 +82,29 @@ const FAQS = [
   },
 ];
 
+/* The form's starting values, and what a successful send resets it back to. */
+const DEFAULT_VALUES = {
+  name: '',
+  email: '',
+  category: CATEGORIES[0],
+  subject: '',
+  message: '',
+  website: '', // honeypot — leave empty
+};
+
 /* ════════════════════════════════════════════════════════════════════════════
    COMPONENT
    ════════════════════════════════════════════════════════════════════════════ */
 export default function SupportCenter() {
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    category: CATEGORIES[0],
-    subject: '',
-    message: '',
-    website: '', // honeypot — leave empty
+  /* React Hook Form owns the fields; zod owns the rules. 'onSubmit' for both
+     modes matches how this form has always behaved — one message, on submit,
+     never while typing. */
+  /** @type {import('react-hook-form').UseFormReturn<import('./schema').SupportValues>} */
+  const { register, handleSubmit, reset, getValues } = useForm({
+    resolver: zodResolver(supportSchema),
+    defaultValues: DEFAULT_VALUES,
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
   });
   const [status, setStatus] = useState('idle'); // idle | sending | sent | error
   const [errorMsg, setErrorMsg] = useState('');
@@ -111,8 +126,6 @@ export default function SupportCenter() {
     }
   }, [emailjsConfigured, publicKey]);
 
-  const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
-
   /* When a request is submitted, bring the confirmation into view. */
   useEffect(() => {
     if (status === 'sent' && cardRef.current) {
@@ -120,35 +133,22 @@ export default function SupportCenter() {
     }
   }, [status]);
 
-  const buildMailto = () => {
-    const subject = `[${form.category}] ${form.subject || 'Support request'}`;
+  const buildMailto = (values) => {
+    const subject = `[${values.category}] ${values.subject || 'Support request'}`;
     const body =
-      `Name: ${form.name}\n` +
-      `Email: ${form.email}\n` +
-      `Category: ${form.category}\n\n` +
-      `${form.message}`;
+      `Name: ${values.name}\n` +
+      `Email: ${values.email}\n` +
+      `Category: ${values.category}\n\n` +
+      `${values.message}`;
     return `mailto:${SUPPORT_CONFIG.supportEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
-  const validate = () => {
-    if (!form.name.trim()) return 'Please enter your name.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'Please enter a valid email address.';
-    if (!form.message.trim()) return 'Please describe how we can help.';
-    return '';
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (form.website) return; // honeypot tripped — silently ignore bots
-
-    const v = validate();
-    if (v) { setStatus('error'); setErrorMsg(v); return; }
-
+  const onValid = async (values) => {
     // If EmailJS isn't configured yet, open the user's mail client as a fallback,
     // then still show the "Request submitted" confirmation.
     if (!emailjsConfigured) {
-      try { window.location.href = buildMailto(); } catch (_) { }
-      setForm({ name: '', email: '', category: CATEGORIES[0], subject: '', message: '', website: '' });
+      try { window.location.href = buildMailto(values); } catch (_) { }
+      reset(DEFAULT_VALUES);
       setStatus('sent');
       return;
     }
@@ -157,21 +157,36 @@ export default function SupportCenter() {
     setErrorMsg('');
     try {
       await emailjs.send(serviceId, templateId, {
-        from_name: form.name,
-        from_email: form.email,
-        reply_to: form.email,
-        category: form.category,
-        subject: form.subject || `${form.category} support request`,
-        message: form.message,
+        from_name: values.name,
+        from_email: values.email,
+        reply_to: values.email,
+        category: values.category,
+        subject: values.subject || `${values.category} support request`,
+        message: values.message,
         to_name: `${SUPPORT_CONFIG.appName} Support`,
         time: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
       }, { publicKey });
       setStatus('sent');
-      setForm({ name: '', email: '', category: CATEGORIES[0], subject: '', message: '', website: '' });
+      reset(DEFAULT_VALUES);
     } catch (err) {
       setStatus('error');
       setErrorMsg('We couldn’t send your message just now. Please email us directly at ' + SUPPORT_CONFIG.supportEmail + '.');
     }
+  };
+
+  /* One message at a time, in field order — the same thing the old
+     early-returning validate() put into this same .sc-error line. */
+  const onInvalid = (fieldErrors) => {
+    setStatus('error');
+    setErrorMsg(firstSupportError(fieldErrors));
+  };
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    // The honeypot stays ahead of validation: a bot that fills it is ignored
+    // in silence, never told why.
+    if (getValues('website')) return;
+    return handleSubmit(onValid, onInvalid)();
   };
 
   return (
@@ -252,15 +267,14 @@ export default function SupportCenter() {
                 </button>
               </div>
             ) : (
-              <form className="sc-form" onSubmit={handleSubmit} noValidate>
+              <form className="sc-form" onSubmit={onSubmit} noValidate>
                 {/* honeypot */}
                 <input
                   type="text"
                   className="sc-hp"
                   tabIndex={-1}
                   autoComplete="off"
-                  value={form.website}
-                  onChange={update('website')}
+                  {...register('website')}
                   aria-hidden="true"
                 />
 
@@ -269,8 +283,7 @@ export default function SupportCenter() {
                     <span className="sc-label">Your name</span>
                     <input
                       type="text"
-                      value={form.name}
-                      onChange={update('name')}
+                      {...register('name')}
                       placeholder="Jane Creator"
                       autoComplete="name"
                       required
@@ -280,8 +293,7 @@ export default function SupportCenter() {
                     <span className="sc-label">Email address</span>
                     <input
                       type="email"
-                      value={form.email}
-                      onChange={update('email')}
+                      {...register('email')}
                       placeholder="you@email.com"
                       autoComplete="email"
                       required
@@ -293,7 +305,7 @@ export default function SupportCenter() {
                   <label className="sc-field">
                     <span className="sc-label">Topic</span>
                     <div className="sc-select">
-                      <select value={form.category} onChange={update('category')}>
+                      <select {...register('category')}>
                         {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                       </select>
                       <ChevronIcon />
@@ -303,8 +315,7 @@ export default function SupportCenter() {
                     <span className="sc-label">Subject <span className="sc-opt">(optional)</span></span>
                     <input
                       type="text"
-                      value={form.subject}
-                      onChange={update('subject')}
+                      {...register('subject')}
                       placeholder="Short summary"
                     />
                   </label>
@@ -314,8 +325,7 @@ export default function SupportCenter() {
                   <span className="sc-label">How can we help?</span>
                   <textarea
                     rows={6}
-                    value={form.message}
-                    onChange={update('message')}
+                    {...register('message')}
                     placeholder="Describe your question or issue. Include any order IDs, usernames, or screenshots you can."
                     required
                   />

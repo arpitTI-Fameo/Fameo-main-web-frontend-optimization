@@ -1,21 +1,21 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import logo from '@/app/assets/logo.png';
 import { CSS } from '../styles';
-import { Tick, GreenTick, EyeGlyph, Check } from '../icons';
-import PolicyModal from '../PolicyModal';
+import PolicyModal from '../PolicyModal'
 import LiveSelfieCapture from '../LiveSelfieCapture';
 import Step01Identity from './Steps/Step01Identity';
 import Step02Profile from './Steps/Step02Profile';
 import Step03Socials from './Steps/Step03Socials';
 import Step04Category from './Steps/Step04Category';
+
 import Step05Proof from './Steps/Step05Proof';
 import SuccessSummary from './Steps/SuccessSummary';
-import { masterEndpoints } from '@/lib/api/endpoints';
-import { appFetch, validateReferralAction, checkUsernameAction } from '@/lib/services/auth/register.api';
-import { useSendOtpMutation, useVerifyOtpMutation, useVerifyEmailOtpMutation, useUploadLiveSelfieMutation, useUploadSelfieMutation, useUploadDocumentsMutation, useRegisterMutation } from '@/lib/hooks/auth/useRegister';
+import { useSendOtpMutation, useVerifyOtpMutation, useVerifyEmailOtpMutation, useUploadLiveSelfieMutation, useUploadSelfieMutation, useUploadDocumentsMutation, useRegisterMutation, useCheckUsernameMutation, useValidateReferralMutation, useStates, useCities, useCategories, useProfessions } from '@/lib/hooks/auth/useRegister';
 import {
   MAX_GENERIC_FILES, MAX_FILE_BYTES, ACCEPTED_DOC_EXT, COUNTRY_CODES,
   mobileLenRange, validateMobile, PATTERNS, validateEmail, PIN_PATTERN,
@@ -23,10 +23,12 @@ import {
   STEPS, OTP_LENGTH, RESEND_SECONDS,
 } from '../constants';
 import {
-  isRealDate, calcAge, maxDobISO, minDobISO, fmtSize, formatDocLabel,
-  cleanUrl, friendlyOtpError, friendlyRegisterError, livenessHint, isFatalLiveness,
-  readReferralFromUrl
+  calcAge, fmtSize, cleanUrl, friendlyOtpError, friendlyRegisterError,
+  livenessHint, isFatalLiveness, readReferralFromUrl
 } from '../helpers';
+import {
+  REGISTER_DEFAULT_VALUES, stepSchema, firstInvalidField,
+} from '../schema';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    FAMEO REGISTER FLOW — Doc 1 design system + Doc 2 API-driven steps
@@ -45,18 +47,6 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState('fwd');
 
-  const [form, setForm] = useState({
-    fname: '', lname: '', dob: '', cc: '+91', mobile: '', email: '',
-    username: '', gender: '',
-    stateId: null, state: '', stateCode: '', cityId: null, city: '', pincode: '',
-    primaryPlatform: '', youtube: '', instagram: '',
-    categoryCode: '', category: '', categoryId: null,
-    professionCode: '', profession: '', professionId: null,
-    pressUrls: '',
-    referralCode: '',
-  });
-  const [consents, setConsents] = useState({ age: false, terms: false });
-  const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [activePolicy, setActivePolicy] = useState(null);
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -83,18 +73,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
   /* async lookups */
   const [usernameStatus, setUsernameStatus] = useState(null);
   const usernameCheckRef = useRef(null);
-  const [states, setStates] = useState([]);
-  const [statesLoading, setStatesLoading] = useState(true);
-  const [statesError, setStatesError] = useState('');
-  const [cities, setCities] = useState([]);
-  const [citiesLoading, setCitiesLoading] = useState(false);
-  const [citiesError, setCitiesError] = useState('');
-  const [categories, setCategories] = useState([]);
-  const [catLoading, setCatLoading] = useState(true);
-  const [catError, setCatError] = useState('');
-  const [professions, setProfessions] = useState([]);
-  const [profLoading, setProfLoading] = useState(false);
-  const [profError, setProfError] = useState('');
+
   const [selectedProfObj, setSelectedProfObj] = useState(null);
 
   /* pincode → state / city */
@@ -118,6 +97,72 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
 
   const cardRef = useRef(null);
 
+  /* ── React Hook Form + zod ──────────────────────────────────────────────
+     RHF owns every value the wizard collects; the step schemas in ../schema
+     own every rule. Both modes are 'onSubmit' because that is when this card
+     has always validated — on Continue, never on a keystroke. Individual
+     messages still clear as you type, through clearErr() below.
+
+     The resolver is rebuilt on every render on purpose. A step's rules depend
+     on state that is not a form value (OTP verification, the selfie upload,
+     the in-flight referral and username lookups), and RHF re-reads its options
+     each render — so the schema always sees current state instead of whatever
+     was true on mount.
+     -------------------------------------------------------------------- */
+  const selfieReady = Boolean(selfieFile && selfieStatus.state === 'done');
+  /** @type {import('react-hook-form').UseFormReturn<import('../schema').RegisterValues>} */
+  const {
+    watch, getValues, setValue, setError, clearErrors, handleSubmit,
+    formState: { errors: fieldErrors },
+  } = useForm({
+    defaultValues: REGISTER_DEFAULT_VALUES,
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+    resolver: zodResolver(stepSchema(step, {
+      phoneVerified, emailVerified, referralStatus, selfieReady,
+      ensureReferralChecked: () => handleValidateReferral(),
+      ensureUsernameChecked: () => ensureUsernameChecked(),
+    })),
+  });
+
+  const form = watch();
+  const consents = { age: form.consentAge, terms: form.consentTerms };
+
+  const { data: states = [], isLoading: statesLoading, isError: statesIsError } = useStates();
+  const statesError = statesIsError ? 'Could not load states.' : '';
+
+  const { data: cities = [], isFetching: citiesLoading, isError: citiesIsError } = useCities(form?.stateId);
+  const citiesError = citiesIsError ? 'Could not load cities.' : '';
+
+  const { data: categories = [], isLoading: catLoading, isError: catIsError } = useCategories();
+  const catError = catIsError ? 'Could not load categories. Please refresh.' : '';
+
+  const { data: professions = [], isFetching: profLoading, isError: profIsError } = useProfessions(form?.categoryCode);
+  const profError = profIsError ? 'Could not load professions.' : '';
+
+  /* The steps render errors.<key> as a string; RHF stores { message, type }
+     per key. Flatten so no step component has to change.
+
+     Deliberately NOT memoised on fieldErrors: setError() and clearErrors(name)
+     mutate RHF's error object in place and re-emit the same reference, so a
+     useMemo keyed on its identity would go stale and keep showing a message
+     that was just cleared. This loop is a handful of keys. */
+  const errors = {};
+  for (const [key, value] of Object.entries(fieldErrors)) {
+    if (value?.message) errors[key] = value.message;
+  }
+
+  /* The steps call setForm(updater) for multi-field writes (country code +
+     trimmed mobile, category code + name + id). Same signature, writing
+     through to RHF instead of to a useState setter. */
+  const setForm = (update) => {
+    const current = getValues();
+    const nextValues = typeof update === 'function' ? update(current) : update;
+    for (const key of Object.keys(nextValues)) {
+      if (!Object.is(nextValues[key], current[key])) setValue(key, nextValues[key]);
+    }
+  };
+
   /* refs used to scroll to the first invalid field on submit */
   const fieldRefs = useRef({});
   const registerFieldRef = (id) => (el) => { if (el) fieldRefs.current[id] = el; };
@@ -140,13 +185,11 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
   const uploadSelfieMutation = useUploadSelfieMutation();
   const uploadDocumentsMutation = useUploadDocumentsMutation();
   const registerMutation = useRegisterMutation();
+  const checkUsernameMutation = useCheckUsernameMutation();
+  const validateReferralMutation = useValidateReferralMutation();
 
   /* central error helper — clears one or more error keys */
-  const clearErr = (...keys) => setErrors(er => {
-    const n = { ...er };
-    keys.forEach(k => { delete n[k]; });
-    return n;
-  });
+  const clearErr = (...keys) => clearErrors(keys);
   const markTouched = (k) => () => setTouched(t => ({ ...t, [k]: true }));
 
   /* resend ticker */
@@ -156,56 +199,26 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     return () => clearTimeout(t);
   }, [resendIn]);
 
-  /* load states + categories on mount */
+  /* reset profession on category change */
   useEffect(() => {
-    setStatesLoading(true); setStatesError('');
-    appFetch(masterEndpoints.states())
-      .then(data => { if (Array.isArray(data)) setStates(data); else setStatesError('Could not load states.'); })
-      .catch(() => setStatesError('Network error loading states.'))
-      .finally(() => setStatesLoading(false));
-
-    setCatLoading(true); setCatError('');
-    appFetch(masterEndpoints.categories())
-      .then(data => { if (Array.isArray(data)) setCategories(data); else setCatError('Could not load categories. Please refresh.'); })
-      .catch(() => setCatError('Network error loading categories.'))
-      .finally(() => setCatLoading(false));
-  }, []);
+    setSelectedProfObj(null);
+    setValue('profession', ''); setValue('professionCode', ''); setValue('professionId', null);
+  }, [form?.categoryCode, setValue]);
 
   /* prefill + validate a referral code arriving from an invite link */
   useEffect(() => {
     const code = readReferralFromUrl();
     if (!code) return;
-    setForm(f => ({ ...f, referralCode: code }));
+    setValue('referralCode', code);
     setReferralFromLink(true);
-    // Pass the code explicitly — setForm hasn't flushed yet, so the closure
-    // inside validateReferralAction would still see an empty referralCode.
-    validateReferralAction(code);
-     
+    // Pass the code explicitly — the value hasn't flushed yet, so the closure
+    // inside handleValidateReferral would still see an empty referralCode.
+    handleValidateReferral(code);
+
   }, []);
 
-  /* load cities on state change */
-  useEffect(() => {
-    if (!form.stateId) { setCities([]); return; }
-    setCitiesLoading(true); setCitiesError(''); setCities([]);
-    appFetch(masterEndpoints.cities(), { params: { state_id: form.stateId } })
-      .then(data => { if (Array.isArray(data)) setCities(data); else setCitiesError('Could not load cities.'); })
-      .catch(() => setCitiesError('Network error loading cities.'))
-      .finally(() => setCitiesLoading(false));
-  }, [form.stateId]);
-
-  /* load professions on category change */
-  useEffect(() => {
-    if (!form.categoryCode) { setProfessions([]); setSelectedProfObj(null); return; }
-    setProfLoading(true); setProfError(''); setProfessions([]); setSelectedProfObj(null);
-    setForm(f => ({ ...f, profession: '', professionCode: '', professionId: null }));
-    appFetch(masterEndpoints.professions(form.categoryCode))
-      .then(data => { if (Array.isArray(data)) setProfessions(data); else setProfError('Could not load professions for this category.'); })
-      .catch(() => setProfError('Network error loading professions.'))
-      .finally(() => setProfLoading(false));
-  }, [form.categoryCode]);
-
-  const set = k => e => { setForm(f => ({ ...f, [k]: e.target.value })); clearErr(k); };
-  const setField = (k, v) => { setForm(f => ({ ...f, [k]: v })); clearErr(k); };
+  const set = k => e => { setValue(k, e.target.value); clearErr(k); };
+  const setField = (k, v) => { setValue(k, v); clearErr(k); };
 
   /* ── DOB / age gate ── */
   const age = calcAge(form.dob);
@@ -213,9 +226,9 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
   const underage = age !== null && age < 18;
   const onDobChange = e => {
     const dob = e.target.value;
-    setForm(f => ({ ...f, dob }));
+    setValue('dob', dob);
     const a = calcAge(dob);
-    setConsents(prev => ({ ...prev, age: a !== null && a >= 18 }));
+    setValue('consentAge', a !== null && a >= 18);
     clearErr('dob', 'consent', 'age');
   };
 
@@ -227,13 +240,13 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     setResendIn(0);
   };
   const onMobileChange = e => {
-    setForm(f => ({ ...f, mobile: e.target.value.replace(/\D/g, '').slice(0, mobileLenRange(f.cc)[1]) }));
+    setValue('mobile', e.target.value.replace(/\D/g, '').slice(0, mobileLenRange(getValues('cc'))[1]));
     clearErr('phone');
     if (otpSent || phoneVerified || emailVerified) resetOtp();
   };
   const onEmailChange = e => {
     // Lowercase so You@GMAIL.com and you@gmail.com can't create two accounts.
-    setForm(f => ({ ...f, email: e.target.value.trim().toLowerCase() }));
+    setValue('email', e.target.value.trim().toLowerCase());
     clearErr('email');
     if (otpSent || phoneVerified || emailVerified) resetOtp();
   };
@@ -261,7 +274,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
   /* ── referral code ── */
   const onReferralChange = e => {
     const v = e.target.value.replace(/[^A-Za-z0-9-]/g, '').slice(0, 30).toUpperCase();
-    setForm(f => ({ ...f, referralCode: v }));
+    setValue('referralCode', v);
     clearErr('referral');
     setReferralFromLink(false);
     setReferralStatus({ state: 'idle', msg: '', data: null });
@@ -269,25 +282,25 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
   /* Returns { ok, msg }. Callers (link prefill · blur · submit) can pass the
      code explicitly, so they never depend on form state having flushed. An
      in-flight check is reused rather than duplicated. */
-  const validateReferralAction = (codeArg) => {
+  const handleValidateReferral = (codeArg) => {
     const code = String(codeArg ?? form.referralCode).trim();
     if (!code) { setReferralStatus({ state: 'idle', msg: '', data: null }); clearErr('referral'); return Promise.resolve({ ok: true, msg: '' }); }
     if (referralCheckRef.current?.code === code) return referralCheckRef.current.promise;
     if (!PATTERNS.referral.test(code)) {
       const msg = 'Codes are 4–30 letters, numbers or dashes.';
       setReferralStatus({ state: 'invalid', msg, data: null });
-      setErrors(er => ({ ...er, referral: msg }));
+      setError('referral', { message: msg });
       return Promise.resolve({ ok: false, msg });
     }
     setReferralStatus({ state: 'checking', msg: 'Checking code…', data: null });
     const promise = (async () => {
       try {
-        const data = await validateReferralAction(code);
+        const data = await validateReferralMutation.mutateAsync(code);
         const valid = data?.valid !== false;
         if (!valid) {
           const msg = data?.message || 'This referral code is not valid.';
           setReferralStatus({ state: 'invalid', msg, data: null });
-          setErrors(er => ({ ...er, referral: msg }));
+          setError('referral', { message: msg });
           return { ok: false, msg };
         }
         const tier = data?.couponTier || data?.tier;
@@ -300,7 +313,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
         console.error('[referral-validate]', err);
         const msg = err?.serverMessage || 'We couldn’t check that code. Please try again, or clear the field to continue.';
         setReferralStatus({ state: 'invalid', msg, data: null });
-        setErrors(er => ({ ...er, referral: msg }));
+        setError('referral', { message: msg });
         return { ok: false, msg };
       } finally {
         if (referralCheckRef.current?.code === code) referralCheckRef.current = null;
@@ -310,7 +323,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     return promise;
   };
   const removeReferral = () => {
-    setForm(f => ({ ...f, referralCode: '' }));
+    setValue('referralCode', '');
     setReferralFromLink(false);
     setReferralStatus({ state: 'idle', msg: '', data: null });
     clearErr('referral');
@@ -324,7 +337,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     if (!mobileOk) e.phone = mobileErrMsg;
     if (!emailOk) e.email = emailErrMsg || 'Enter a valid email address (e.g. you@example.com)';
     if (Object.keys(e).length) {
-      setErrors(er => ({ ...er, ...e }));
+      Object.entries(e).forEach(([key, message]) => setError(key, { message }));
       setTouched(t => ({ ...t, mobile: true, email: true }));
       const order = ['fname', 'lname', 'phone', 'email'];
       const first = order.find(k => e[k]);
@@ -350,7 +363,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
       const msg = known.includes('already')
         ? 'An account already exists with this number or email. Try logging in instead.'
         : 'Could not send the code right now. Check your number and try again.';
-      setErrors(er => ({ ...er, phone: msg }));
+      setError('phone', { message: msg });
       focusField('mobile');
     }
   };
@@ -415,23 +428,25 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
      first click did nothing. Now the check is debounced as you type, and
      Continue awaits the in-flight promise instead of racing it.
      -------------------------------------------------------------------- */
-  const checkUsernameAction = (nameArg) => {
+  const handleCheckUsername = (nameArg) => {
     const username = String(nameArg ?? form.username).trim();
     if (!username) { setUsernameStatus(null); return Promise.resolve(null); }
     if (!PATTERNS.username.test(username)) {
       setUsernameStatus('invalid');
-      setErrors(er => ({ ...er, username: 'Use 1–30 letters, numbers, dots or underscores.' }));
+      setError('username', { message: 'Use 1–30 letters, numbers, dots or underscores.' });
       return Promise.resolve('invalid');
     }
     if (usernameCheckRef.current?.username === username) return usernameCheckRef.current.promise;
     setUsernameStatus('checking');
     const promise = (async () => {
       try {
-        const data = await checkUsernameAction(username);
+        console.log("username", username)
+        const data = await checkUsernameMutation.mutateAsync(username);
+        console.log(data)
         const available = data?.available === true;
         setUsernameStatus(available ? 'available' : 'taken');
         if (available) clearErr('username');
-        else setErrors(er => ({ ...er, username: `@${username} is already taken — please use another username.` }));
+        else setError('username', { message: `@${username} is already taken — please use another username.` });
         return available ? 'available' : 'taken';
       } catch (err) {
         console.error('[check-username]', err);
@@ -447,11 +462,12 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
 
   const ensureUsernameChecked = async () => {
     const name = form.username.trim();
+    console.log("username", name)
     if (!name) return null;
     const inflight = usernameCheckRef.current;
     if (inflight && inflight.username === name) return inflight.promise;
-    if (usernameStatus === 'available' || usernameStatus === 'taken') return usernameStatus;
-    return checkUsernameAction(name);
+    if (usernameStatus === 'available' || usernameStatus === 'taken' || usernameStatus === 'error') return usernameStatus;
+    return handleCheckUsername(name);
   };
 
   /* live availability as they type */
@@ -459,9 +475,9 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     const name = form.username.trim();
     if (!name) { setUsernameStatus(null); return; }
     if (!PATTERNS.username.test(name)) { setUsernameStatus('invalid'); return; }
-    const t = setTimeout(() => checkUsernameAction(name), 450);
+    const t = setTimeout(() => handleCheckUsername(name), 450);
     return () => clearTimeout(t);
-     
+
   }, [form.username]);
 
   /* ── pincode → state / district ───────────────────────────────────────── */
@@ -489,7 +505,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     const want = normName(pendingCityRef.current);
     const c = cities.find(x => normName(x.city_name) === want)
       || cities.find(x => normName(x.city_name).includes(want) || want.includes(normName(x.city_name)));
-    if (c) { setForm(f => ({ ...f, cityId: c.id, city: c.city_name })); clearErr('city'); }
+    if (c) { setValue('cityId', c.id); setValue('city', c.city_name); clearErr('city'); }
     pendingCityRef.current = null;
   }, [cities]);
 
@@ -498,7 +514,8 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     if (!d) return;
     const st = states.find(s => normName(s.state_name) === normName(d.state));
     if (!st) return;
-    setForm(f => ({ ...f, stateId: st.id, state: st.state_name, stateCode: st.state_code, cityId: null, city: '' }));
+    setValue('stateId', st.id); setValue('state', st.state_name); setValue('stateCode', st.state_code);
+    setValue('cityId', null); setValue('city', '');
     pendingCityRef.current = d.district;
     clearErr('state', 'city');
   };
@@ -509,19 +526,21 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
   /* ── state / city / profession selection ── */
   const onStateChange = (stateId) => {
     const s = states.find(x => x.id === parseInt(stateId)) || null;
-    setForm(f => ({ ...f, stateId: s ? s.id : null, state: s ? s.state_name : '', stateCode: s ? s.state_code : '', cityId: null, city: '' }));
+    setValue('stateId', s ? s.id : null); setValue('state', s ? s.state_name : '');
+    setValue('stateCode', s ? s.state_code : ''); setValue('cityId', null); setValue('city', '');
     pendingCityRef.current = null;
     clearErr('state');
   };
   const onCityChange = (cityId) => {
     const c = cities.find(x => x.id === parseInt(cityId)) || null;
-    setForm(f => ({ ...f, cityId: c ? c.id : null, city: c ? c.city_name : '' }));
+    setValue('cityId', c ? c.id : null); setValue('city', c ? c.city_name : '');
     clearErr('city');
   };
   const onProfessionChange = (code) => {
     const p = professions.find(x => x.profession_code === code) || null;
     setSelectedProfObj(p);
-    setForm(f => ({ ...f, professionCode: code, profession: p ? p.profession_name : '', professionId: p ? p.profession_id : null }));
+    setValue('professionCode', code); setValue('profession', p ? p.profession_name : '');
+    setValue('professionId', p ? p.profession_id : null);
     clearErr('profession');
   };
 
@@ -767,70 +786,6 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
 
   const busy = registerMutation.isPending || selfieStatus.state === 'checking' || selfieStatus.state === 'uploading' || sendOtpMutation.isPending || referralStatus.state === 'checking';
 
-  /* ── validate the current step, collect errors + first invalid field id ── */
-  const validateStep = async (s) => {
-    const e = {};
-    const order = [];
-    const add = (id, cond, msg, scrollId) => {
-      order.push(scrollId || id);
-      if (cond) e[id] = msg;
-    };
-
-    if (s === 0) {
-      add('fname', !form.fname.trim(), 'First name is required');
-      add('lname', !form.lname.trim(), 'Last name is required');
-      if (!form.dob) { e.dob = 'Date of birth is required'; order.push('dob'); }
-      else if (!isRealDate(form.dob)) { e.dob = 'That date doesn’t exist — please pick a valid date.'; order.push('dob'); }
-      else if (!ageOk) { e.dob = `You must be 18 or older (you're ${age}).`; order.push('dob'); }
-      add('phone', !mobileOk, mobileErrMsg, 'mobile');
-      add('email', !emailOk, emailErrMsg || 'Enter a valid email address', 'email');
-      if (form.referralCode.trim() && referralStatus.state !== 'valid') {
-        const r = await validateReferralAction();
-        if (!r.ok) { e.referral = r.msg || 'Enter a valid referral code, or clear the field.'; order.push('referral'); }
-      }
-      if (!phoneVerified || !emailVerified) { e.verify = 'Please verify both mobile and email.'; order.push(otpSent ? 'otp-panel' : 'otp-send'); }
-      if (!consents.age) { e.age = 'Please confirm you are 18 or older.'; order.push('age'); }
-      if (!consents.terms) { e.terms = 'Please accept the Terms, Privacy and Cookie policies.'; order.push('terms'); }
-    }
-    if (s === 1) {
-      const uname = form.username.trim();
-      if (!uname) { e.username = 'Username is required'; order.push('username'); }
-      else if (!PATTERNS.username.test(uname)) { e.username = 'Use 1–30 letters, numbers, dots or underscores.'; order.push('username'); }
-      else {
-        // Await the check already in flight rather than racing it — this is
-        // what made the first Continue click a no-op.
-        const st = await ensureUsernameChecked();
-        if (st === 'taken') { e.username = `@${uname} is already taken — please use another username.`; order.push('username'); }
-        else if (st !== 'available') { e.username = 'We couldn’t confirm this username. Please try again.'; order.push('username'); }
-      }
-      add('gender', !form.gender, 'Please select your gender');
-      const pin = form.pincode.trim();
-      if (!pin) { e.pincode = 'PIN code is required'; order.push('pincode'); }
-      else if (!PIN_PATTERN.test(pin)) { e.pincode = 'Enter a valid 6-digit PIN code (it can’t start with 0).'; order.push('pincode'); }
-      add('state', !form.stateId, 'Please select your state');
-      add('city', !form.city, 'Please select your city');
-    }
-    if (s === 2) {
-      add('platform', !form.primaryPlatform, 'Please select your primary platform');
-      if ((form.primaryPlatform === 'YouTube' || form.primaryPlatform === 'Both') && !ytOk) { e.youtube = 'Enter a valid YouTube channel URL'; order.push('youtube'); }
-      if ((form.primaryPlatform === 'Instagram' || form.primaryPlatform === 'Both') && !igOk) { e.instagram = 'Enter a valid Instagram profile URL'; order.push('instagram'); }
-    }
-    if (s === 3) {
-      add('category', !form.categoryCode, 'Please choose a category');
-      add('profession', form.categoryCode && !form.profession, 'Please select your profession');
-    }
-    if (s === 4) {
-      add('selfie', !(selfieFile && selfieStatus.state === 'done'), 'Please complete the live selfie check');
-      // Documents are optional — QC1 can request anything missing during review.
-    }
-
-    const firstInvalid = order.find(id => {
-      const key = id === 'mobile' ? 'phone' : (id === 'otp-panel' || id === 'otp-send') ? 'verify' : id;
-      return e[key];
-    });
-    return { errors: e, firstInvalid };
-  };
-
   const go = (n) => {
     setDir(n > step ? 'fwd' : 'bwd');
     setStep(n);
@@ -839,24 +794,33 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  /* ── advance a step ───────────────────────────────────────────────────────
+     handleSubmit runs this step's schema and REPLACES the error set rather
+     than merging into it, so a stale key (a "DOB required" from an earlier
+     attempt) cannot survive once it is fixed. Step 05 submits instead of
+     advancing; the success screen is step 5.
+     ---------------------------------------------------------------------- */
+  const onStepValid = () => {
+    if (step === 4) { handleRegister(); return; }
+    go(step + 1);
+  };
+  const onStepInvalid = (stepErrors) => {
+    const firstInvalid = firstInvalidField(step, stepErrors, { otpSent });
+    if (firstInvalid) focusField(firstInvalid);
+  };
+
   const next = async () => {
     if (step === 5 || busy) return;
     setSubmitAttempted(true);
     setRegisterError('');
-
-    const { errors: e, firstInvalid } = await validateStep(step);
-    if (Object.keys(e).length > 0) {
-      // Replace this step's errors instead of merging, so stale keys (e.g. a
-      // "DOB required" from an earlier attempt) don't survive once fixed.
-      setErrors(e);
-      if (firstInvalid) focusField(firstInvalid);
-      return;
-    }
-    if (step === 4) { handleRegister(); return; }
-    go(step + 1);
+    await handleSubmit(onStepValid, onStepInvalid)();
   };
 
-  const toggleConsent = key => { setConsents(p => ({ ...p, [key]: !p[key] })); clearErr(key === 'age' ? 'age' : 'terms'); };
+  const toggleConsent = key => {
+    const name = key === 'age' ? 'consentAge' : 'consentTerms';
+    setValue(name, !getValues(name));
+    clearErr(key === 'age' ? 'age' : 'terms');
+  };
 
   const meta = STEPS[step] || STEPS[STEPS.length - 1];
   const footLabels = ['COMPLETE IDENTITY & VERIFY', 'BUILD YOUR PROFILE', 'LINK YOUR SOCIALS', 'CHOOSE YOUR CATEGORY', 'FINAL PROOF & SUBMIT'];
@@ -870,7 +834,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     ageOk, underage, onDobChange, age,
     phoneVerified, otpSent, resetOtp, setForm, clearErr, showMobileErr, mobileOk, onMobileChange, markTouched, mobileErrMsg, mobileHint,
     emailVerified, showEmailErr, emailWarn, onEmailChange, emailOk, emailErrMsg,
-    onReferralChange, validateReferralAction, removeReferral,
+    onReferralChange, validateReferral: handleValidateReferral, removeReferral,
     sendOtp, otpSending: sendOtpMutation.isPending, mobileShake, getRaw, mobileOtp, mobileRefs, otpDigit, otpKey, mobileOtpStatus, mobileComplete, verifyMobile, resendIn,
     emailShake, emailOtp, emailRefs, emailOtpStatus, emailComplete, verifyEmail,
     consents, toggleConsent, setActivePolicy,

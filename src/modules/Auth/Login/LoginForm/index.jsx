@@ -1,4 +1,4 @@
-export default function LoginForm({ form, setForm, loading, error, isSessionExpired, handleLogin }) {
+export default function LoginForm({ register, loading, error, isSessionExpired, handleLogin }) {
   return (
     <div className="lg-body">
       <p className="lg-subtitle">Sign in with your Fameo app credentials to continue.</p>
@@ -24,8 +24,7 @@ export default function LoginForm({ form, setForm, loading, error, isSessionExpi
           type="text"
           className="lg-input"
           placeholder="Username"
-          value={form.username}
-          onChange={(e) => setForm({ ...form, username: e.target.value })}
+          {...register("username")}
           onKeyDown={(e) => e.key === "Enter" && handleLogin()}
           autoComplete="username"
         />
@@ -47,8 +46,7 @@ export default function LoginForm({ form, setForm, loading, error, isSessionExpi
           type="password"
           className="lg-input"
           placeholder="••••••••"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          {...register("password")}
           onKeyDown={(e) => e.key === "Enter" && handleLogin()}
           autoComplete="current-password"
         />

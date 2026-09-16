@@ -1,5 +1,6 @@
 import React from 'react';
 import { pickCategoryIcon } from '../../constants';
+import SelectPicker from '../../../../../components/Common/SelectPicker';
 
 export default function Step04Category({ ctx }) {
   const {
@@ -40,13 +41,12 @@ export default function Step04Category({ ctx }) {
           {profError && <div className="frg-note red">{profError}</div>}
           <div className="frg-field" ref={registerFieldRef('profession')}>
             <label className="frg-label" htmlFor="frg-prof">Select your profession <span className="req">*</span></label>
-            <div className={`frg-uline${errors.profession ? ' err' : ''}`}><div className="frg-selwrap">
-              <select id="frg-prof" className="frg-select2" value={form.professionCode || ''}
-                onChange={e => onProfessionChange(e.target.value)} disabled={profLoading || professions.length === 0}>
-                <option value="">{profLoading ? 'Loading professions…' : professions.length === 0 ? 'No professions found' : 'Select your profession'}</option>
-                {professions.map(p => <option key={p.profession_code} value={p.profession_code}>{p.profession_name}</option>)}
-              </select>
-            </div></div>
+            <div className={`frg-uline${errors.profession ? ' err' : ''}`}>
+              <SelectPicker id="frg-prof" className="frg-select2" value={form.professionCode || ''}
+                onChange={e => onProfessionChange(e.target.value)} disabled={profLoading || professions.length === 0}
+                placeholder={profLoading ? 'Loading professions…' : professions.length === 0 ? 'No professions found' : 'Select your profession'}
+                options={professions.map(p => ({ value: p.profession_code, label: p.profession_name }))} />
+            </div>
             {errors.profession && <div className="frg-help err">{errors.profession}</div>}
           </div>
         </>

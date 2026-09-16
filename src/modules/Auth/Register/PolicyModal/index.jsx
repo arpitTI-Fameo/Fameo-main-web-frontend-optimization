@@ -28,6 +28,7 @@ export default function PolicyModal({ policy, onClose }) {
         <div className="pm-handle" aria-hidden="true" />
         <div className="pm-header">
           <div className="pm-icon">{policy.icon}</div>
+
           <div className="pm-title-block">
             <span className="pm-eyebrow">Legal · Fameo</span>
             <div className="pm-title">{policy.label}</div>
