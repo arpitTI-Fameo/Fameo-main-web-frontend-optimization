@@ -17,6 +17,7 @@ import { useVerifyPaymentMutation } from '@/lib/hooks/main/useOrder';
 import { useSyncCartToServerMutation, useCheckoutMutation, useClearCartMutation } from '@/lib/hooks/main/useProduct';
 import { S } from './styles';
 import { BFF_BASE } from '@/lib/api/config';
+import { DEFAULT_LOCALE } from '@/constants/locale';
 
 // Same-origin via the BFF; the httpOnly session cookie is attached
 // server-side, so this module no longer builds an Authorization header.
@@ -216,7 +217,7 @@ export default function Checkout({ initialAddresses }) {
           setRepriced({ serverPayable });
           setError(
             `Heads up — your plan discount doesn't apply to this item, so the total is ` +
-            `₹${serverPayable.toLocaleString('en-IN')} (not ₹${Math.round(dispPayable).toLocaleString('en-IN')}). ` +
+            `₹${serverPayable.toLocaleString(DEFAULT_LOCALE)} (not ₹${Math.round(dispPayable).toLocaleString(DEFAULT_LOCALE)}). ` +
             `We've updated your order summary — tap Pay again to confirm.`
           );
           setLoading(false);
@@ -235,8 +236,8 @@ export default function Checkout({ initialAddresses }) {
       // instead of the Pay button failing with an opaque gateway error.
       if (payableINR > MAX_ORDER_INR) {
         throw new Error(
-          `Order total ₹${payableINR.toLocaleString('en-IN')} is above the ` +
-          `₹${MAX_ORDER_INR.toLocaleString('en-IN')} per-transaction limit. ` +
+          `Order total ₹${payableINR.toLocaleString(DEFAULT_LOCALE)} is above the ` +
+          `₹${MAX_ORDER_INR.toLocaleString(DEFAULT_LOCALE)} per-transaction limit. ` +
           `Please split this into two orders, or contact us to place it manually.`
         );
       }

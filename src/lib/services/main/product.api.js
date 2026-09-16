@@ -13,7 +13,7 @@ import { createServerAction } from '@/lib/api/action';
 // Same-origin via the products BFF, which attaches the httpOnly session
 // cookie server-side. /cart, /orders and /checkout need that session; before
 // this they read the token from localStorage, which no longer holds one.
-import { BFF_PRODUCTS_BASE } from '@/lib/api/config';
+import { BFF_PRODUCTS_BASE, PRODUCTS_PAGE_SIZE } from '@/lib/api/config';
 import { fameoProductEndpoints } from '@/lib/api/endpoints';
 import { clientFetch } from '@/lib/api/client/fetcher';
 
@@ -22,7 +22,7 @@ const call = (path, options = {}) =>
 
 // ── Products (public catalog for creators) ─────────────────────
 export const getLiveProductsAction = async (params = {}) => {
-  const qs = new URLSearchParams({ status: 'live', limit: 50, ...params });
+  const qs = new URLSearchParams({ status: 'live', limit: PRODUCTS_PAGE_SIZE, ...params });
   return createServerAction({
     url: `/products?${qs}`,
     method: 'GET',
@@ -34,7 +34,7 @@ export const getLiveProductsAction = async (params = {}) => {
 // Hits /api/public/products on the products backend, which returns only
 // 'live' products and needs no token. Use these on anonymous storefront pages.
 export const getStorefrontProductsAction = async (params = {}) => {
-  const qs = new URLSearchParams({ limit: 50, ...params });
+  const qs = new URLSearchParams({ limit: PRODUCTS_PAGE_SIZE, ...params });
   return createServerAction({
     url: `/public/products?${qs}`,
     method: 'GET',

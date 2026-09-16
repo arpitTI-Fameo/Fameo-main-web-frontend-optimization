@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { S } from '../styles';
+import { ADMIN_ROUTES, ROUTES } from "@/constants/routes";
 
 export default function CourseCatalog({ catalog, canEditCourses, accent, togglePublishCourse, toggleFeatureCourse }) {
   return (
     <div style={{ ...S.card, marginBottom: 24 }}>
       <div style={S.cardHead}>
         <h2 style={S.cardTitle}>Course Catalog <span style={{ fontSize: 13, color: "#bbb", fontWeight: 400, fontFamily: "'DM Sans',sans-serif" }}>({catalog.length})</span></h2>
-        <Link href="/admin/courses" style={{ ...S.cardLink, color: accent }}>Manage all →</Link>
+        <Link href={ADMIN_ROUTES.COURSES} style={{ ...S.cardLink, color: accent }}>Manage all →</Link>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(340px,1fr))" }}>
         {catalog.map((c, i) => {
@@ -38,10 +39,10 @@ export default function CourseCatalog({ catalog, canEditCourses, accent, toggleP
                 <span style={{ fontSize: 9, letterSpacing: ".08em", textTransform: "uppercase", padding: "2px 7px", borderRadius: 3, background: sc[2], color: sc[1], fontWeight: 600 }}>
                   {sc[0]}
                 </span>
-                <Link href={`/resources/courses/${c.slug}`} target="_blank" style={S.catBtn}>↗</Link>
+                <Link href={ROUTES.COURSE(c.slug)} target="_blank" style={S.catBtn}>↗</Link>
                 {canEditCourses && (
                   <>
-                    <Link href="/admin/courses" style={{ ...S.catBtn, color: accent }}>Edit</Link>
+                    <Link href={ADMIN_ROUTES.COURSES} style={{ ...S.catBtn, color: accent }}>Edit</Link>
                     <button onClick={() => togglePublishCourse(c)} style={{
                       ...S.catBtn,
                       color: c.isPublished ? "#888" : "#3a7c3a",
@@ -65,7 +66,7 @@ export default function CourseCatalog({ catalog, canEditCourses, accent, toggleP
       </div>
       <div style={{ padding: "10px 16px", fontSize: 11, color: "#aaa", borderTop: "1px solid #f5f5f2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>Publish / Feature work right here · open the manager to edit chapters &amp; lessons</span>
-        <Link href="/admin/courses" style={{ color: accent, textDecoration: "none", fontWeight: 500, fontSize: 11 }}>
+        <Link href={ADMIN_ROUTES.COURSES} style={{ color: accent, textDecoration: "none", fontWeight: 500, fontSize: 11 }}>
           Open Course Manager →
         </Link>
       </div>

@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { S } from '../styles';
-import { timeAgo } from '../constants';
+import { timeAgo } from '@/utils/relativeTime';
+import { ADMIN_ROUTES } from "@/constants/routes";
 
 export default function PendingApprovals({ pending, accent, approveItem, rejectItem }) {
   return (
     <div style={S.card}>
       <div style={S.cardHead}>
         <h2 style={S.cardTitle}>Pending Approvals</h2>
-        <Link href="/admin/approval" style={{ ...S.cardLink, color: accent }}>View all →</Link>
+        <Link href={ADMIN_ROUTES.APPROVAL} style={{ ...S.cardLink, color: accent }}>View all →</Link>
       </div>
       {pending.length === 0
         ? <p style={S.empty}>All caught up ✓</p>

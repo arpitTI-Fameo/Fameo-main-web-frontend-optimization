@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
 import { getArchiveAction, restoreArchiveItemAction, deleteContentAction } from '@/lib/services/admin/archive.service';
+import { adminKeys } from '@/lib/services/admin/admin.keys';
 
 export const useAdminArchive = (opts = {}) => useQuery({
-    queryKey: ['admin', 'archive'],
+    queryKey: adminKeys.archive(),
     queryFn: getArchiveAction,
     ...opts
 });

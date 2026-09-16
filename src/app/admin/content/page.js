@@ -2,6 +2,7 @@ import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query
 import ContentOS from "@/modules/Admin/ContentOS";
 import { getAdminContentServer } from '@/lib/services/admin/admin.server';
 import { hasSession } from '@/lib/auth/session';
+import { adminKeys } from '@/lib/services/admin/admin.keys';
 
 export default async function ContentPage() {
   const queryClient = new QueryClient();
@@ -14,7 +15,7 @@ export default async function ContentPage() {
     // Initial fetch usually has page 1
     const params = new URLSearchParams({ page: 1, limit: 10 });
     await queryClient.prefetchQuery({
-      queryKey: ['admin', 'content', params.toString()],
+      queryKey: adminKeys.contentList(params.toString()),
       queryFn: () => getAdminContentServer(params),
     });
   }

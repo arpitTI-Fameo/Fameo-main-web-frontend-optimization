@@ -10,6 +10,7 @@ import { adminLoginSchema, ADMIN_LOGIN_DEFAULT_VALUES } from './schema';
 import { S } from './styles';
 import LoginForm from './LoginForm';
 import LoginRoles from './LoginRoles';
+import { ADMIN_ROUTES } from "@/constants/routes";
 
 // SAST C-1. This table used to carry an `email` and `pw` for each role, and a
 // `quickLogin` button that submitted them. Being in a client component, all four
@@ -50,7 +51,7 @@ export function AdminLogin() {
 
     // Only redirect after hydration — prevents false redirect when store is empty on first render
     useEffect(() => {
-        if (hydrated && user) router.replace("/admin");
+        if (hydrated && user) router.replace(ADMIN_ROUTES.ROOT);
     }, [user, router, hydrated]);
 
     // Show nothing until hydrated — avoids black flash
@@ -58,7 +59,7 @@ export function AdminLogin() {
 
     const onValid = async ({ email, password }) => {
         const res = await login(email, password);
-        if (res?.success) router.replace("/admin");
+        if (res?.success) router.replace(ADMIN_ROUTES.ROOT);
     };
 
     const submit = (e) => {

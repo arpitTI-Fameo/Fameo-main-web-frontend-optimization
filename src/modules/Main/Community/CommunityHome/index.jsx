@@ -18,6 +18,7 @@ import { showToast } from '../Toast';
 import { toUserMessage } from '@/lib/api/errors';
 import { useCommunityHero, useFeed, useTopCreators } from '@/lib/hooks/main/useCommunity';
 import { useLiveEvent, useEvents, useRSVPMutation } from '@/lib/hooks/main/useEvent';
+import { DEFAULT_LOCALE } from '@/constants/locale';
 
 
 const QUICK_LINKS = [
@@ -196,7 +197,7 @@ export default function CommunityHome({ onNavigate, onOpenProfile, onReport, onO
             <span>•</span>
             {liveCard?.status === 'live'
               ? <span style={{ color: 'var(--cm-red)' }}>🔴 {liveCard?.listenerCount || 540} listening</span>
-              : <span>{liveCard?.scheduledAt ? new Date(liveCard.scheduledAt).toLocaleString('en-IN', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : 'Tomorrow 7PM'}</span>}
+              : <span>{liveCard?.scheduledAt ? new Date(liveCard.scheduledAt).toLocaleString(DEFAULT_LOCALE, { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : 'Tomorrow 7PM'}</span>}
           </div>
           <button className="cm-btn cm-btn-live" style={{ fontSize: 12, height: 30 }}>
             {liveCard?.status === 'live' ? 'Join Now →' : 'Set Reminder →'}
@@ -327,7 +328,7 @@ export default function CommunityHome({ onNavigate, onOpenProfile, onReport, onO
               <div key={i} className="cm-event-mini" onClick={() => onNavigate('events')}>
                 <div className="cm-event-mini-time">
                   {e.scheduledAt
-                    ? new Date(e.scheduledAt).toLocaleString('en-IN', { weekday: 'short', hour: '2-digit', minute: '2-digit' })
+                    ? new Date(e.scheduledAt).toLocaleString(DEFAULT_LOCALE, { weekday: 'short', hour: '2-digit', minute: '2-digit' })
                     : e.time || 'Tomorrow 7PM'}
                 </div>
                 <div className="cm-event-mini-title">{e.title || e.name}</div>

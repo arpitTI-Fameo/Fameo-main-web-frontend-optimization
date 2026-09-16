@@ -13,6 +13,7 @@ import {
   matchesRoute,
 } from '@/lib/auth/gated-routes';
 import { SESSION_COOKIE, LEGACY_SESSION_COOKIE } from '@/lib/api/config';
+import { ADMIN_ROUTES } from '@/constants/routes';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAST C-2 / C-3 / C-4 — rewritten.
@@ -89,14 +90,14 @@ export async function middleware(request) {
   const claims = await verifyToken(token);   // null unless the signature checks out
 
   // ── Admin ─────────────────────────────────────────────────────────────────
-  if (pathname === '/admin/login') {
+  if (pathname === ADMIN_ROUTES.LOGIN) {
     // Already a valid admin? Skip the login screen.
-    if (claims && isAdminRole(claims.role)) return redirectTo(request, '/admin');
+    if (claims && isAdminRole(claims.role)) return redirectTo(request, ADMIN_ROUTES.ROOT);
     return nextWithContext(request);
   }
 
-  if (pathname.startsWith('/admin')) {
-    if (!claims) return redirectAndClear(request, '/admin/login', { redirect: pathname });
+  if (pathname.startsWith(ADMIN_ROUTES.ROOT)) {
+    if (!claims) return redirectAndClear(request, ADMIN_ROUTES.LOGIN, { redirect: pathname });
     // A valid CREATOR token must not open the admin panel. Role comes from the
     // signed claim, not from sessionStorage (SAST H-8).
     if (!isAdminRole(claims.role)) return redirectTo(request, '/', { denied: 'admin' });

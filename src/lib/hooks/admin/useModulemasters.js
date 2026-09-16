@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
 import { getModuleMastersAction, inviteModuleMasterAction, updateModuleMasterModulesAction, revokeModuleMasterAction } from '@/lib/services/admin/moduleMasters.service';
+import { adminKeys } from '@/lib/services/admin/admin.keys';
 
 export const useAdminModuleMasters = (opts = {}) => useQuery({
-    queryKey: ['admin', 'module-masters'],
+    queryKey: adminKeys.moduleMasters(),
     queryFn: getModuleMastersAction,
     ...opts
 });

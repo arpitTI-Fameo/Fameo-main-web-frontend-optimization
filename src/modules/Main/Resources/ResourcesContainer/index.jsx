@@ -17,6 +17,7 @@ import ResourcesFaq from "../ResourcesFaq";
 import ResourcesCta from "../ResourcesCta";
 import { normalizeCourse } from "../helpers";
 import { CSS } from "../styles";
+import { ROUTES } from '@/constants/routes';
 
 export default function ResourcesContainer() {
   const router = useRouter();
@@ -55,12 +56,12 @@ export default function ResourcesContainer() {
   /* Navigate to the dedicated course route (no in-page overlay) */
   const openCourse = (c) => {
     if (!c?.slug) return;
-    router.push(`/resources/courses/${c.slug}`);
+    router.push(ROUTES.COURSE(c.slug));
   };
 
   /* Prefetch on hover so the course page opens instantly */
   const prefetchCourse = (c) => {
-    if (c?.slug) router.prefetch(`/resources/courses/${c.slug}`);
+    if (c?.slug) router.prefetch(ROUTES.COURSE(c.slug));
   };
 
   const pickGoal = (cat) => {

@@ -7,24 +7,25 @@ import { useAdminAuthStore } from "@/store/adminAuthStore";
 import { useAdminContent, useUpdateContentStatusMutation, useDeleteContentMutation } from "@/lib/hooks/admin/useContent";
 import { useSocket } from "@/lib/hooks/custome/useSocket";
 import { S } from './styles';
-import { MODULES } from './constants';
+import { MODULES, CONTENT_STATUS } from './constants';
 import ContentOSHeader from './ContentOSHeader';
 import ContentOSFilters from './ContentOSFilters';
 import ContentOSTable from './ContentOSTable';
+import { ADMIN_ROLE, CONTENT_AUTHOR_ROLES, CONTENT_APPROVER_ROLES } from "@/constants/roles";
 
 export default function ContentOS() {
     const { user } = useAdminAuthStore();
     const role = user?.role;
 
     // ── Permission flags per role
-    const canCreate = ["superAdmin", "contentManager", "moduleMaster"].includes(role);
-    const canEdit = ["superAdmin", "contentManager", "moduleMaster"].includes(role);
-    const canPublish = ["superAdmin", "contentManager"].includes(role);
-    const canDelete = role === "superAdmin";
-    const canArchive = ["superAdmin", "contentManager"].includes(role);
-    const canApprove = ["superAdmin", "contentManager"].includes(role);
-    const isReadOnly = role === "supportAgent";
-    const isMM = role === "moduleMaster";
+    const canCreate = CONTENT_AUTHOR_ROLES.includes(role);
+    const canEdit = CONTENT_AUTHOR_ROLES.includes(role);
+    const canPublish = CONTENT_APPROVER_ROLES.includes(role);
+    const canDelete = role === ADMIN_ROLE.SUPER_ADMIN;
+    const canArchive = CONTENT_APPROVER_ROLES.includes(role);
+    const canApprove = CONTENT_APPROVER_ROLES.includes(role);
+    const isReadOnly = role === ADMIN_ROLE.SUPPORT_AGENT;
+    const isMM = role === ADMIN_ROLE.MODULE_MASTER;
 
     // moduleMaster sees only assigned modules
     const assignedModules = isMM ? (user?.assignedModules || []) : null;
@@ -68,8 +69,8 @@ export default function ContentOS() {
             await updateStatusMutation.updateStatus({ id, status });
             contentQuery.refetch();
             const msg =
-                status === "published" ? "Published live ◉ — visible on Learner Hub instantly" :
-                    status === "archived" ? "Archived — removed from Learner Hub" :
+                status === CONTENT_STATUS.PUBLISHED ? "Published live ◉ — visible on Learner Hub instantly" :
+                    status === CONTENT_STATUS.ARCHIVED ? "Archived — removed from Learner Hub" :
                         status === "review" ? "Submitted for review" : "Updated";
             showToast(msg);
         } catch { showToast("Failed to update", false); }

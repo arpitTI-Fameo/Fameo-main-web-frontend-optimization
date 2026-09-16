@@ -349,12 +349,11 @@ export const PLANS = [
 
 // Fameo membership tiers mapped from app plan codes
 // FREE/PRO → no product discount | POPULAR → 2% | ELITE → 5%
-export const PLAN_DISCOUNTS = {
-  // free:    0,     // no discount
-  // pro:     0,     // no discount — login access only
-  popular: 0.02,  // 2% off all products
-  elite:   0.05,  // 5% off all products
-};
+/* PLAN_DISCOUNTS was defined here too, and it had NO consumers — all three
+   call sites import it from @/utils/planPricing. Worse, the two had already
+   drifted: this copy was missing the `free`, `pro` and `premium` keys that
+   planPricing's lookups rely on, so anyone "fixing" a discount rate here would
+   have changed nothing at all. planPricing.js is the one definition. */
 
 export const PLAN_COLORS = {
   // free:    '#9898a8',

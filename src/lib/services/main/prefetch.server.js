@@ -23,6 +23,7 @@ import 'server-only';
 
 import { publicFetch, privateFetch } from '@/lib/api/server/fetcher';
 import { PRODUCTS_ORIGIN } from '@/lib/api/server/origins';
+import { PRODUCTS_PAGE_SIZE } from '@/lib/api/config';
 import {
   subscriptionEndpoints,
   communityEndpoints,
@@ -64,7 +65,7 @@ export const getPlansServer = () =>
  * per request and never shared-cached.
  */
 export const getStorefrontProductsServer = (params = {}) => {
-  const qs = new URLSearchParams({ limit: 50, ...params });
+  const qs = new URLSearchParams({ limit: PRODUCTS_PAGE_SIZE, ...params });
   return envelope(() =>
     privateFetch(`${PRODUCTS_ORIGIN}/public/products?${qs}`),
   );

@@ -49,6 +49,18 @@ export const LOCAL_BASE = '';
 export const REQUEST_TIMEOUT = 15_000;
 
 /**
+ * Page size for product listings.
+ *
+ * Written out as a bare `limit: 50` in three places: the authenticated
+ * catalogue call, the public storefront call, and — the one that matters — the
+ * SERVER prefetch of that same storefront listing. The prefetch and the client
+ * hook have to ask for the identical page, or the dehydrated cache entry never
+ * matches the query that reads it: no error, just a spinner and a second
+ * request for data the server already fetched.
+ */
+export const PRODUCTS_PAGE_SIZE = 50;
+
+/**
  * Realtime origin for socket.io.
  *
  * This one IS client-visible, and that is unavoidable: a WebSocket upgrade

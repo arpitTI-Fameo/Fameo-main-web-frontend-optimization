@@ -6,12 +6,13 @@ import { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 
 import { SOCKET_ORIGIN } from "@/lib/api/config";
+import { STORAGE_KEYS } from '@/constants/storageKeys';
 
 let _socket = null;
 
 function getSocket() {
   if (!_socket) {
-    const user = (() => { try { return JSON.parse(sessionStorage.getItem("fameo_user") || "null"); } catch { return null; } })();
+    const user = (() => { try { return JSON.parse(sessionStorage.getItem(STORAGE_KEYS.USER) || "null"); } catch { return null; } })();
     _socket = io(SOCKET_ORIGIN, {
       auth: { user },
       transports: ["websocket"],

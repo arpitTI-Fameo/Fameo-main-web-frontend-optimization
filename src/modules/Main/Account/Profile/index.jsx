@@ -10,6 +10,7 @@ import Verified from "./Verified";
 import Field from "./Field";
 import Section from "./Section";
 import { useWebProfile } from '@/lib/hooks/main/useUser';
+import { STORAGE_KEYS } from '@/constants/storageKeys';
 
 export default function Profile({ initialData }) {
   const { data: json, isLoading: loading, error: apiError } = useWebProfile({ initialData });
@@ -36,8 +37,8 @@ export default function Profile({ initialData }) {
       };
       
       if (typeof window !== "undefined") {
-        if (merged.profile_picture) localStorage.setItem("fameo_profile_photo", merged.profile_picture);
-        else localStorage.removeItem("fameo_profile_photo");
+        if (merged.profile_picture) localStorage.setItem(STORAGE_KEYS.PROFILE_PHOTO, merged.profile_picture);
+        else localStorage.removeItem(STORAGE_KEYS.PROFILE_PHOTO);
       }
       setProfile(merged);
     } catch (e) {

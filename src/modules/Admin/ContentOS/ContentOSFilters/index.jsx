@@ -1,5 +1,5 @@
 import { S } from '../styles';
-import { STATUS_CONFIG } from '../constants';
+import { CONTENT_STATUS, STATUS_CONFIG } from '../constants';
 
 export default function ContentOSFilters({
     filter,
@@ -16,7 +16,7 @@ export default function ContentOSFilters({
                 onChange={e => setFilter(f => ({ ...f, search: e.target.value }))} />
             <select style={S.select} value={filter.status} onChange={e => setFilter(f => ({ ...f, status: e.target.value }))}>
                 <option value="all">All Status</option>
-                {["published", "draft", "review", "archived"].map(s =>
+                {Object.keys(STATUS_CONFIG).map(s =>
                     <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>
                 )}
             </select>
@@ -29,8 +29,8 @@ export default function ContentOSFilters({
             {selected.size > 0 && canPublish && (
                 <div style={S.bulkBar}>
                     <span style={S.bulkCount}>{selected.size} selected</span>
-                    <button style={S.bulkBtn} onClick={() => bulkAction("published")}>Publish all</button>
-                    <button style={{ ...S.bulkBtn, color: "#d49090" }} onClick={() => bulkAction("archived")}>Archive all</button>
+                    <button style={S.bulkBtn} onClick={() => bulkAction(CONTENT_STATUS.PUBLISHED)}>Publish all</button>
+                    <button style={{ ...S.bulkBtn, color: "#d49090" }} onClick={() => bulkAction(CONTENT_STATUS.ARCHIVED)}>Archive all</button>
                     <button style={{ ...S.bulkBtn, color: "#aaa" }} onClick={() => setSelected(new Set())}>Clear</button>
                 </div>
             )}

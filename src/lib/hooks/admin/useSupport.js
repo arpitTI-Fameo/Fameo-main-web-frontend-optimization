@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
 import { getAdminSupportTicketsAction, getAdminSupportFaqsAction, replyAdminSupportTicketAction, updateAdminSupportTicketStatusAction, createAdminSupportFaqAction } from '@/lib/services/admin/support.service';
+import { adminKeys } from '@/lib/services/admin/admin.keys';
 
 export const useAdminSupportTickets = (status, opts = {}) => useQuery({
-    queryKey: ['admin', 'support', 'tickets', { status }],
+    queryKey: adminKeys.supportTickets(status),
     queryFn: () => getAdminSupportTicketsAction(status),
     ...opts
 });
 
 export const useAdminSupportFaqs = (opts = {}) => useQuery({
-    queryKey: ['admin', 'support', 'faqs'],
+    queryKey: adminKeys.supportFaqs(),
     queryFn: getAdminSupportFaqsAction,
     ...opts
 });

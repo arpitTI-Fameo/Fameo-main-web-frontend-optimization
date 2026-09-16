@@ -2,6 +2,7 @@ import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query
 import CoursesAdmin from "@/modules/Admin/Courses";
 import { getAdminCoursesServer } from '@/lib/services/admin/admin.server';
 import { hasSession } from '@/lib/auth/session';
+import { adminKeys } from '@/lib/services/admin/admin.keys';
 
 export default async function CoursesPage() {
   const queryClient = new QueryClient();
@@ -12,7 +13,7 @@ export default async function CoursesPage() {
   // lib/auth/session.js rather than duplicating them here.
   if (await hasSession()) {
     await queryClient.prefetchQuery({
-      queryKey: ['admin', 'courses'],
+      queryKey: adminKeys.courses(),
       queryFn: () => getAdminCoursesServer(),
     });
   }

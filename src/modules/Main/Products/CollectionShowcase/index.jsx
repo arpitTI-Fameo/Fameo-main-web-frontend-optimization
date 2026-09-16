@@ -17,6 +17,7 @@ import { CATEGORY_IMAGES } from './constants';
 import { slugify } from './helpers';
 import { useReveal } from './hooks';
 import { CSS } from './styles';
+import { ROUTES } from '@/constants/routes';
 
 export default function CollectionShowcase({ products = [], onProductClick, onAddToCart }) {
   // Per-card confirmation — the Add button called onAddToCart and stayed
@@ -68,7 +69,7 @@ export default function CollectionShowcase({ products = [], onProductClick, onAd
               className="cs-tile"
               data-reveal
               style={{ transitionDelay: `${i * 70}ms` }}
-              onClick={() => router.push(`/products/${slugify(cat)}`)}
+              onClick={() => router.push(ROUTES.CATEGORY(slugify(cat)))}
               aria-label={`Browse ${cat}`}
             >
               <span className="cs-tile-img-wrap">

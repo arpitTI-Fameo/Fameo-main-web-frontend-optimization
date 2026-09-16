@@ -1,4 +1,4 @@
-// lib/flyToCart.js
+// modules/Main/Products/flyToCart.js
 // Premium "add to bag" flight animation.
 //
 // Clones the product image and arcs it into the bag icon, then pulses the bag.
@@ -27,8 +27,10 @@ const getAnchor = () => {
   return el;
 };
 
-/** Ripple + squash-stretch pulse on the bag once the parcel lands. */
-export const pulseCartAnchor = () => {
+/* Ripple + squash-stretch pulse on the bag once the parcel lands.
+   Called only from flyToCart() below — it was exported, but nothing outside
+   this file ever imported it. */
+const pulseCartAnchor = () => {
   const anchor = getAnchor();
   if (!anchor || prefersReducedMotion()) return;
 
@@ -269,5 +271,3 @@ export function flyToCart(sourceEl, { imageUrl } = {}) {
     void ax; void trails;
   });
 }
-
-export default flyToCart;

@@ -14,6 +14,7 @@ import { toUserMessage } from '@/lib/api/errors';
 import { useAuthStore } from '@/store/authStore';
 import { useAddEpisodeCommentMutation } from '@/lib/services/main/podcast.api';
 import { useEpisode, useEpisodeTranscription, useEpisodeComments, useToggleEpisodeLikeMutation, useToggleEpisodeSaveMutation, useShow, useEpisodes } from '@/lib/hooks/main/usePodcast';
+import { DEFAULT_LOCALE } from '@/constants/locale';
 
 
 // ── Design tokens (white theme) ───────────────────────────────────────────────
@@ -411,7 +412,7 @@ export default function PodcastPlayer({ episodeId, episode: episodeProp, current
                           </span>
                         )}
                         <span style={{ fontSize:11, color:T.text3, marginLeft:'auto' }}>
-                          {new Date(c.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
+                          {new Date(c.createdAt).toLocaleDateString(DEFAULT_LOCALE,{day:'numeric',month:'short'})}
                         </span>
                       </div>
                       <div style={{ fontSize:13.5, color:T.text2, lineHeight:1.65 }}>{c.content}</div>

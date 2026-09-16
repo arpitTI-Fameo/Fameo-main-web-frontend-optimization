@@ -9,6 +9,8 @@ import { S } from './styles';
 import RevenueHeader from './RevenueHeader';
 import RevenueStats from './RevenueStats';
 import RevenueTable from './RevenueTable';
+import { ADMIN_ROUTES } from "@/constants/routes";
+import { ADMIN_ROLE } from "@/constants/roles";
 
 export function Revenue() {
   const { user } = useAuthStore();
@@ -26,7 +28,7 @@ export function Revenue() {
   } : revenueQuery.data?.data;
 
   useEffect(() => {
-    if (user && user.role !== "superAdmin") { router.push("/admin"); }
+    if (user && user.role !== ADMIN_ROLE.SUPER_ADMIN) { router.push(ADMIN_ROUTES.ROOT); }
   }, [user, router]);
 
   if (user?.role !== "superAdmin") return null;

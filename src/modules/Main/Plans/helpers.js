@@ -1,4 +1,5 @@
 'use client';
+import { DEFAULT_LOCALE } from '@/constants/locale';
 
 export const loadRazorpay = () => new Promise(resolve => {
     if (window.Razorpay) return resolve(true);
@@ -13,7 +14,7 @@ export const loadRazorpay = () => new Promise(resolve => {
 // decimals when they do and none when they don't.
 export const inr = (n) => {
     const v = Number(n) || 0;
-    return v.toLocaleString('en-IN', {
+    return v.toLocaleString(DEFAULT_LOCALE, {
         minimumFractionDigits: Number.isInteger(v) ? 0 : 2,
         maximumFractionDigits: 2,
     });

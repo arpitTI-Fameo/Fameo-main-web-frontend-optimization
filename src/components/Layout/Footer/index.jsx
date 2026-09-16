@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import logo from "@/app/assets/logo_fameo_2.png";
+import { ROUTES } from "@/constants/routes";
 
 const S = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&display=swap');
@@ -515,7 +516,7 @@ const COLS = [
       // { label: "Careers",         href: "/careers" },
       // { label: "Blog",            href: "/blog" },
       // { label: "Press Kit",       href: "/press" },
-      { label: "Contact Us",      href: "/support" },
+      { label: "Contact Us",      href: ROUTES.SUPPORT },
     ],
   },
   {
@@ -755,7 +756,7 @@ export default function MainFooter() {
             {/* Legal links → open modal */}
             <div className="ft-legal">
               <button
-                onClick={() => router.push("/support")}
+                onClick={() => router.push(ROUTES.SUPPORT)}
                 className="ft-legal-link"
               >
                 Support

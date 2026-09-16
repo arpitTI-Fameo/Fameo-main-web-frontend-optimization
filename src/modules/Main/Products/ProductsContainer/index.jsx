@@ -8,7 +8,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
-import { flyToCart } from '@/utils/flyToCart';
+import { flyToCart } from '../flyToCart';
 import {
   PRODUCTS, HERO_SLIDES, TESTIMONIALS,
   PROMISES, MARQUEE_WORDS,

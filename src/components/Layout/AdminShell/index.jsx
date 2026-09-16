@@ -10,13 +10,15 @@ import { useSocket } from "@/lib/hooks/custome/useSocket";
 import AdminSidebar from "./AdminSidebar";
 import { NAV, ROLE_COLORS } from "./constants";
 import { S } from "./styles";
+import { ADMIN_ROUTES } from "@/constants/routes";
+import { CONTENT_APPROVER_ROLES } from "@/constants/roles";
 
 export default function AdminShell({
   user, logout, pathname, router, collapsed, setCollapsed, pendingCount, setPending, children,
 }) {
 
   // Only superAdmin and contentManager can access approvals
-  const canFetchPending = ["superAdmin", "contentManager"].includes(user.role);
+  const canFetchPending = CONTENT_APPROVER_ROLES.includes(user.role);
 
   const fetchPending = async () => {
     if (!canFetchPending) return;  // ← fix: skip for supportAgent + moduleMaster
@@ -42,7 +44,7 @@ export default function AdminShell({
     "topic:published": canFetchPending ? fetchPending : () => { },
   });
 
-  const doLogout = async () => { await logout(); router.replace("/admin/login"); };
+  const doLogout = async () => { await logout(); router.replace(ADMIN_ROUTES.LOGIN); };
 
   const rc = ROLE_COLORS[user.role] || ROLE_COLORS.contentManager;
   const navItems = NAV[user.role] || [];

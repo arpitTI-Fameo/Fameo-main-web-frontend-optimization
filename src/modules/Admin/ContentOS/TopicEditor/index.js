@@ -6,13 +6,15 @@ import { useRouter } from "next/navigation";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
 import { useAdminContentById, useSaveContentMutation } from "@/lib/hooks/admin/useContent";
 import { S } from './styles';
-import { MODULES } from '../constants';
+import { MODULES, CONTENT_STATUS } from '../constants';
 
 import TopicEditorTopBar from './TopicEditorTopBar';
 import TopicEditorPane from './TopicEditorPane';
 import TopicPreviewPane from './TopicPreviewPane';
+import { ADMIN_ROUTES } from "@/constants/routes";
+import { CONTENT_APPROVER_ROLES } from "@/constants/roles";
 
-const EMPTY = { title: "", shortDesc: "", moduleId: 0, level: "b", readTime: "5 min", body: "", checklist: [""], takeaways: [""], status: "draft", mediaIds: [], productId: "" };
+const EMPTY = { title: "", shortDesc: "", moduleId: 0, level: "b", readTime: "5 min", body: "", checklist: [""], takeaways: [""], status: CONTENT_STATUS.DRAFT, mediaIds: [], productId: "" };
 
 export default function TopicEditor({ params }) {
     const { id } = use(params);
@@ -21,7 +23,7 @@ export default function TopicEditor({ params }) {
     const { user } = useAdminAuthStore();
 
     const isMM = user?.role === "moduleMaster";
-    const canPublish = ["superAdmin", "contentManager"].includes(user?.role);
+    const canPublish = CONTENT_APPROVER_ROLES.includes(user?.role);
     const canSubmitForReview = isMM;
     const assignedModules = isMM ? (user?.assignedModules || []) : null;
 
@@ -57,7 +59,7 @@ export default function TopicEditor({ params }) {
             // Block moduleMaster from editing outside assigned modules
             if (isMM && assignedModules && !assignedModules.includes(t.moduleId)) {
                 alert("You don't have access to edit this topic.");
-                router.replace("/admin/content");
+                router.replace(ADMIN_ROUTES.CONTENT);
                 return;
             }
             if (contentQuery.isSuccess) setTopic(t);
@@ -82,7 +84,7 @@ export default function TopicEditor({ params }) {
             setSaved(true); setTimeout(() => setSaved(false), 2000);
             if (isNew && savedTopic?._id) router.replace(`/admin/content/${savedTopic._id}/edit`);
             showToast(
-                overrideStatus === "published" ? "Published live ◉ — visible on Learner Hub instantly" :
+                overrideStatus === CONTENT_STATUS.PUBLISHED ? "Published live ◉ — visible on Learner Hub instantly" :
                     overrideStatus === "review" ? "Submitted for review — awaiting approval" :
                         "Draft saved"
             );

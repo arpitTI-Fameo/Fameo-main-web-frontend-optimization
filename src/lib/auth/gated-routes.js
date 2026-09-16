@@ -8,6 +8,8 @@
 //
 // middleware.js remains the ENFORCEMENT point. This file is only the data.
 
+import { ADMIN_ROUTES } from '@/constants/routes';
+
 /** Signed-in creators only. */
 export const AUTH_ONLY_ROUTES = [
   '/products',
@@ -25,7 +27,7 @@ export const PAID_ROUTES = [
 ];
 
 /** Admin panel. Never public. */
-export const ADMIN_PREFIX = '/admin';
+export const ADMIN_PREFIX = ADMIN_ROUTES.ROOT;
 
 /** Every path prefix a signed-out visitor cannot reach. */
 export const GATED_ROUTES = [...AUTH_ONLY_ROUTES, ...PAID_ROUTES, ADMIN_PREFIX];

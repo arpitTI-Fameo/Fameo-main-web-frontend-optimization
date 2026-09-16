@@ -4,12 +4,13 @@
 import Link from "next/link";
 
 import { S } from "../../styles";
+import { ADMIN_ROUTES } from "@/constants/routes";
 
 export default function SidebarHeader({ collapsed, setCollapsed, rc }) {
   return (
     <div style={S.sbTop}>
       {!collapsed && (
-        <Link href="/admin" style={{ ...S.logo, color: "#F0E8D6", textDecoration: "none" }}>
+        <Link href={ADMIN_ROUTES.ROOT} style={{ ...S.logo, color: "#F0E8D6", textDecoration: "none" }}>
           Fameo <span style={{ color: rc.accent }}>Admin</span>
         </Link>
       )}

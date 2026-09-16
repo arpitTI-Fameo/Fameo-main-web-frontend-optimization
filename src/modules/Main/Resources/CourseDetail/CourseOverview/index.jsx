@@ -7,6 +7,7 @@ import { COURSES } from "@/constants/courses";
 import Footer from '../Footer';
 import { HERO_FALLBACK, QUOTES } from '../constants';
 import { useReveals } from '../hooks';
+import { ROUTES } from '@/constants/routes';
 
 export default function CourseOverview({ course, allLessons, onOpenLesson, onHome }) {
   const [sticky, setSticky] = useState(false);
@@ -164,7 +165,7 @@ export default function CourseOverview({ course, allLessons, onOpenLesson, onHom
           <div className="cx-sec-label cx-reveal">CONTINUE YOUR PATH</div>
           <div className="cx-next-grid" data-stagger="130">
             {nextCourses.map(c => (
-              <a className="cx-ncard" data-child key={c.slug} href={`/resources/courses/${c.slug}`}>
+              <a className="cx-ncard" data-child key={c.slug} href={ROUTES.COURSE(c.slug)}>
                 <img src={c.heroThumb || c.thumbnail} alt="" />
                 <div className="cx-ninfo">
                   <div className="nc">{c.category}</div>

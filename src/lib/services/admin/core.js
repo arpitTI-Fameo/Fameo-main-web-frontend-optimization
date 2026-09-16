@@ -7,6 +7,8 @@
 // store/adminAuthStore.js for why the localStorage version was removed.
 
 import { clientFetch } from '@/lib/api/client/fetcher';
+import { STORAGE_KEYS } from '@/constants/storageKeys';
+import { ADMIN_ROUTES } from '@/constants/routes';
 
 /**
  * Clears whatever a pre-migration build may have left in web storage.
@@ -16,9 +18,9 @@ import { clientFetch } from '@/lib/api/client/fetcher';
 export function clearTokens() {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.removeItem('fameo_token');
-    localStorage.removeItem('fameo_refresh');
-    sessionStorage.removeItem('fameo_user');
+    localStorage.removeItem(STORAGE_KEYS.LEGACY_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.LEGACY_REFRESH);
+    sessionStorage.removeItem(STORAGE_KEYS.USER);
   } catch {
     // Private mode / disabled storage — nothing to clean up.
   }
@@ -35,8 +37,8 @@ export const adminFetch = async (path, opts = {}) => {
   } catch (error) {
     if (error.status === 401) {
       clearTokens();
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/admin/login')) {
-        window.location.href = '/admin/login';
+      if (typeof window !== 'undefined' && !window.location.pathname.includes(ADMIN_ROUTES.LOGIN)) {
+        window.location.href = ADMIN_ROUTES.LOGIN;
       }
     }
     throw error;

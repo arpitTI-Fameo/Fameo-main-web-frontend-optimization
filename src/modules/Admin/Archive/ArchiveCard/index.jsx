@@ -3,7 +3,7 @@
 
 import { S } from "../styles";
 import { MODULES } from "../constants";
-import { timeAgo } from "../helpers";
+import { daysAgo } from '@/utils/relativeTime';
 
 export default function ArchiveCard({ item, isSuperAdmin, restore, permanentDelete }) {
     return (
@@ -17,7 +17,7 @@ export default function ArchiveCard({ item, isSuperAdmin, restore, permanentDele
                         {item.level === "b" ? "Beginner" : "Intermediate"} · {item.readTime}
                     </p>
                     <p style={S.cardMeta}>
-                        Archived {timeAgo(item.updatedAt)} · by {item.createdByName || item.createdBy || "—"}
+                        Archived {daysAgo(item.updatedAt)} · by {item.createdByName || item.createdBy || "—"}
                     </p>
                 </div>
             </div>

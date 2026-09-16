@@ -20,6 +20,7 @@
 // token in the system becomes forgeable.
 
 import { jwtVerify } from 'jose';
+import { ADMIN_ROLES as ADMIN_ROLE_LIST } from '@/constants/roles';
 
 const secretRaw = process.env.JWT_SECRET;
 const secret = secretRaw ? new TextEncoder().encode(secretRaw) : null;
@@ -74,15 +75,13 @@ export async function verifyToken(token) {
   }
 }
 
-/** Roles allowed into /admin. Mirrors ADMIN_ROLES in store/adminAuthStore.js. */
-export const ADMIN_ROLES = new Set([
-  'superAdmin',
-  'contentManager',
-  'moduleMaster',
-  'supportAgent',
-]);
+/* Membership lookup for the hot path. Deliberately NOT exported: the roles
+   themselves live in @/constants/roles, and a second exported ADMIN_ROLES —
+   a Set here, an array there — is an import waiting to pick the wrong one.
+   isAdminRole() is the only thing any caller has ever needed. */
+const ADMIN_ROLE_SET = new Set(ADMIN_ROLE_LIST);
 
-export const isAdminRole = (role) => ADMIN_ROLES.has(role);
+export const isAdminRole = (role) => ADMIN_ROLE_SET.has(role);
 
 /**
  * Tiers that unlock paid areas (community, talent-hire).
@@ -102,4 +101,4 @@ export const PAID_PLANS = new Set(['pro', 'popular', 'elite', 'premium']);
 export const hasPaidPlan = (claims) =>
   PAID_PLANS.has(String(claims?.plan ?? '').trim().toLowerCase());
 
-export default { verifyToken, isAdminRole, hasPaidPlan, ADMIN_ROLES, PAID_PLANS };
+export default { verifyToken, isAdminRole, hasPaidPlan, PAID_PLANS };

@@ -1,5 +1,6 @@
 import { S } from '../styles';
-import { MODULES, timeAgo } from '../constants';
+import { MODULES } from '../constants';
+import { timeAgoNumeric } from '@/utils/relativeTime';
 
 export default function ModuleMastersList({ loading, masters, updateModules, revoke }) {
     if (loading) return <div style={S.empty}>Loading…</div>;
@@ -21,7 +22,7 @@ export default function ModuleMastersList({ loading, masters, updateModules, rev
                         </div>
                     </div>
                     <div style={S.cardRight}>
-                        <p style={S.lastSeen}>Active {timeAgo(m.lastSeen)}</p>
+                        <p style={S.lastSeen}>Active {timeAgoNumeric(m.lastSeen)}</p>
                         <div style={{ display: "flex", gap: 8 }}>
                             <button style={S.editBtn} onClick={() => {
                                 const mods = prompt("Enter module IDs (comma separated 0-7):", m.assignedModules?.join(","));

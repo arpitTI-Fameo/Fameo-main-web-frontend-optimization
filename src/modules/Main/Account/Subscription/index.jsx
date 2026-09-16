@@ -13,8 +13,8 @@ import { useAuthStore } from '@/store/authStore';
 
 const PLAN_COLORS = { free: '#9898a8', pro: '#7c9ec9', popular: '#d4a0c0', elite: '#e8457a' };
 const PLAN_ICONS = { free: '○', pro: '✦', popular: '◈', elite: '★' };
-import { S } from './styles';
-import { fmtINR, fmtDate, fmtShort, printInvoice } from './helpers';
+import { S, printInvoice } from './styles';
+import { fmtINR, fmtDate, fmtShort } from './helpers';
 import { useCurrentSubscription, useSubscriptionHistory, useCancelSubscriptionMutation, useSetAutoRenewMutation } from '@/lib/hooks/main/useSubscription';
 
 

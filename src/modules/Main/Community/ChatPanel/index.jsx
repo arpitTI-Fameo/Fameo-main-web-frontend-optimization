@@ -10,6 +10,7 @@ import { io } from 'socket.io-client';
 import { useAuthStore } from '@/store/authStore';
 import { SOCKET_ORIGIN } from '@/lib/api/config';
 import { useMessages, useMessageUploadMutation, useRooms } from '@/lib/hooks/main/useChat';
+import { DEFAULT_LOCALE } from '@/constants/locale';
 
 
 // ── Design tokens (white theme) ───────────────────────────────────────────────
@@ -57,7 +58,7 @@ const fmtDate = d => {
   if (dt.toDateString() === today.toDateString()) return 'Today';
   const yest = new Date(today); yest.setDate(yest.getDate() - 1);
   if (dt.toDateString() === yest.toDateString()) return 'Yesterday';
-  return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  return dt.toLocaleDateString(DEFAULT_LOCALE, { day: 'numeric', month: 'short' });
 };
 const fmtAudio = s => `${Math.floor((s || 0) / 60)}:${String(Math.floor((s || 0) % 60)).padStart(2, '0')}`;
 

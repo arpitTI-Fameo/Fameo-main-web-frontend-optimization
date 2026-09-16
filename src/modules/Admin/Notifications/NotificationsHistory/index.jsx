@@ -1,5 +1,6 @@
 import { S } from '../styles';
-import { TYPE_COLOR, timeAgo } from '../constants';
+import { TYPE_COLOR } from '../constants';
+import { timeAgoNumeric } from '@/utils/relativeTime';
 
 export default function NotificationsHistory({ sent }) {
   return (
@@ -13,7 +14,7 @@ export default function NotificationsHistory({ sent }) {
             <span style={{ ...S.typeDot, background: (TYPE_COLOR[n.type] || "#aaa") + "22", color: TYPE_COLOR[n.type] || "#aaa" }}>
               {n.type}
             </span>
-            <span style={{ fontSize: 10, color: "#bbb" }}>{timeAgo(n.sentAt)}</span>
+            <span style={{ fontSize: 10, color: "#bbb" }}>{timeAgoNumeric(n.sentAt)}</span>
           </div>
           <p style={S.sentTitle}>{n.title}</p>
           {n.body && <p style={{ fontSize: 12, color: "#888", marginTop: 4, lineHeight: 1.5 }}>{n.body}</p>}

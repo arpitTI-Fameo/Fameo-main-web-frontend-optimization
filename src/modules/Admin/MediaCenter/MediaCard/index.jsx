@@ -3,7 +3,8 @@
 
 import { S } from "../styles";
 import { TYPE_COLORS, TYPE_ICONS } from "../constants";
-import { timeAgo, fmtSize } from "../helpers";
+import { fmtSize } from "../helpers";
+import { timeAgoNumeric } from '@/utils/relativeTime';
 
 export default function MediaCard({ item, deleteMedia }) {
     const color = TYPE_COLORS[item.type] || "#aaa";
@@ -16,7 +17,7 @@ export default function MediaCard({ item, deleteMedia }) {
             <div style={S.cardBody}>
                 <p style={S.cardName} title={item.name}>{item.name}</p>
                 <p style={S.cardMeta}>{fmtSize(item.sizeBytes || 0)} · {item.uploadedByRole || item.uploadedBy?.role || "—"}</p>
-                <p style={S.cardMeta}>{timeAgo(item.uploadedAt || item.createdAt)}</p>
+                <p style={S.cardMeta}>{timeAgoNumeric(item.uploadedAt || item.createdAt)}</p>
                 {item.attachedTopics?.length > 0 && (
                     <p style={{ ...S.cardMeta, color: "#C9A96E" }}>
                         {item.attachedTopics.length} topic{item.attachedTopics.length > 1 ? "s" : ""} attached

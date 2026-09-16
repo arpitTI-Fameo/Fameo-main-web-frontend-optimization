@@ -19,6 +19,7 @@ import emailjs from '@emailjs/browser';
 import { supportSchema, firstSupportError } from './schema';
 import { S } from './styles';
 import { MailIcon, ClockIcon, CalendarIcon, CheckIcon, ChevronIcon, PlusIcon } from './icons';
+import { DEFAULT_LOCALE } from '@/constants/locale';
 
 /* ════════════════════════════════════════════════════════════════════════════
    CONFIG  — edit these values
@@ -164,7 +165,7 @@ export default function SupportCenter() {
         subject: values.subject || `${values.category} support request`,
         message: values.message,
         to_name: `${SUPPORT_CONFIG.appName} Support`,
-        time: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
+        time: new Date().toLocaleString(DEFAULT_LOCALE, { dateStyle: 'medium', timeStyle: 'short' }),
       }, { publicKey });
       setStatus('sent');
       reset(DEFAULT_VALUES);

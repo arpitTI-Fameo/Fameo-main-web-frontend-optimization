@@ -17,22 +17,24 @@ import PendingApprovals from './PendingApprovals';
 import MySubmissions from './MySubmissions';
 import ActivityFeed from './ActivityFeed';
 import OverviewFeatureFlags from './OverviewFeatureFlags';
+import { ADMIN_ROUTES } from "@/constants/routes";
+import { ADMIN_ROLE, CONTENT_AUTHOR_ROLES, CONTENT_APPROVER_ROLES } from "@/constants/roles";
 
 export function Overview() {
   const { user } = useAdminAuthStore();
   const role = user?.role;
   const accent = ROLE_ACCENT[role] || "#C9A96E";
 
-  const canApprove = ["superAdmin", "contentManager"].includes(role);
-  const canCreate = ["superAdmin", "contentManager", "moduleMaster"].includes(role);
-  const isSA = role === "superAdmin";
-  const isSupport = role === "supportAgent";
+  const canApprove = CONTENT_APPROVER_ROLES.includes(role);
+  const canCreate = CONTENT_AUTHOR_ROLES.includes(role);
+  const isSA = role === ADMIN_ROLE.SUPER_ADMIN;
+  const isSupport = role === ADMIN_ROLE.SUPPORT_AGENT;
   const isMM = role === "moduleMaster";
 
   const [flagSaving, setFlagSaving] = useState({});
   const [toast, setToast] = useState(null);
 
-  const canEditCourses = ["superAdmin", "contentManager"].includes(role);
+  const canEditCourses = CONTENT_APPROVER_ROLES.includes(role);
 
   const statsQuery = useAdminStats();
   const activityQuery = useAdminActivity(8);
@@ -179,18 +181,18 @@ export function Overview() {
 
   const statCards = [
     ...(isSupport ? [] : [
-      { label: "Published Topics", value: stats?.publishedTopics, sub: `${stats?.draftTopics || 0} drafts`, accent: "#7ec87e", href: "/admin/content" },
+      { label: "Published Topics", value: stats?.publishedTopics, sub: `${stats?.draftTopics || 0} drafts`, accent: "#7ec87e", href: ADMIN_ROUTES.CONTENT },
     ]),
     ...(canApprove ? [
-      { label: "Pending Approvals", value: stats?.pendingApprovals, sub: "need review", accent: "#C9A96E", href: "/admin/approval" },
+      { label: "Pending Approvals", value: stats?.pendingApprovals, sub: "need review", accent: "#C9A96E", href: ADMIN_ROUTES.APPROVAL },
     ] : []),
     ...(isSupport ? [
-      { label: "Open Tickets", value: stats?.openTickets || "—", sub: "need response", accent: "#7ec87e", href: "/admin/support" },
-      { label: "Total Learners", value: stats?.totalLearners || "—", sub: "registered users", accent: "#7eb8d8", href: "/admin/contacts" },
+      { label: "Open Tickets", value: stats?.openTickets || "—", sub: "need response", accent: "#7ec87e", href: ADMIN_ROUTES.SUPPORT },
+      { label: "Total Learners", value: stats?.totalLearners || "—", sub: "registered users", accent: "#7eb8d8", href: ADMIN_ROUTES.CONTACTS },
     ] : [
-      { label: "Active Learners", value: stats?.activeLearners, sub: `of ${stats?.totalLearners?.toLocaleString() || 0} total`, accent: "#7eb8d8", href: "/admin/contacts" },
+      { label: "Active Learners", value: stats?.activeLearners, sub: `of ${stats?.totalLearners?.toLocaleString() || 0} total`, accent: "#7eb8d8", href: ADMIN_ROUTES.CONTACTS },
     ]),
-    ...(isSA ? [{ label: "Revenue (MTD)", value: stats?.revenue, sub: "this month", accent: "#b89fd4", href: "/admin/revenue" }] : []),
+    ...(isSA ? [{ label: "Revenue (MTD)", value: stats?.revenue, sub: "this month", accent: "#b89fd4", href: ADMIN_ROUTES.REVENUE }] : []),
   ];
 
   const roleSub = {

@@ -23,8 +23,9 @@ import { useAuthStore } from '@/store/authStore';
 import { useAuthHydrated } from '@/lib/hooks/custome/useAuthHydrated';
 import { useProfilePhoto } from '@/lib/hooks/custome/useProfilePhoto';
 import { ROUTES } from '@/constants/routes';
+import { STORAGE_KEYS } from '@/constants/storageKeys';
 
-export const LOGIN_FLAG = 'fameo_just_logged_in';
+export const LOGIN_FLAG = STORAGE_KEYS.JUST_LOGGED_IN;
 const SEEN_PREFIX = 'fameo_welcomed:';
 
 const FIRST_MS = 10000; // first-run card stays a little longer

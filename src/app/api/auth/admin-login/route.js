@@ -17,8 +17,7 @@ import { API_ORIGIN } from '@/lib/api/server/origins';
 import { hit, clientKey, limitHeaders, LIMITS } from '@/lib/api/server/rate-limit';
 import { authEndpoints } from '@/lib/api/endpoints';
 import { setSessionToken } from '@/lib/auth/session';
-
-const ADMIN_ROLES = ['superAdmin', 'contentManager', 'moduleMaster', 'supportAgent'];
+import { ADMIN_ROLES } from '@/constants/roles';
 
 export async function POST(request) {
   const gate = hit(`admin-login:${clientKey(request)}`, LIMITS.auth.limit, LIMITS.auth.windowMs);

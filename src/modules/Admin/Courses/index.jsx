@@ -11,6 +11,8 @@ import { getAdminCourseAction } from '@/lib/services/admin/courses.service';
 import { useSocket } from "@/lib/hooks/custome/useSocket";
 import { COURSES as STATIC_COURSES } from "@/constants/courses";
 import { MediaPicker } from "@/components/admin/MediaPicker";
+import { CONTENT_APPROVER_ROLES } from "@/constants/roles";
+import { ROUTES } from "@/constants/routes";
 
 const CATEGORIES = ["Foundations", "Content", "Setup", "Growth", "Monetization", "Operations", "Scaling", "Analytics", "Mindset"];
 const LEVELS = ["Beginner", "Intermediate", "Advanced", "All Levels"];
@@ -18,7 +20,7 @@ const LEVELS = ["Beginner", "Intermediate", "Advanced", "All Levels"];
 export default function CoursesAdmin() {
     const { user } = useAdminAuthStore();
     const isSA = user?.role === "superAdmin";
-    const canEdit = ["superAdmin", "contentManager"].includes(user?.role);
+    const canEdit = CONTENT_APPROVER_ROLES.includes(user?.role);
 
     const [search, setSearch] = useState("");
     const [catFilter, setCat] = useState("all");
@@ -265,7 +267,7 @@ export default function CoursesAdmin() {
 
                         {/* Actions */}
                         <div style={{ flex: 2, display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center" }}>
-                            <Link href={`/resources/courses/${c.slug}`} target="_blank"
+                            <Link href={ROUTES.COURSE(c.slug)} target="_blank"
                                 style={{ ...S.btn, color: "#7eb8d8", borderColor: "#7eb8d844" }}>
                                 Preview ↗
                             </Link>

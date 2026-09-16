@@ -19,6 +19,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { STORAGE_KEYS } from '@/constants/storageKeys';
 
 export const useAdminAuthStore = create(
   persist(
@@ -70,9 +71,9 @@ export const useAdminAuthStore = create(
         // Sweep pre-migration keys so an upgrade cannot leave a readable token
         // behind for anything still looking for one.
         try {
-          localStorage.removeItem("fameo_token");
-          localStorage.removeItem("fameo_refresh");
-          sessionStorage.removeItem("fameo_user");
+          localStorage.removeItem(STORAGE_KEYS.LEGACY_TOKEN);
+          localStorage.removeItem(STORAGE_KEYS.LEGACY_REFRESH);
+          sessionStorage.removeItem(STORAGE_KEYS.USER);
         } catch {
           // Private mode / disabled storage — nothing to clean up.
         }

@@ -13,6 +13,7 @@ import { CSS } from "../styles";
 import { BUBBLES, SPARKLES, PARTICLES } from "../decor";
 import LoginHeader from "../LoginHeader";
 import LoginForm from "../LoginForm";
+import { STORAGE_KEYS } from '@/constants/storageKeys';
 
 
 export default function LoginContainer() {
@@ -66,8 +67,8 @@ export default function LoginContainer() {
         // token are both httpOnly cookies set by /api/auth/login; `fameo_user`
         // is the user OBJECT, read by the socket hooks for their handshake
         // payload, and `fameo_just_logged_in` is a one-shot UI flag.
-        if (user) sessionStorage.setItem("fameo_user", JSON.stringify(user));
-        sessionStorage.setItem("fameo_just_logged_in", "1");
+        if (user) sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+        sessionStorage.setItem(STORAGE_KEYS.JUST_LOGGED_IN, "1");
       }
 
       login(user, null);

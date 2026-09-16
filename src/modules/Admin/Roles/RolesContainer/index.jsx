@@ -18,6 +18,8 @@ import UserTable from '../UserTable';
 import Modal from '../Modal';
 import { ROLE_MAP } from '../constants';
 import { KEYFRAMES, S } from '../styles';
+import { ADMIN_ROUTES } from "@/constants/routes";
+import { ADMIN_ROLE } from "@/constants/roles";
 
 export default function RolesContainer() {
   const { user } = useAdminAuthStore();
@@ -36,7 +38,7 @@ export default function RolesContainer() {
 
   // Guard — superAdmin only
   useEffect(() => {
-    if (user && user.role !== "superAdmin") router.replace("/admin");
+    if (user && user.role !== ADMIN_ROLE.SUPER_ADMIN) router.replace(ADMIN_ROUTES.ROOT);
   }, [user]);
 
   const usersQuery = useAdminRoleUsers();

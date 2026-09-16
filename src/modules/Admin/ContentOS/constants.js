@@ -1,8 +1,21 @@
+/* A topic's lifecycle. Module-scoped on purpose: these four values mean
+   something to ContentOS and nothing outside it, so they do not belong in
+   src/constants. Admin/Products has its own, separate status domain. */
+export const CONTENT_STATUS = {
+    PUBLISHED: "published",
+    DRAFT: "draft",
+    REVIEW: "review",
+    ARCHIVED: "archived",
+};
+
+/* Keyed by CONTENT_STATUS so a status can never be configured under a name
+   the rest of the module does not use. Insertion order is also the order the
+   filter chips render in — see ContentOSFilters. */
 export const STATUS_CONFIG = {
-    published: { label: "Published", color: "#7ec87e", bg: "#7ec87e18" },
-    draft: { label: "Draft", color: "#C9A96E", bg: "#C9A96E18" },
-    review: { label: "In Review", color: "#7eb8d8", bg: "#7eb8d818" },
-    archived: { label: "Archived", color: "#aaa", bg: "#aaa22" },
+    [CONTENT_STATUS.PUBLISHED]: { label: "Published", color: "#7ec87e", bg: "#7ec87e18" },
+    [CONTENT_STATUS.DRAFT]: { label: "Draft", color: "#C9A96E", bg: "#C9A96E18" },
+    [CONTENT_STATUS.REVIEW]: { label: "In Review", color: "#7eb8d8", bg: "#7eb8d818" },
+    [CONTENT_STATUS.ARCHIVED]: { label: "Archived", color: "#aaa", bg: "#aaa22" },
 };
 
 export const MODULES = [
@@ -16,10 +29,3 @@ export const MODULES = [
     { id: 7, title: "Scaling & Career Growth" },
 ];
 
-export function timeAgo(iso) {
-    const d = Math.floor((Date.now() - new Date(iso)) / 60000);
-    if (d < 1) return "just now";
-    if (d < 60) return `${d}m ago`;
-    if (d < 1440) return `${Math.floor(d / 60)}h ago`;
-    return `${Math.floor(d / 1440)}d ago`;
-}

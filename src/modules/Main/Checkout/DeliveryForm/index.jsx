@@ -5,6 +5,7 @@ import { useAuthStore }        from '@/store/authStore';
 import { SHIPPING_RATES, shippingCostFor } from '@/utils/shipping';
 import { useAddresses } from '@/lib/hooks/main/useUser';
 import { S } from './styles';
+import { DEFAULT_LOCALE } from '@/constants/locale';
 
 
 // Rates moved to lib/shipping.js — the old table here held pseudo-USD figures
@@ -317,7 +318,7 @@ export default function DeliveryForm({ addr, onAddr, shipping, onShipping, cartT
                 <div className="df-ship-days">{rate.days}</div>
               </div>
               <div className={`df-ship-price${cost === 0 ? ' free' : ''}`}>
-                {cost === 0 ? 'FREE' : `₹${cost.toLocaleString('en-IN')}`}
+                {cost === 0 ? 'FREE' : `₹${cost.toLocaleString(DEFAULT_LOCALE)}`}
               </div>
             </div>
           );

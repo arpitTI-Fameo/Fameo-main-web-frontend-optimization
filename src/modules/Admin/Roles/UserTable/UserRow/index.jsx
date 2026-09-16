@@ -3,7 +3,7 @@
 
 import { S } from '../../styles';
 import { ROLES } from '../../constants';
-import { timeAgo } from '../../helpers';
+import { lastSeenAgo } from '../../helpers';
 
 export default function UserRow({ u, rc, isSelf, changeRole, setModal }) {
   return (
@@ -69,8 +69,8 @@ export default function UserRow({ u, rc, isSelf, changeRole, setModal }) {
         </span>
       </div>
 
-      <span style={S.metaCell}>{timeAgo(u.lastSeen)}</span>
-      <span style={S.metaCell}>{timeAgo(u.createdAt)}</span>
+      <span style={S.metaCell}>{lastSeenAgo(u.lastSeen)}</span>
+      <span style={S.metaCell}>{lastSeenAgo(u.createdAt)}</span>
 
       {/* Actions */}
       <div style={{ flex: 2, display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>

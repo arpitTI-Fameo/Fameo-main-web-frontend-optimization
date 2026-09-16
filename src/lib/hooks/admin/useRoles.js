@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
 import { getAdminRoleUsersAction, updateAdminRoleAction, toggleAdminRoleAccessAction, deleteAdminRoleUserAction, updateAdminRolePasswordAction, createAdminRoleUserAction } from '@/lib/services/admin/roles.service';
+import { adminKeys } from '@/lib/services/admin/admin.keys';
 
 export const useAdminRoleUsers = (opts = {}) => useQuery({
-    queryKey: ['admin', 'roles', 'users'],
+    queryKey: adminKeys.roleUsers(),
     queryFn: getAdminRoleUsersAction,
     ...opts
 });

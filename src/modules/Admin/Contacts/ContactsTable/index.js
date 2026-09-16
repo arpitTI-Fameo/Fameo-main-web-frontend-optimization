@@ -1,11 +1,5 @@
 import { S } from '../styles';
-
-function timeAgo(iso) {
-    const d = Math.floor((Date.now() - new Date(iso)) / 86400000);
-    if (d === 0) return "today";
-    if (d === 1) return "yesterday";
-    return `${d} days ago`;
-}
+import { daysAgo } from '@/utils/relativeTime';
 
 const ROLE_COLOR = { learner: "#7eb8d8", creator: "#C9A96E", brand: "#b89fd4", educator: "#7ec87e" };
 
@@ -36,7 +30,7 @@ export default function ContactsTable({ loading, users, showEmail }) {
                                 <span style={{ ...S.rolePill, background: (ROLE_COLOR[u.role] || "#aaa") + "22", color: ROLE_COLOR[u.role] || "#888" }}>{u.role}</span>
                             </span>
                             <span style={{ flex: 1, fontSize: 12, color: "#888" }}>{u.orderCount || 0}</span>
-                            <span style={{ flex: 1, fontSize: 11, color: "#bbb" }}>{timeAgo(u.createdAt)}</span>
+                            <span style={{ flex: 1, fontSize: 11, color: "#bbb" }}>{daysAgo(u.createdAt)}</span>
                             <span style={{ flex: 1 }}>
                                 <span style={{ ...S.statusDot, background: u.isActive ? "#7ec87e" : "#d49090", color: u.isActive ? "#3a7c3a" : "#9a3030" }}>
                                     {u.isActive ? "Active" : "Inactive"}

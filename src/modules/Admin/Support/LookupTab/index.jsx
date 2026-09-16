@@ -1,4 +1,5 @@
 import { S } from '../styles';
+import { DEFAULT_LOCALE } from '@/constants/locale';
 
 export default function LookupTab({
   lookupQuery, setLookupQ, lookupLearner, looking, lookupResult, setTab, setSearch
@@ -28,7 +29,7 @@ export default function LookupTab({
                 <p style={S.learnerName}>{u.name}</p>
                 <p style={S.learnerEmail}>{u.email}</p>
                 <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
-                  <span style={S.learnerStat}>Joined {new Date(u.createdAt).toLocaleDateString("en-IN")}</span>
+                  <span style={S.learnerStat}>Joined {new Date(u.createdAt).toLocaleDateString(DEFAULT_LOCALE)}</span>
                   <span style={S.learnerStat}>Orders: {u.orderCount || 0}</span>
                   <span style={S.learnerStat}>Role: {u.role}</span>
                 </div>

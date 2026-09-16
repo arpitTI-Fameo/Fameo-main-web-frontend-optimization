@@ -1,5 +1,6 @@
 import { S } from '../styles';
-import { PRIORITY_COLOR, STATUS_COLOR, timeAgo } from '../constants';
+import { PRIORITY_COLOR, STATUS_COLOR } from '../constants';
+import { timeAgoNumeric } from '@/utils/relativeTime';
 
 export default function TicketsTab({
   searchQuery, setSearch, filterStatus, setFilter,
@@ -31,7 +32,7 @@ export default function TicketsTab({
                     <span style={S.ticketSubject}>{t.subject}</span>
                     <span style={{ ...S.priorityDot, background: PRIORITY_COLOR[t.priority] || "#aaa" }} title={t.priority} />
                   </div>
-                  <p style={S.ticketMeta}>{t.learnerName} · {timeAgo(t.created)}</p>
+                  <p style={S.ticketMeta}>{t.learnerName} · {timeAgoNumeric(t.created)}</p>
                   <span style={{ ...S.statusBadge, background: (STATUS_COLOR[t.status] || "#aaa") + "22", color: STATUS_COLOR[t.status] || "#aaa" }}>
                     {t.status}
                   </span>
@@ -54,7 +55,7 @@ export default function TicketsTab({
                   <p style={S.detailMeta}>
                     From <strong>{active.learnerName}</strong>
                     {active.learnerEmail && ` — ${active.learnerEmail}`}
-                    {" · "}{timeAgo(active.created)}
+                    {" · "}{timeAgoNumeric(active.created)}
                   </p>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
@@ -84,7 +85,7 @@ export default function TicketsTab({
                     <div style={{ ...S.messageBubble, background: m.from === "admin" ? "#1a1208" : "#f5f5f2", color: m.from === "admin" ? "#F0E8D6" : "#1a1208" }}>
                       {m.text}
                     </div>
-                    <span style={S.messageTime}>{m.from === "admin" ? "You" : "Learner"} · {timeAgo(m.time)}</span>
+                    <span style={S.messageTime}>{m.from === "admin" ? "You" : "Learner"} · {timeAgoNumeric(m.time)}</span>
                   </div>
                 ))}
               </div>

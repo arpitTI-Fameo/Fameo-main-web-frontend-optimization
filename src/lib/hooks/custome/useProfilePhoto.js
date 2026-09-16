@@ -29,11 +29,12 @@ import { useState, useEffect } from "react";
 
 import { BFF_APP_BASE } from "@/lib/api/config";
 import { userConfigEndpoints } from "@/lib/api/endpoints";
+import { STORAGE_KEYS } from '@/constants/storageKeys';
 
 // Same-origin. The upstream host used to be hardcoded here, which shipped it in
 // the client bundle and could not be changed per environment.
 const PROFILE_URL = `${BFF_APP_BASE}${userConfigEndpoints.webProfile()}`;
-const CACHE_PREFIX = "fameo_profile_photo";
+const CACHE_PREFIX = STORAGE_KEYS.PROFILE_PHOTO;
 
 const isWebUrl = (u) => typeof u === "string" && /^https?:\/\//i.test(u);
 

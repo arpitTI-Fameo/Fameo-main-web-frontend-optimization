@@ -3,7 +3,7 @@
 
 import { S } from "../styles";
 import { TYPE_COLOR } from "../constants";
-import { timeAgo } from "../helpers";
+import { timeAgo } from '@/utils/relativeTime';
 
 export default function ApprovalCard({ item, tab, accent, review }) {
   const [bg, color] = TYPE_COLOR[item.type] || ["#eee", "#555"];

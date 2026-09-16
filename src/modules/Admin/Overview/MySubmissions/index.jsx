@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { S } from '../styles';
-import { timeAgo } from '../constants';
+import { timeAgo } from '@/utils/relativeTime';
+import { ADMIN_ROUTES } from "@/constants/routes";
 
 export default function MySubmissions({ pending, accent }) {
   return (
     <div style={S.card}>
       <div style={S.cardHead}>
         <h2 style={S.cardTitle}>My Submissions</h2>
-        <Link href="/admin/content" style={{ ...S.cardLink, color: accent }}>View all →</Link>
+        <Link href={ADMIN_ROUTES.CONTENT} style={{ ...S.cardLink, color: accent }}>View all →</Link>
       </div>
       {pending.length === 0
         ? <p style={S.empty}>No pending submissions</p>

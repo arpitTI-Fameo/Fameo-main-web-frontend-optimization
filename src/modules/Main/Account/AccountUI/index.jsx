@@ -1,4 +1,5 @@
 'use client';
+import { DEFAULT_LOCALE } from '@/constants/locale';
 // modules/Account/AccountUI/index.jsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared design tokens + presentational primitives for every /account page.
@@ -37,7 +38,7 @@ export function inr(value) {
   if (value === null || value === undefined) return '—';
   const n = Number(value);
   if (Number.isNaN(n)) return '—';
-  return `₹${n.toLocaleString('en-IN', {
+  return `₹${n.toLocaleString(DEFAULT_LOCALE, {
     minimumFractionDigits: n % 1 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
   })}`;
@@ -48,7 +49,7 @@ export function shortDate(value) {
   if (!value) return '—';
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  return d.toLocaleDateString(DEFAULT_LOCALE, { day: 'numeric', month: 'short' });
 }
 
 // ─── Status → chip colours ───────────────────────────────────────────────────

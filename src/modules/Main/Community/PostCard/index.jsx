@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { useToggleLikeMutation, useToggleSaveMutation } from '@/lib/hooks/main/useCommunity';
+import { DEFAULT_LOCALE } from '@/constants/locale';
 
 
 function timeAgo(date) {
@@ -200,7 +201,7 @@ export function EventHighlightCard({ event, onNavigate, onRSVP, rsvped }) {
         <div style={{ fontSize: 12, color: 'var(--cm-text3)' }}>
           by {event?.host?.name || 'Creator'} · {event?.status === 'live'
             ? `${event?.listenerCount || 540} listening`
-            : new Date(event?.scheduledAt).toLocaleString('en-IN', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
+            : new Date(event?.scheduledAt).toLocaleString(DEFAULT_LOCALE, { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
         </div>
       </div>
       {rsvped ? (

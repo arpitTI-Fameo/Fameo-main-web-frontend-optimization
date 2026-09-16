@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { S } from '../styles';
+import { ADMIN_ROUTES } from "@/constants/routes";
 
 export default function ContentOSHeader({
     isReadOnly,
@@ -22,7 +23,7 @@ export default function ContentOSHeader({
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 {canPublish && <span style={S.liveNote}>◉ Publish = instant live update</span>}
                 {canCreate && (
-                    <Link href="/admin/content/new/edit" style={{ ...S.newBtn, background: accent, color: "#1a1200" }}>
+                    <Link href={ADMIN_ROUTES.CONTENT_NEW_EDIT} style={{ ...S.newBtn, background: accent, color: "#1a1200" }}>
                         + New Topic
                     </Link>
                 )}

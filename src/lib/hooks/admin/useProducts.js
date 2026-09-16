@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
 import { getAdminProductsAction, createAdminProductAction, updateAdminProductAction, updateProductStatusAction } from '@/lib/services/admin/products.service';
+import { adminKeys } from '@/lib/services/admin/admin.keys';
 
 export const useAdminProducts = (opts = {}) => useQuery({
-    queryKey: ['admin', 'products'],
+    queryKey: adminKeys.products(),
     queryFn: getAdminProductsAction,
     ...opts
 });

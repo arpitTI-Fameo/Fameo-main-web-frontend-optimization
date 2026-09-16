@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
 import { getMediaAction, uploadMediaAction, deleteMediaItemAction } from '@/lib/services/admin/media.service';
+import { adminKeys } from '@/lib/services/admin/admin.keys';
 
 export const useAdminMedia = (opts = {}) => useQuery({
-    queryKey: ['admin', 'media'],
+    queryKey: adminKeys.media(),
     queryFn: getMediaAction,
     ...opts
 });

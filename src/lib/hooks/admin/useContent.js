@@ -2,9 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
 import { getAdminContentAction, updateAdminContentStatusAction, getAdminContentByIdAction, createAdminContentAction, updateAdminContentAction } from '@/lib/services/admin/content.service';
 import { deleteContentAction } from '@/lib/services/admin/archive.service';
+import { adminKeys } from '@/lib/services/admin/admin.keys';
 
 export const useAdminContent = (params, opts = {}) => useQuery({
-    queryKey: ['admin', 'content', params.toString()],
+    queryKey: adminKeys.contentList(params.toString()),
     queryFn: () => getAdminContentAction(params),
     ...opts
 });
@@ -26,7 +27,7 @@ export const useDeleteContentMutation = (opts = {}) => {
 };
 
 export const useAdminContentById = (id, opts = {}) => useQuery({
-    queryKey: ['admin', 'content', id],
+    queryKey: adminKeys.contentDetail(id),
     queryFn: () => getAdminContentByIdAction(id),
     ...opts
 });

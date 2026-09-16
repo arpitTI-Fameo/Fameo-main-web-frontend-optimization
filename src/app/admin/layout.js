@@ -5,8 +5,10 @@
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAdminAuthStore } from "@/store/adminAuthStore";
+import { ADMIN_ROLES } from "@/constants/roles";
 
 import AdminShell from "@/components/Layout/AdminShell";
+import { ADMIN_ROUTES } from "@/constants/routes";
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
@@ -20,19 +22,18 @@ export default function AdminLayout({ children }) {
   useEffect(() => { setHydrated(true); }, []);
 
   // ── Login page — bypass layout entirely
-  if (pathname === "/admin/login") return <>{children}</>;
+  if (pathname === ADMIN_ROUTES.LOGIN) return <>{children}</>;
 
   // ── Not hydrated yet — show nothing (prevents flash)
   if (!hydrated) return null;
 
   // ── Auth guard — runs after hydration
   if (!user) {
-    if (typeof window !== "undefined") router.replace("/admin/login");
+    if (typeof window !== "undefined") router.replace(ADMIN_ROUTES.LOGIN);
     return null;
   }
 
-  const adminRoles = ["superAdmin", "contentManager", "moduleMaster", "supportAgent"];
-  if (!adminRoles.includes(user.role)) {
+  if (!ADMIN_ROLES.includes(user.role)) {
     if (typeof window !== "undefined") router.replace("/");
     return null;
   }

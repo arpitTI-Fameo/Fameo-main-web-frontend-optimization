@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { S } from '../styles';
-import { STATUS_CONFIG, MODULES, timeAgo } from '../constants';
+import { CONTENT_STATUS, STATUS_CONFIG, MODULES } from '../constants';
+import { timeAgo } from '@/utils/relativeTime';
+import { ROUTES } from "@/constants/routes";
 
 export default function ContentOSTable({
     isReadOnly,
@@ -66,7 +68,7 @@ export default function ContentOSTable({
 
                                 <div style={{ flex: isReadOnly ? 0.5 : 1.5, display: "flex", gap: 4, flexWrap: "wrap" }}>
                                     {/* Read-only preview for all roles */}
-                                    <Link href={`/resources/courses/${t.slug || t._id}`} target="_blank" style={{ ...S.actionBtn, color: "#7eb8d8", borderColor: "#7eb8d844" }}>
+                                    <Link href={ROUTES.COURSE(t.slug || t._id)} target="_blank" style={{ ...S.actionBtn, color: "#7eb8d8", borderColor: "#7eb8d844" }}>
                                         Preview
                                     </Link>
 
@@ -76,7 +78,7 @@ export default function ContentOSTable({
                                     )}
 
                                     {/* Submit for review — moduleMaster only on drafts */}
-                                    {isMM && t.status === "draft" && isOwn && (
+                                    {isMM && t.status === CONTENT_STATUS.DRAFT && isOwn && (
                                         <button style={{ ...S.actionBtn, color: "#7eb8d8", borderColor: "#7eb8d844" }}
                                             onClick={() => changeStatus(t._id, "review")}>Submit</button>
                                     )}
@@ -84,25 +86,25 @@ export default function ContentOSTable({
                                     {/* Approve — contentManager and superAdmin on review items */}
                                     {canApprove && t.status === "review" && (
                                         <button style={{ ...S.actionBtn, color: "#3a7c3a", borderColor: "#7ec87e44" }}
-                                            onClick={() => changeStatus(t._id, "published")}>✓ Approve</button>
+                                            onClick={() => changeStatus(t._id, CONTENT_STATUS.PUBLISHED)}>✓ Approve</button>
                                     )}
 
                                     {/* Publish — superAdmin + contentManager on non-published */}
-                                    {canPublish && t.status !== "published" && t.status !== "review" && (
+                                    {canPublish && t.status !== CONTENT_STATUS.PUBLISHED && t.status !== CONTENT_STATUS.REVIEW && (
                                         <button style={{ ...S.actionBtn, color: "#3a7c3a", borderColor: "#7ec87e44" }}
-                                            onClick={() => changeStatus(t._id, "published")}>Publish</button>
+                                            onClick={() => changeStatus(t._id, CONTENT_STATUS.PUBLISHED)}>Publish</button>
                                     )}
 
                                     {/* Unpublish */}
-                                    {canPublish && t.status === "published" && (
+                                    {canPublish && t.status === CONTENT_STATUS.PUBLISHED && (
                                         <button style={{ ...S.actionBtn, color: "#888" }}
-                                            onClick={() => changeStatus(t._id, "draft")}>Unpublish</button>
+                                            onClick={() => changeStatus(t._id, CONTENT_STATUS.DRAFT)}>Unpublish</button>
                                     )}
 
                                     {/* Archive */}
-                                    {canArchive && t.status !== "archived" && (
+                                    {canArchive && t.status !== CONTENT_STATUS.ARCHIVED && (
                                         <button style={{ ...S.actionBtn, color: "#d49090", borderColor: "#d4909044" }}
-                                            onClick={() => changeStatus(t._id, "archived")}>Archive</button>
+                                            onClick={() => changeStatus(t._id, CONTENT_STATUS.ARCHIVED)}>Archive</button>
                                     )}
 
                                     {/* Delete — superAdmin only */}

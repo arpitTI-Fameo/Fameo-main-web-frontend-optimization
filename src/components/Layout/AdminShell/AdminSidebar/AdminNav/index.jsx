@@ -4,6 +4,7 @@
 import NavItem from "./NavItem";
 import { S } from "../../styles";
 import { SECTION_LABELS } from "../../constants";
+import { ADMIN_ROUTES } from "@/constants/routes";
 
 export default function AdminNav({ sections, pathname, collapsed, rc, pendingCount }) {
   return (
@@ -13,7 +14,7 @@ export default function AdminNav({ sections, pathname, collapsed, rc, pendingCou
           {!collapsed && <span style={S.secLabel}>{SECTION_LABELS[sec]}</span>}
           {items.map(item => {
             const active = pathname === item.href ||
-              (item.href !== "/admin" && pathname.startsWith(item.href));
+              (item.href !== ADMIN_ROUTES.ROOT && pathname.startsWith(item.href));
             return (
               <NavItem
                 key={item.href}
