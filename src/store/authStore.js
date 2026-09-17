@@ -2,6 +2,9 @@
 // store/authStore.js
 import { create }  from 'zustand';
 import { persist } from 'zustand/middleware';
+import { clientFetch } from '@/lib/api/client/fetcher';
+import { LOCAL_BASE, LEGACY_MEMBERSHIP_COOKIE } from '@/lib/api/config';
+import { localAuthRoutes } from '@/lib/api/endpoints';
 
 // SAST H-1 / H-2 are now CLOSED.
 //
@@ -40,18 +43,18 @@ export const useAuthStore = create(
         // rides in the signed JWT (`plan` claim). Any cookie left over from a
         // previous session is actively cleared below so nothing reads a stale
         // one by accident.
-        clearCookie('fameo_membership');
+        clearCookie(LEGACY_MEMBERSHIP_COOKIE);
       },
 
       // Logout — clear state instantly, then notify backenda
       logout: async () => {
         set({ user: null, token: null });
-        clearCookie('fameo_membership');
+        clearCookie(LEGACY_MEMBERSHIP_COOKIE);
         // Hits our own route, which clears the httpOnly cookie server-side and
         // notifies upstream. The browser has no token to send any more.
-        fetch('/api/auth/logout', {
+        clientFetch(localAuthRoutes.logout(), {
           method: 'POST',
-          credentials: 'same-origin',
+          base: LOCAL_BASE,
         }).catch(() => {});
       },
 
@@ -75,13 +78,12 @@ export const useAuthStore = create(
         }));
 
         try {
-          const res = await fetch('/api/auth/refresh-session', {
+          const data = await clientFetch(localAuthRoutes.refreshSession(), {
             method: 'POST',
-            credentials: 'same-origin',
+            base: LOCAL_BASE,
           });
-          const json = await res.json();
-          if (res.ok && json?.data?.user) {
-            set({ user: json.data.user });
+          if (data?.user) {
+            set({ user: data.user });
           }
         } catch {
           // Non-fatal: the next login picks up the new plan. Paid areas may
@@ -104,7 +106,7 @@ export const useAuthStore = create(
         // so rehydrate must not touch it — a document.cookie write here would
         // be ignored for the new cookie and would clobber the legacy one the
         // admin panel still uses.
-        clearCookie('fameo_membership');
+        clearCookie(LEGACY_MEMBERSHIP_COOKIE);
       },
     }
   )

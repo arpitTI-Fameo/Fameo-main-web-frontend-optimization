@@ -20,7 +20,7 @@ import { useCurrentSubscription, useSubscriptionHistory, useCancelSubscriptionMu
 
 export default function Subscription() {
   const router = useRouter();
-  const { token, updateMembership, logout } = useAuthStore();
+  const { user, updateMembership, logout } = useAuthStore();
 
   const currentQuery = useCurrentSubscription();
   const historyQuery = useSubscriptionHistory();
@@ -33,8 +33,8 @@ export default function Subscription() {
   const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
-    if (!token) { router.push('/login?redirect=/account/subscription'); }
-  }, [token, router]);
+    if (!user) { router.push('/login?redirect=/account/subscription'); }
+  }, [user, router]);
 
   const sub = currentQuery.data || null;
   const invoices = historyQuery.data || [];

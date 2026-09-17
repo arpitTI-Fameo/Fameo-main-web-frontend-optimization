@@ -25,6 +25,12 @@ export const SESSION_COOKIE = 'fameo_session';
 export const LEGACY_SESSION_COOKIE = 'fameo_token';
 
 /**
+ * Pre-migration membership cookie. Cleared aggressively to prevent stale reads
+ * and security bypasses since membership tier is now in the JWT.
+ */
+export const LEGACY_MEMBERSHIP_COOKIE = 'fameo_membership';
+
+/**
  * httpOnly cookie holding the "app" backend's token (the one that used to live
  * in localStorage as `fameo_app_token`). It is a DIFFERENT credential from the
  * main session token, issued by a different upstream, so it gets its own

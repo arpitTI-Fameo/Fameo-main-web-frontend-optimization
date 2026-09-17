@@ -1,17 +1,9 @@
 'use client';
 
 import React from 'react';
-import { usePathname } from 'next/navigation';
 
 import lightLogo from '@/app/assets/logo_fameo_2.png';
 import darkLogo from '@/app/assets/logo.png';
-
-const isRouteOrChild = (pathname, route) => {
-  if (!pathname || !route) return false;
-  if (route === '/') return pathname === '/';
-  return pathname === route || pathname.startsWith(`${route}/`);
-};
-
 /**
  * AppLogo
  *
@@ -26,7 +18,6 @@ export default function AppLogo({
   forceLight = false,
   ...props
 }) {
-  const pathname = usePathname();
 
   // The dark logo is now the default everywhere unless forced otherwise.
   // Add specific routes here if they explicitly require the light logo.

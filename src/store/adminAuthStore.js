@@ -20,6 +20,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { STORAGE_KEYS } from '@/constants/storageKeys';
+import { clientFetch } from '@/lib/api/client/fetcher';
+import { LOCAL_BASE } from '@/lib/api/config';
+import { localAuthRoutes } from '@/lib/api/endpoints';
 
 export const useAdminAuthStore = create(
   persist(
@@ -31,20 +34,18 @@ export const useAdminAuthStore = create(
       login: async (email, password) => {
         set({ loading: true, error: null });
         try {
-          const res = await fetch("/api/auth/admin-login", {
+          const data = await clientFetch(localAuthRoutes.adminLogin(), {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
-            credentials: "same-origin",
+            base: LOCAL_BASE,
           });
-          const json = await res.json().catch(() => ({}));
 
-          const user = json?.data?.user;
+          const user = data?.user;
 
-          if (!res.ok || json?.success === false || !user) {
+          if (!user) {
             set({
               loading: false,
-              error: json?.message || "Login failed — no token returned",
+              error: "Login failed — no user returned",
             });
             return { success: false };
           }
@@ -59,9 +60,9 @@ export const useAdminAuthStore = create(
 
       logout: async () => {
         try {
-          await fetch("/api/auth/admin-logout", {
+          await clientFetch(localAuthRoutes.adminLogout(), {
             method: "POST",
-            credentials: "same-origin",
+            base: LOCAL_BASE,
           });
         } catch {
           // Network failure must not trap the admin in a signed-in UI. The
