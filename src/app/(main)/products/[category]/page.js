@@ -1,5 +1,5 @@
-import Category from '@/modules/Main/Products/Category';
+import ProductListing from '@/modules/Main/Products/ProductListing';
 
-export default function CategoryPage() {
-  return <Category />;
+export default function ProductListingPage() {
+  return <ProductListing />;
 }

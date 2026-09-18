@@ -252,103 +252,7 @@ export const CSS = `
   transform: scale(1.06);
 }
 
-/* ════ E. Outro — giant wordmark with living "O" ═════════════════ */
-.tss-outro {
-  position: relative; z-index: 3; background: #fff;
-  min-height: 100vh; display: flex; flex-direction: column;
-  padding: 26px 34px 30px;
-  box-shadow: 0 -18px 50px rgba(20,15,10,.08);
-}
-/* Matches the 100svh already used for .tss-zoom-stage — keeps the outro
-   from overshooting the screen on mobile. Desktop is identical. */
-@supports (min-height: 100svh){
-  .tss-outro { min-height: 100svh; }
-}
-.tss-outro-top {
-  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-}
-.tss-outro-links { display: flex; gap: 26px; }
-.tss-outro-links a, .tss-outro-login {
-  font-family: 'Space Mono', monospace; font-size: 12px;
-  letter-spacing: .1em; color: #1A1A1A; text-decoration: none;
-  transition: opacity .2s;
-}
-.tss-outro-links a:hover, .tss-outro-login:hover { opacity: .55; }
-.tss-outro-social { display: flex; gap: 34px; justify-self: center; }
-.tss-outro-social a { color: #1A1A1A; display: inline-flex; transition: opacity .2s; }
-.tss-outro-social a:hover { opacity: .55; }
-.tss-outro-social svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.6; }
-.tss-outro-right { display: flex; align-items: center; gap: 22px; justify-self: end; }
-.tss-outro-signup {
-  font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: .1em;
-  color: #fff; text-decoration: none;
-  background: linear-gradient(135deg, var(--mn-rose-l) 30%, var(--mn-rose) 50%, var(--mn-rose-d) 76%);
-  padding: 15px 26px;
-  border-radius: 46% 54% 52% 48% / 58% 52% 48% 42%;   /* organic rose blob */
-  transition: filter .2s;
-}
-.tss-outro-signup:hover { filter: brightness(1.08); }
 
-/* ── signed-in variant of the top-right pair. The blob keeps its shape and
-      its slot; only the label changes, so the page still closes on a single
-      strong action instead of on a dead SIGN UP. ── */
-.tss-outro-me {
-  display: flex; align-items: center; gap: 9px;
-  color: #1A1A1A; text-decoration: none; transition: opacity .2s;
-}
-.tss-outro-me:hover { opacity: .55; }
-.tss-outro-av {
-  width: 28px; height: 28px; border-radius: 50%; flex: none; overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, var(--mn-rose-l) 30%, var(--mn-rose) 52%, var(--mn-rose-d) 100%);
-  color: #fff; font-family: 'Schibsted Grotesk', sans-serif;
-  font-size: 11px; font-weight: 700;
-}
-.tss-outro-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.tss-outro-name {
-  font-family: 'Schibsted Grotesk', sans-serif;
-  font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
-  max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-/* keeps the row from resizing once the persisted store is read */
-.tss-outro-skel { width: 190px; height: 1px; }
-
-.tss-outro-stage { flex: 1; display: grid; place-items: center; }
-.tss-outro-word {
-  font-weight: 700; letter-spacing: -0.045em; line-height: 1;
-  font-size: clamp(76px, 15vw, 260px); color: #1A1A1A;
-  white-space: nowrap; display: flex; align-items: center;
-  will-change: transform;
-}
-/* the living "O" — doodles and photos cycle inside it */
-.tss-outro-o {
-  position: relative; display: inline-flex;
-  width: 0.64em; height: 0.64em; margin-left: 0.035em;
-  align-items: center; justify-content: center;
-  border-radius: 50%;
-}
-.tss-outro-o img {
-  width: 100%; height: 100%; border-radius: 50%;
-  object-fit: cover; display: block;
-  animation: tssOPop .55s cubic-bezier(.3,1.45,.4,1);
-}
-@keyframes tssOPop {
-  from { transform: scale(.5); opacity: 0; }
-  to   { transform: scale(1);  opacity: 1; }
-}
-.tss-outro-o svg { width: 116%; height: 116%; overflow: visible; }
-.tss-outro-o svg path {
-  fill: none; stroke: #141414; stroke-width: 3;
-  stroke-linecap: round; stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-  stroke-dasharray: 1; stroke-dashoffset: 1;
-  animation: tssODraw 1.9s cubic-bezier(.45,0,.2,1) forwards;
-}
-@keyframes tssODraw {
-  0%  { stroke-dashoffset: 1; }
-  45% { stroke-dashoffset: 0; }
-  100%{ stroke-dashoffset: 0; }
-}
 
 /* ════ responsive ════════════════════════════════════════════════ */
 @media (max-width: 900px) {
@@ -420,14 +324,7 @@ export const CSS = `
   .tss-disc-card-name { font-size: 14px; }
   .tss-disc-thumb { display: none; }
 
-  /* ── E. outro ── */
-  .tss-outro { padding: 20px 18px 24px; }
-  .tss-outro-links { display: none; }
-  .tss-outro-top { grid-template-columns: auto 1fr; }
-  .tss-outro-social { justify-self: start; gap: 22px; }
-  .tss-outro-right { gap: 14px; }
-  .tss-outro-name  { max-width: 76px; }
-  .tss-outro-skel  { width: 120px; }
+
 }
 
 @media (prefers-reduced-motion: reduce) {

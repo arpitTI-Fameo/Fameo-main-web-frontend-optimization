@@ -413,7 +413,7 @@ export default function FameoScrollHero() {
 
       {/* ── fixed chrome ──────────────────────────────────────── */}
       <div className="tsc-fixed">
-        <span className="tsc-beta">CURRENTLY IN BETA</span>
+        {/* <span className="tsc-beta">CURRENTLY IN BETA</span> */}
 
         <nav className="tsc-navbar">
           <Link href="/" className="tsc-navbar-brand">Fameo</Link>

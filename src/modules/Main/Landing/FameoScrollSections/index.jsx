@@ -1,13 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import useAuthCta from '@/lib/hooks/custome/useAuthCta';
+import React from 'react';
 import { CSS } from './styles';
 import IntroToGrid from './IntroToGrid';
 import KineticBands from './KineticBands';
 import ZoomDiscover from './ZoomDiscover';
-import Outro from './Outro';
-import { clamp01, lerp, easeInOut, seg } from './utils';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    FAMEO SCROLL SECTIONS — continuation after <FameoScrollHero />
@@ -48,7 +45,6 @@ export default function FameoScrollSections() {
       <IntroToGrid />
       <KineticBands />
       <ZoomDiscover />
-      <Outro />
     </div>
   );
 }

@@ -191,7 +191,7 @@ const S = `
 `;
 
 export default function ProductsSubNav() {
-  const router   = useRouter();
+  const router = useRouter();
   const pathname = usePathname();
 
   // Cart count comes from persisted (localStorage) state, which the server
@@ -199,7 +199,7 @@ export default function ProductsSubNav() {
   // server and client markup agree.
   const { count: cartCount } = useHydratedCart();
   const openCartDrawer = useUIStore((s) => s.openCartDrawer);
-  const lastAdded      = useCartStore((s) => s.lastAdded);
+  const lastAdded = useCartStore((s) => s.lastAdded);
 
   // Pulse the badge whenever something lands in the bag. The count was already
   // updating, but a digit quietly changing in the corner was the only feedback
@@ -239,7 +239,6 @@ export default function ProductsSubNav() {
       <div className="psn-wrap">
         <div className="psn-strip" role="navigation" aria-label="Product categories">
 
-          {/* Category buttons */}
           <div className="psn-cats">
             {PRODUCT_CATEGORIES.map((cat) => (
               <div key={cat} className="psn-item">
@@ -253,12 +252,10 @@ export default function ProductsSubNav() {
                   {PRODUCT_MEGA_MENU[cat] && <span className="psn-chev">▾</span>}
                 </button>
 
-                {/* Mega menu */}
                 {PRODUCT_MEGA_MENU[cat] && (
                   <div className="psn-mega" role="region" aria-label={`${cat} submenu`}>
                     <div className="psn-mega-inner">
 
-                      {/* Dark accent column */}
                       <div className="psn-mega-accent">
                         <div>
                           <p className="psn-mega-cat">
@@ -271,7 +268,7 @@ export default function ProductsSubNav() {
                         <div style={{ fontSize: 18, color: '#D45A79', opacity: .5 }}>◈</div>
                       </div>
 
-                      {/* Link grid */}
+
                       <div className="psn-mega-grid">
                         {Object.entries(PRODUCT_MEGA_MENU[cat]).map(([group, items]) => (
                           <div key={group}>
@@ -280,12 +277,12 @@ export default function ProductsSubNav() {
                               {items.length === 0
                                 ? <li><a href="#">All {group}</a></li>
                                 : items.map((item) => (
-                                    <li key={item}>
-                                      <a href={`${ROUTES.PRODUCTS}/${cat.toLowerCase().replace(/\s+/g, '-')}?brand=${item.toLowerCase()}`}>
-                                        {item}
-                                      </a>
-                                    </li>
-                                  ))
+                                  <li key={item}>
+                                    <a href={`${ROUTES.PRODUCTS}/${cat.toLowerCase().replace(/\s+/g, '-')}?brand=${item.toLowerCase()}`}>
+                                      {item}
+                                    </a>
+                                  </li>
+                                ))
                               }
                             </ul>
                           </div>
@@ -293,7 +290,7 @@ export default function ProductsSubNav() {
                       </div>
                     </div>
 
-                    {/* Footer */}
+
                     <div className="psn-mega-foot">
                       <button
                         className="psn-mega-cta"
@@ -311,17 +308,11 @@ export default function ProductsSubNav() {
             ))}
           </div>
 
-          {/* Bag button — right side */}
           <div className="psn-bag-wrap">
             <button
               className="psn-bag"
-              // data-cart-anchor is the flight target for lib/flyToCart.js —
-              // the product image arcs into this element and it pulses on
-              // arrival. If the attribute goes missing the flight is skipped
-              // gracefully and the toast still fires.
+
               data-cart-anchor=""
-              // Open the drawer instead of navigating away — a full page change
-              // just to check the bag loses the browsing position.
               onClick={() => (cartCount > 0 ? openCartDrawer() : router.push('/cart'))}
               aria-label={`Shopping bag, ${cartCount} items`}
             >

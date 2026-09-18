@@ -1,5 +1,5 @@
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
-import Products from '@/modules/Main/Products';
+import ProductsLanding from '@/modules/Main/Products/ProductLanding';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { fameoProductsKeys } from '@/lib/hooks/main/useProduct';
 import { getStorefrontProductsServer } from '@/lib/services/main/prefetch.server';
@@ -21,7 +21,7 @@ export default async function ProductsPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <Products />
+      <ProductsLanding />
     </HydrationBoundary>
   );
 }
