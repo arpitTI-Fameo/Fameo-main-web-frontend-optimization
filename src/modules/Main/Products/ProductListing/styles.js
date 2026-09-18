@@ -3,7 +3,8 @@ export const S = `
 
   .pl-page {
     background: #FFFFFF;
-    /* clears the fixed MainNav + ProductsSubNav above this route */
+    /* clears the fixed MainNav above this route */
+    padding-top: 64px;
     min-height: 70vh;
   }
 `;

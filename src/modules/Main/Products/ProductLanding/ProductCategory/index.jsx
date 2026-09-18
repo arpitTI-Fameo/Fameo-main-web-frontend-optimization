@@ -26,11 +26,15 @@ export default function ProductCategory({
   const router = useRouter();
   const railRef = useRef(null);
   const [active, setActive] = useState(0);
+  const [hovered, setHovered] = useState(null);
+  const [loopCount, setLoopCount] = useState(3);
+
+  const displaySlides = Array.from({ length: loopCount }).flatMap((_, loopIdx) =>
+    slides.map((s) => ({ ...s, uniqueKey: `${loopIdx}-${s.slug}` }))
+  );
 
   const openCategory = (slug) => router.push(ROUTES.CATEGORY(slug));
 
-  // One card plus the flex gap — read from the DOM so the clamped card width
-  // and gap never have to be duplicated here.
   const step = useCallback(() => {
     const rail = railRef.current;
     const card = rail?.querySelector('.pc-card');
@@ -43,6 +47,13 @@ export default function ProductCategory({
     const rail = railRef.current;
     const s = step();
     if (!rail || !s) return;
+
+    // Append more slides if we get near the end
+    const atEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - s * 1.5;
+    if (atEnd) {
+      setLoopCount((c) => c + 1);
+    }
+
     setActive(Math.round(rail.scrollLeft / s));
   }, [step]);
 
@@ -50,8 +61,18 @@ export default function ProductCategory({
     const rail = railRef.current;
     const s = step();
     if (!rail || !s) return;
-    const atEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 4;
-    rail.scrollTo({ left: atEnd ? 0 : rail.scrollLeft + s, behavior: 'smooth' });
+    
+    // Check if we need more slides before animating
+    const atEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - s * 1.5;
+    if (atEnd) {
+      setLoopCount((c) => c + 1);
+      // Wait a tick for the DOM to update with new slides, then scroll
+      setTimeout(() => {
+        rail.scrollBy({ left: s, behavior: 'smooth' });
+      }, 10);
+    } else {
+      rail.scrollBy({ left: s, behavior: 'smooth' });
+    }
   }, [step]);
 
   return (
@@ -84,41 +105,46 @@ export default function ProductCategory({
 
           <div className="pc-rail-shell">
             <div className="pc-rail" ref={railRef} onScroll={onScroll}>
-              {slides.map((s, i) => (
-                <article
-                  key={s.slug}
-                  className={`pc-card${i === active ? ' is-active' : ''}`}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`${s.room} — ${s.title}`}
-                  onClick={() => openCategory(s.slug)}
-                  onKeyDown={(e) => e.key === 'Enter' && openCategory(s.slug)}
-                >
-                  <div className="pc-card-frame">
-                    <img className="pc-card-img" src={s.img} alt={s.title} loading="lazy" />
-                  </div>
+              {displaySlides.map((s, i) => {
+                const isActive = hovered !== null ? i === hovered : i === active;
+                return (
+                  <article
+                    key={s.uniqueKey}
+                    className={`pc-card${isActive ? ' is-active' : ''}`}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${s.room} — ${s.title}`}
+                    onMouseEnter={() => setHovered(i)}
+                    onMouseLeave={() => setHovered(null)}
+                    onClick={() => openCategory(s.slug)}
+                    onKeyDown={(e) => e.key === 'Enter' && openCategory(s.slug)}
+                  >
+                    <div className="pc-card-frame">
+                      <img className="pc-card-img" src={s.img} alt={s.title} loading="lazy" />
+                    </div>
 
-                  {i === active && (
-                    <>
-                      <button
-                        type="button"
-                        className="pc-card-open"
-                        onClick={(e) => { e.stopPropagation(); openCategory(s.slug); }}
-                        aria-label={`Open ${s.title}`}
-                      >
-                        <ArrowUpRightIcon />
-                      </button>
+                    {isActive && (
+                      <>
+                        <button
+                          type="button"
+                          className="pc-card-open"
+                          onClick={(e) => { e.stopPropagation(); openCategory(s.slug); }}
+                          aria-label={`Open ${s.title}`}
+                        >
+                          <ArrowUpRightIcon />
+                        </button>
 
-                      <div className="pc-card-info">
-                        <p className="pc-card-meta">
-                          {s.n} <span className="pc-dash" aria-hidden="true" /> {s.room}
-                        </p>
-                        <h3 className="pc-card-title">{s.title}</h3>
-                      </div>
-                    </>
-                  )}
-                </article>
-              ))}
+                        <div className="pc-card-info">
+                          <p className="pc-card-meta">
+                            {s.n} <span className="pc-dash" aria-hidden="true" /> {s.room}
+                          </p>
+                          <h3 className="pc-card-title">{s.title}</h3>
+                        </div>
+                      </>
+                    )}
+                  </article>
+                );
+              })}
             </div>
 
             <button

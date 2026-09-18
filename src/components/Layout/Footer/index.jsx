@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import useAuthCta from '@/lib/hooks/custome/useAuthCta';
+import Separator from '@/components/ui/Separator';
 import { TASTE_DOODLES, O_MEDIA } from '../../../modules/Main/Landing/FameoScrollSections/constants';
 import { clamp01, lerp } from '../../../modules/Main/Landing/FameoScrollSections/utils';
 import { S } from './styles';
@@ -123,77 +124,63 @@ export default function Footer() {
       <style>{S}</style>
       <section className="tss-outro" ref={ref}>
 
-      {/* top area: main navigation links from old footer */}
-      <div className="tss-outro-grid">
-        {COLS.map((col, i) => (
-          <div key={i} className="tss-outro-col">
-            <h4 className="tss-outro-col-head">{col.heading}</h4>
-            <div className="tss-outro-col-links">
-              {col.links.map((link) => (
-                <a key={link.label} href={link.href} className="tss-outro-col-link">
-                  {link.label}
-                  {link.badge && <span className={`tss-badge ${link.badgeClass}`}>{link.badge}</span>}
-                </a>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Curved separator 1 */}
-      <svg
-        className="tss-outro-curve"
-        viewBox="0 0 100 10"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <defs>
-          <linearGradient id="footer-curve-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="transparent" />
-            <stop offset="50%" stopColor="#D45A79" />
-            <stop offset="100%" stopColor="transparent" />
-          </linearGradient>
-        </defs>
-        <path d="M0,0 Q50,15 100,0" fill="none" stroke="url(#footer-curve-grad)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
-      </svg>
-
-      {/* giant wordmark — "Fame" + living O */}
-      <div className="tss-outro-stage">
-        <h2 className="tss-outro-word" ref={wordRef} aria-label="Fameo">
-          Fame
-          <span className="tss-outro-o" aria-hidden="true">
-            {m.t === 'i' ? (
-              <img key={mIdx} src={m.src} alt="" draggable={false} />
-            ) : (
-              <svg key={mIdx} viewBox={doodle.viewBox} preserveAspectRatio="xMidYMid meet">
-                {doodle.paths.map((d, pi) => (
-                  <path key={pi} d={d} pathLength={1} style={{ animationDelay: `${pi * 0.2}s` }} />
+        {/* top area: main navigation links from old footer */}
+        <div className="tss-outro-grid">
+          {COLS.map((col, i) => (
+            <div key={i} className="tss-outro-col">
+              <h4 className="tss-outro-col-head">{col.heading}</h4>
+              <div className="tss-outro-col-links">
+                {col.links.map((link) => (
+                  <a key={link.label} href={link.href} className="tss-outro-col-link">
+                    {link.label}
+                    {link.badge && <span className={`tss-badge ${link.badgeClass}`}>{link.badge}</span>}
+                  </a>
                 ))}
-              </svg>
-            )}
-          </span>
-        </h2>
-      </div>
-
-
-      {/* bottom row: legal · socials */}
-      <div className="tss-outro-bottom">
-        <div className="tss-outro-legal">
-          {LEGAL_LINKS.map(link => (
-            <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer">
-              {link.label}
-            </a>
+              </div>
+            </div>
           ))}
         </div>
-        <div className="tss-outro-social">
-          {SOCIALS.map(s => (
-            <a key={s.label} href={s.href} aria-label={s.label} target="_blank" rel="noopener noreferrer">
-              {s.icon}
-            </a>
-          ))}
+
+        {/* Curved separator 1 */}
+        <Separator className="tss-outro-curve" />
+
+        {/* giant wordmark — "Fame" + living O */}
+        <div className="tss-outro-stage">
+          <h2 className="tss-outro-word" ref={wordRef} aria-label="Fameo">
+            Fame
+            <span className="tss-outro-o" aria-hidden="true">
+              {m.t === 'i' ? (
+                <img key={mIdx} src={m.src} alt="" draggable={false} />
+              ) : (
+                <svg key={mIdx} viewBox={doodle.viewBox} preserveAspectRatio="xMidYMid meet">
+                  {doodle.paths.map((d, pi) => (
+                    <path key={pi} d={d} pathLength={1} style={{ animationDelay: `${pi * 0.2}s` }} />
+                  ))}
+                </svg>
+              )}
+            </span>
+          </h2>
         </div>
-      </div>
-    </section>
+
+
+        {/* bottom row: legal · socials */}
+        <div className="tss-outro-bottom">
+          <div className="tss-outro-legal">
+            {LEGAL_LINKS.map(link => (
+              <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer">
+                {link.label}
+              </a>
+            ))}
+          </div>
+          <div className="tss-outro-social">
+            {SOCIALS.map(s => (
+              <a key={s.label} href={s.href} aria-label={s.label} target="_blank" rel="noopener noreferrer">
+                {s.icon}
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
     </>
   );
 }

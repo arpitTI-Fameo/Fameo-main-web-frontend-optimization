@@ -14,7 +14,10 @@ export const ROUTES = {
   PLANS: '/plans',
 
   // Products
-  PRODUCT: (slug) => `/products/${slug}`,
+  // Detail lives under its category so the URL carries the breadcrumb:
+  // /products/lighting/lumiere-pro. A flat /products/<slug> would collide with
+  // CATEGORY() — both would match the same [category] segment.
+  PRODUCT: (category, slug) => `/products/${category}/${slug}`,
   CATEGORY: (cat) => `/products/${cat}`,
 
   // Resources

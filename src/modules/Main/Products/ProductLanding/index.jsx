@@ -15,17 +15,17 @@ import {
 import { PRODUCT_BRANDS } from '@/constants/megaMenu';
 import { useStorefrontProducts } from '@/lib/hooks/main/useProduct';
 
-import ProductDetail from '../ProductDetails/ProductDetail';
 import ProductShowcase from '../ProductListing/ProductShowcase';
 import ProductDiscountSections from './ProductDiscountSections';
 import ProductCategory from './ProductCategory';
 import ProductBestSelling from './ProductBestSelling';
 import ProductHero from './ProductHero'
 import { BESTSELLERS } from '../constants';
-import { toUiProduct } from '../helpers';
+import { productHref, toUiProduct } from '../helpers';
 import { S } from '../styles';
 
 export default function ProductsLanding() {
+  const router = useRouter();
   const addToCartRaw = useCartStore((s) => s.addToCart);
   const showToast = useUIStore((s) => s.showToast);
   const usingMockDataRef = useRef(false);
@@ -70,7 +70,6 @@ export default function ProductsLanding() {
   const [loaded, setLoaded] = useState(false);
   const [pageVis, setPageVis] = useState(false);
   const [heroSlide, setHeroSlide] = useState(0);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [promVis, setPromVis] = useState(false);
   const [testVis, setTestVis] = useState(false);
   const [ctaVis, setCtaVis] = useState(false);
@@ -107,6 +106,10 @@ export default function ProductsLanding() {
     );
     return () => clearInterval(heroTimer.current);
   }, []);
+
+  // A best-seller card used to open a full-screen overlay. It now navigates to
+  // the real detail route, so the page is linkable, shareable and indexable.
+  const openProduct = useCallback((p) => router.push(productHref(p)), [router]);
 
   const goSlide = useCallback((idx) => {
     clearInterval(heroTimer.current);
@@ -226,7 +229,7 @@ export default function ProductsLanding() {
 
         <ProductBestSelling
           products={bestsellers}
-          onProductClick={setSelectedProduct}
+          onProductClick={openProduct}
           onAddToCart={(p, el) => addToCart(p, 1, el)}
         />
 
@@ -234,22 +237,6 @@ export default function ProductsLanding() {
 
         <ProductHero />
       </div>
-
-      {/* Product detail overlay */}
-      <ProductDetail
-        product={selectedProduct}
-        onClose={() => setSelectedProduct(null)}
-        onAddToCart={() => {
-          if (!selectedProduct) return { ok: false };
-          const res = addToCart(selectedProduct, 1);
-          // Don't yank the overlay away instantly — the old code closed it in
-          // the same tick, so the "Added ✓" confirmation never had a frame to
-          // render and the click felt like it did nothing. Hold briefly, then
-          // close so the drawer underneath is visible.
-          if (res?.ok) setTimeout(() => setSelectedProduct(null), 900);
-          return res;
-        }}
-      />
     </>
   );
 }

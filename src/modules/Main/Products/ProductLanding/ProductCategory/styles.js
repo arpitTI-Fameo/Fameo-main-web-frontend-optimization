@@ -86,10 +86,56 @@ export const S = `
     background: #EFEFF1;
   }
   /* The active card's top-right corner is bitten out so the open button sits
-     in a clean gap rather than on top of the photo. */
+     in a clean gap rather than on top of the photo.
+
+     A single radial-gradient can only cut a plain disc, and the two points
+     where that disc meets the card's edges come out as sharp spikes. The notch
+     is drawn as an SVG tile instead, so those junctions carry a real fillet and
+     the edge flows into the cutout.
+
+     The tile is a fixed 128x128 square pinned to the top-right corner; two flat
+     layers fill the rest of the card and the three union together (mask layers
+     composite with 'add' by default, so no mask-composite support is needed).
+
+     Tile geometry, in tile coordinates — all of it follows from .pc-card-open
+     below, so move the button and these move with it:
+       notch centre (102, 26)  = the button's centre, which sits 26px in from
+                                 the card's top and right edges
+       notch radius 40         = the button's 30px radius + a 10px gap
+       fillet radius 26        = the flare where the notch meets each edge
+     The arc endpoints are the tangent points between those three circles, and
+     every one of them is a whole number here: a fillet radius equal to the
+     button's 26px inset puts each fillet centre square-on from the notch
+     centre — (36, 26) and (102, 92) — so the tangents land on (62, 26) and
+     (102, 66). Change the inset or the radius and these stop being integers;
+     recompute them rather than rounding. */
   .pc-card.is-active .pc-card-frame {
-    -webkit-mask-image: radial-gradient(circle 46px at calc(100% - 26px) 26px, transparent 0 46px, #000 47px);
-    mask-image: radial-gradient(circle 46px at calc(100% - 26px) 26px, transparent 0 46px, #000 47px);
+    --pc-notch-tile: 128px;
+    /* 1px of overlap between the layers — abutting them exactly leaves a
+       hairline seam where the two alpha edges antialias against each other. */
+    --pc-notch-fill: calc(100% - var(--pc-notch-tile) + 1px);
+
+    -webkit-mask-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M0 0L36 0A26 26 0 0 1 62 26A40 40 0 0 0 102 66A26 26 0 0 1 128 92L128 128L0 128Z' fill='%23000'/%3E%3C/svg%3E"),
+      linear-gradient(#000, #000),
+      linear-gradient(#000, #000);
+    -webkit-mask-size:
+      var(--pc-notch-tile) var(--pc-notch-tile),
+      var(--pc-notch-fill) 100%,
+      100% var(--pc-notch-fill);
+    -webkit-mask-position: top right, top left, bottom left;
+    -webkit-mask-repeat: no-repeat;
+
+    mask-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M0 0L36 0A26 26 0 0 1 62 26A40 40 0 0 0 102 66A26 26 0 0 1 128 92L128 128L0 128Z' fill='%23000'/%3E%3C/svg%3E"),
+      linear-gradient(#000, #000),
+      linear-gradient(#000, #000);
+    mask-size:
+      var(--pc-notch-tile) var(--pc-notch-tile),
+      var(--pc-notch-fill) 100%,
+      100% var(--pc-notch-fill);
+    mask-position: top right, top left, bottom left;
+    mask-repeat: no-repeat;
   }
   .pc-card-img {
     width: 100%; height: 100%; object-fit: cover; display: block;

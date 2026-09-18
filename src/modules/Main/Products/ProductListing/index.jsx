@@ -16,9 +16,8 @@ import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 
-import ProductDetail from '../ProductDetails/ProductDetail';
 import { flyToCart } from '../flyToCart';
-import { toUiProduct } from '../helpers';
+import { productHref, toUiProduct } from '../helpers';
 
 import ListingHeader from './ListingHeader';
 import ProductGrid from './ProductGrid';
@@ -60,7 +59,6 @@ export default function ProductListing() {
       LISTING_ALL_CATEGORY
   );
   const [visibleCount, setVisibleCount] = useState(LISTING_PAGE_SIZE);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [sort, setSort] = useState(LISTING_DEFAULT_SORT);
   const [view, setView] = useState(LISTING_VIEWS.GRID);
 
@@ -79,6 +77,10 @@ export default function ProductListing() {
     });
     return sortProducts(matches, sort);
   }, [data, category, brand, sort]);
+
+  // A card used to open a full-screen overlay. It now navigates to the real
+  // detail route, so the page is linkable, shareable and indexable.
+  const openProduct = useCallback((p) => router.push(productHref(p)), [router]);
 
   const pickCategory = useCallback((c) => {
     setCategory(c);
@@ -139,7 +141,7 @@ export default function ProductListing() {
         <ProductGrid
           products={products}
           view={view}
-          onOpen={setSelectedProduct}
+          onOpen={openProduct}
           onAddToCart={addToCart}
           onWishlist={toggleWish}
           isWished={hasWish}
@@ -167,17 +169,6 @@ export default function ProductListing() {
           onCta={() => router.push(ROUTES.PRODUCTS)}
         />
       </main>
-
-      <ProductDetail
-        product={selectedProduct}
-        onClose={() => setSelectedProduct(null)}
-        onAddToCart={() => {
-          if (!selectedProduct) return { ok: false };
-          const res = addToCartRaw(selectedProduct, 1);
-          if (res?.ok) setTimeout(() => setSelectedProduct(null), 900);
-          return res;
-        }}
-      />
     </>
   );
 }
