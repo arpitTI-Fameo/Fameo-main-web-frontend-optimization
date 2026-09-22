@@ -1,20 +1,59 @@
 export const S = `
-  .cs-wrap { display:flex; align-items:center; margin-bottom:40px; }
-  .cs-step  { display:flex; align-items:center; gap:10px; flex:1; }
+  .cs-wrap {
+    display: flex;
+    align-items: center;
+    margin-bottom: clamp(28px, 4.5vh, 44px);
+  }
+
+  .cs-step { display: flex; align-items: center; gap: 10px; flex: 1; }
+
   .cs-num {
-    width:28px; height:28px; border-radius:50%;
-    border:1.5px solid rgba(0,0,0,0.08);
-    display:flex; align-items:center; justify-content:center;
-    font-family:'Jost',sans-serif; font-size:11px; font-weight:300;
-    color:#9898a8; flex-shrink:0; transition:all .3s;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--chk-line);
+    background: #FFFFFF;
+    color: var(--chk-faint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    transition: background .3s ease, color .3s ease, border-color .3s ease;
   }
-  .cs-step.active .cs-num { background:#181820; color:#fff; border-color:#181820; }
-  .cs-step.done   .cs-num { background:#E8405A; color:#fff; border-color:#E8405A; }
+  .cs-step.active .cs-num {
+    background: var(--chk-ink);
+    border-color: var(--chk-ink);
+    color: #FFFFFF;
+  }
+  .cs-step.done .cs-num {
+    background: var(--chk-accent);
+    border-color: var(--chk-accent);
+    color: #FFFFFF;
+  }
+
   .cs-label {
-    font-family:'Jost',sans-serif; font-size:10px; font-weight:300;
-    letter-spacing:.16em; text-transform:uppercase; color:#9898a8;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--chk-faint);
+    transition: color .3s ease;
   }
-  .cs-step.active .cs-label { color:#181820; font-weight:400; }
-  .cs-step.done   .cs-label { color:#E8405A; }
-  .cs-line { flex:1; height:1px; background:rgba(0,0,0,0.08); margin:0 10px; }
+  .cs-step.active .cs-label { color: var(--chk-ink); }
+  .cs-step.done .cs-label { color: var(--chk-accent); }
+
+  .cs-line {
+    flex: 1;
+    height: 1px;
+    margin: 0 12px;
+    background: var(--chk-line);
+  }
+
+  @media (max-width: 720px) {
+    .cs-label { display: none; }
+    .cs-step { flex: 0 0 auto; }
+  }
 `;

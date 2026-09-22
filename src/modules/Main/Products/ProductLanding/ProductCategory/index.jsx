@@ -9,7 +9,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/constants/routes';
 
-import { ArrowRightIcon, ArrowUpRightIcon, HeroWaves } from './icons';
+import { ArrowRightIcon, ArrowUpRightIcon } from './icons';
 import { CATEGORY_HERO, CATEGORY_SLIDES } from './constants';
 import { S } from './styles';
 import ProductHeading from '../ProductHeading';
@@ -91,7 +91,7 @@ export default function ProductCategory({
         <div className="pc-row">
 
           <div className="pc-hero">
-            <HeroWaves />
+            <img src="/assets/products/sidebg-product-categary.avif" alt="" className="pc-hero-bg" aria-hidden="true" />
             <h2 className="pc-hero-title">{hero.title}</h2>
             <p className="pc-hero-sub">{hero.subtitle}</p>
             <button

@@ -19,10 +19,11 @@ import { useWishlistStore } from '@/store/wishlistStore';
 import { flyToCart } from '../flyToCart';
 import { productHref, toUiProduct } from '../helpers';
 
-import ListingHeader from './ListingHeader';
+import ProductHeader from '@/components/Common/ProductHeader';
 import ProductGrid from './ProductGrid';
 import PromoBanner from './PromoBanner';
 import WhyChoose from './WhyChoose';
+import ProductFilter from './ProductFilter';
 import {
   LISTING_ALL_CATEGORY,
   LISTING_BREADCRUMBS,
@@ -39,6 +40,77 @@ import { S } from './styles';
 
 // Forgiving compare — 'Bags & Tripods' and 'bags-tripods' must match.
 const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+const mockAvailableFilters = {
+  brands: [
+    { id: 'b1', slug: 'sony', name: 'Sony', productCount: 12 },
+    { id: 'b2', slug: 'canon', name: 'Canon', productCount: 8 },
+    { id: 'b3', slug: 'nikon', name: 'Nikon', productCount: 5 },
+    { id: 'b4', slug: 'fujifilm', name: 'Fujifilm', productCount: 7 },
+    { id: 'b5', slug: 'dji', name: 'DJI', productCount: 4 },
+    { id: 'b6', slug: 'gopro', name: 'GoPro', productCount: 6 },
+    { id: 'b7', slug: 'sigma', name: 'Sigma', productCount: 3 },
+    { id: 'b8', slug: 'tamron', name: 'Tamron', productCount: 2 }
+  ],
+  categories: {
+    parents: [
+      { id: 'p1', slug: 'cameras', name: 'Cameras', productCount: 40 },
+      { id: 'p2', slug: 'lenses', name: 'Lenses', productCount: 30 }
+    ],
+    leaves: [
+      { id: 'c1', slug: 'mirrorless-cameras', name: 'Mirrorless Cameras', productCount: 15 },
+      { id: 'c2', slug: 'action-cameras', name: 'Action Cameras', productCount: 10 },
+      { id: 'c3', slug: 'dslr-cameras', name: 'DSLR Cameras', productCount: 5 },
+      { id: 'c4', slug: 'cine-lenses', name: 'Cine Lenses', productCount: 8 }
+    ]
+  },
+  attributes: [
+    {
+      id: 'a1', slug: 'size', name: 'Size', type: 'select',
+      options: [
+        { value: 'XS', productCount: 3 },
+        { value: 'S', productCount: 10 },
+        { value: 'S/M', productCount: 4 },
+        { value: 'M', productCount: 15 },
+        { value: 'M/L', productCount: 6 },
+        { value: 'L', productCount: 5 },
+        { value: 'XL', productCount: 8 },
+        { value: 'XXL', productCount: 2 },
+        { value: 'One Size', productCount: 12 }
+      ]
+    },
+    {
+      id: 'a2', slug: 'colour', name: 'Colour', type: 'color',
+      options: [
+        { value: 'Black', productCount: 20 },
+        { value: 'Grey', productCount: 14 },
+        { value: 'White', productCount: 10 },
+        { value: 'Beige', productCount: 7 },
+        { value: 'Red', productCount: 2 },
+        { value: 'Purple', productCount: 4 },
+        { value: 'Blue', productCount: 9 },
+        { value: 'Green', productCount: 5 }
+      ]
+    },
+    {
+      id: 'a3', slug: 'properties', name: 'Properties', type: 'select',
+      options: [
+        { value: 'Waterproof', productCount: 5 },
+        { value: 'Windproof', productCount: 3 },
+        { value: 'Lightweight', productCount: 8 },
+        { value: 'Breathable', productCount: 7 },
+        { value: 'Ventilation', productCount: 4 },
+        { value: 'Signature chambers', productCount: 2 },
+        { value: 'Water repellent', productCount: 6 },
+        { value: 'Insulated', productCount: 9 }
+      ]
+    }
+  ],
+  priceRange: {
+    min: { originalPrice: 0, salePrice: 0 },
+    max: { originalPrice: 1000, salePrice: 399 }
+  }
+};
 
 export default function ProductListing() {
   const { category: slug } = useParams();
@@ -61,6 +133,7 @@ export default function ProductListing() {
   const [visibleCount, setVisibleCount] = useState(LISTING_PAGE_SIZE);
   const [sort, setSort] = useState(LISTING_DEFAULT_SORT);
   const [view, setView] = useState(LISTING_VIEWS.GRID);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   const { data, isLoading, error: apiError } = useStorefrontProducts({ limit: 200 });
 
@@ -122,9 +195,10 @@ export default function ProductListing() {
     <>
       <style>{S}</style>
       <main className="pl-page">
-        <ListingHeader
+        <ProductHeader
           title={LISTING_HEADER.title}
           subtitle={LISTING_HEADER.subtitle}
+          image={LISTING_HEADER.image}
           breadcrumbs={LISTING_BREADCRUMBS}
           shown={visibleCount}
           total={products.length}
@@ -136,6 +210,7 @@ export default function ProductListing() {
           onSortChange={pickSort}
           view={view}
           onViewChange={setView}
+          onFilters={() => setIsFilterModalOpen(true)}
         />
 
         <ProductGrid
@@ -167,6 +242,23 @@ export default function ProductListing() {
           subtitle={PROMO_BANNER.subtitle}
           ctaLabel={PROMO_BANNER.ctaLabel}
           onCta={() => router.push(ROUTES.PRODUCTS)}
+        />
+
+        <ProductFilter
+          isOpen={isFilterModalOpen}
+          onClose={() => setIsFilterModalOpen(false)}
+          currentFilters={{
+            categories: category && category !== LISTING_ALL_CATEGORY ? [norm(category)] : [],
+            brands: brand ? [brand] : []
+          }}
+          availableFilters={mockAvailableFilters}
+          onApply={(filters) => {
+            if (filters.categories && filters.categories.length > 0) {
+              pickCategory(filters.categories[0]); // fallback for simple state
+            }
+            // In a real app, this would also push URL query params for the other filters
+            // to maintain state across reloads.
+          }}
         />
       </main>
     </>

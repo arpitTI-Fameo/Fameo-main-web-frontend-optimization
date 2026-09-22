@@ -3,6 +3,7 @@
 
 export const BEST_SELLING_HEADER = {
   title: 'Bestsellers',
+  eyebrow: 'Discover Our Top Picks',
 };
 
 // Cards fed into the carousel. Anything past this is trimmed.

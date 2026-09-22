@@ -15,6 +15,7 @@ export * from './admin/roles.service';
 export * from './admin/support.service';
 export * from './auth/auth.api';
 export * from './auth/register.api';
+export * from './main/assistant.api';
 export * from './main/chat.api';
 export * from './main/community.api';
 export * from './main/creator.client';

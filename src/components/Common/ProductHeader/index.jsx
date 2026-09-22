@@ -9,9 +9,10 @@
 
 import Link from 'next/link';
 
-import { LISTING_VIEWS } from '../constants';
+import { LISTING_VIEWS } from '@/modules/Main/Products/ProductListing/constants';
+import SelectPicker from '@/components/Common/SelectPicker';
 
-import { ChevronDownIcon, FilterIcon, GridViewIcon, ListViewIcon } from './icons';
+import { FilterIcon, GridViewIcon, ListViewIcon } from './icons';
 import { S } from './styles';
 
 /**
@@ -35,6 +36,7 @@ import { S } from './styles';
 export default function ListingHeader({
   title,
   subtitle,
+  image,
   breadcrumbs = [],
   shown = 0,
   total = 0,
@@ -88,8 +90,13 @@ export default function ListingHeader({
               <div className="plh-headline">
                 <h1 className="plh-title">{title}</h1>
                 {subtitle && <p className="plh-sub">{subtitle}</p>}
+                {countLabel && <p className="plh-count">{countLabel}</p>}
               </div>
-              {countLabel && <p className="plh-count">{countLabel}</p>}
+              {image && (
+                <div className="plh-hero-image">
+                  <img src={image} alt={title} />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -126,22 +133,11 @@ export default function ListingHeader({
               {!!sortOptions.length && (
                 <label className="plh-sort">
                   <span className="plh-sort-label">Sort by:</span>
-                  <span className="plh-select-wrap">
-                    <select
-                      className="plh-select"
-                      value={sort}
-                      onChange={(e) => onSortChange?.(e.target.value)}
-                    >
-                      {sortOptions.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="plh-chev" aria-hidden="true">
-                      <ChevronDownIcon />
-                    </span>
-                  </span>
+                  <SelectPicker
+                    value={sort}
+                    onChange={(e) => onSortChange?.(e.target.value)}
+                    options={sortOptions}
+                  />
                 </label>
               )}
 

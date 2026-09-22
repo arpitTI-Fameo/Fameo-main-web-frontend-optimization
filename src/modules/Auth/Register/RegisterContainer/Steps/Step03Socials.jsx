@@ -12,7 +12,7 @@ export default function Step03Socials({ ctx }) {
       <div className="frg-field" ref={registerFieldRef('platform')}>
         <label className="frg-label" htmlFor="frg-plat">Primary platform <span className="req">*</span></label>
         <div className={`frg-uline${errors.platform ? ' err' : ''}`}>
-          <SelectPicker id="frg-plat" className="frg-select2" value={form.primaryPlatform} 
+          <SelectPicker id="frg-plat" className="frg-select2" value={form.primaryPlatform}
             onChange={e => { setForm(f => ({ ...f, primaryPlatform: e.target.value })); clearErr('platform', 'youtube', 'instagram'); }}
             placeholder="Select platform"
             options={['YouTube', 'Instagram', 'Both']} />
@@ -31,7 +31,7 @@ export default function Step03Socials({ ctx }) {
             {(form.youtube && !ytOk) || errors.youtube
               ? 'That link doesn’t look like a channel. Use youtube.com/@handle, /channel/ID, /c/name or /user/name'
               : form.youtube && ytOk ? 'Looks good'
-              : 'Accepted: youtube.com/@handle · /channel/ID · /c/name · /user/name'}
+                : 'Accepted: youtube.com/@handle · /channel/ID · /c/name · /user/name'}
           </div>
         </div>
       )}
@@ -47,7 +47,7 @@ export default function Step03Socials({ ctx }) {
             {(form.instagram && !igOk) || errors.instagram
               ? 'That link doesn’t look like a profile. Use https://instagram.com/yourhandle'
               : form.instagram && igOk ? 'Looks good'
-              : 'Full URL — e.g. https://instagram.com/yourhandle (tracking links are fine)'}
+                : 'Full URL — e.g. https://instagram.com/yourhandle (tracking links are fine)'}
           </div>
         </div>
       )}

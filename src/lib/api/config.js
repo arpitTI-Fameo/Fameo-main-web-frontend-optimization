@@ -43,6 +43,7 @@ export const APP_SESSION_COOKIE = 'fameo_app_session';
 export const BFF_BASE = '/api/bff';
 export const BFF_PRODUCTS_BASE = '/api/bff-products';
 export const BFF_APP_BASE = '/api/bff-app';
+export const BFF_ASSISTANT_BASE = '/api/bff-assistant';
 
 /**
  * Our OWN Next route handlers (src/app/api/**) are already same-origin, so they

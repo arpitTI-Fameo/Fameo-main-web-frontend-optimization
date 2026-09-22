@@ -3,7 +3,7 @@ export const S = `
 
   .plh-wrap {
     /* Neutral monochrome palette to match the site theme */
-    --plh-band: #F9F9FB;
+    --plh-band: #F4F4F4;
     --plh-bar: #FFFFFF;
     --plh-line: #EEEEF2;
     --plh-ink: #111118;
@@ -47,39 +47,60 @@ export const S = `
   .plh-sep { margin: 0 8px; color: #D4D4D8; }
 
   .plh-head {
-    margin-top: clamp(14px, 2.4vh, 22px);
+    margin-top: clamp(24px, 4vh, 32px);
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
-    gap: 24px;
+    gap: 40px;
   }
-  .plh-headline { min-width: 0; }
+  .plh-headline { 
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
 
   .plh-title {
     margin: 0;
     font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(34px, 4.4vw, 54px);
-    font-weight: 400;
-    line-height: 1.04;
-    letter-spacing: .005em;
-    color: var(--plh-ink);
+    font-size: clamp(32px, 4.4vw, 48px);
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: #1A1A1A;
   }
 
   .plh-sub {
-    margin: 12px 0 0;
+    margin: 16px 0 0;
     max-width: 560px;
-    font-size: 13.5px;
+    font-size: 15px;
+    font-weight: 400;
     line-height: 1.6;
-    color: var(--plh-muted);
+    color: #4A4A4A;
   }
 
   .plh-count {
-    margin: 0 0 4px;
+    margin: 24px 0 0;
     flex: none;
     font-size: 12.5px;
     line-height: 1;
     color: var(--plh-muted);
     white-space: nowrap;
+  }
+
+  .plh-hero-image {
+    flex: 1.2;
+    max-width: 600px;
+  }
+  .plh-hero-image img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3.5 / 1;
+    display: block;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
   }
 
   /* ── control bar ── */
@@ -223,8 +244,9 @@ export const S = `
   }
 
   @media (max-width: 680px) {
-    .plh-head { flex-direction: column; align-items: flex-start; gap: 10px; }
-    .plh-count { margin: 0; }
+    .plh-head { flex-direction: column; align-items: flex-start; gap: 24px; }
+    .plh-hero-image { width: 100%; max-width: none; }
+    .plh-count { margin-top: 16px; }
     .plh-sub { max-width: none; }
     .plh-filters { padding: 10px 18px; }
     .plh-pill { padding: 9px 16px; font-size: 12.5px; }

@@ -37,9 +37,11 @@ export const S = `
     padding: clamp(30px, 5vh, 72px) clamp(28px, 3.4vw, 60px);
     display: flex; flex-direction: column; justify-content: center;
   }
-  .pc-hero-waves {
-    position: absolute; right: -6%; bottom: -8%;
-    width: 78%; height: auto; pointer-events: none;
+  .pc-hero-bg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; pointer-events: none;
+    opacity: 0.2;
   }
   .pc-hero-title {
     position: relative; z-index: 1;

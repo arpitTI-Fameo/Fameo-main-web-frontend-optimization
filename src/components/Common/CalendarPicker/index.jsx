@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import SelectPicker from './SelectPicker';
+import SelectPicker from '../SelectPicker';
+import { S } from './styles';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -16,7 +17,7 @@ export default function CalendarPicker({ value, onChange, min, max, id, classNam
   // By default, open the calendar on the max date (e.g. exactly 18 years ago) if no value is selected,
   // or jump to the currently selected date if there is one.
   const initialDate = value ? new Date(value) : (max ? new Date(max) : new Date());
-  
+
   const [viewMonth, setViewMonth] = useState(initialDate.getMonth());
   const [viewYear, setViewYear] = useState(initialDate.getFullYear());
 
@@ -34,7 +35,7 @@ export default function CalendarPicker({ value, onChange, min, max, id, classNam
 
   const minDate = min ? new Date(min) : new Date(1900, 0, 1);
   const maxDate = max ? new Date(max) : new Date(2100, 11, 31);
-  
+
   // Year dropdown should cover [minYear, maxYear]
   const minYear = minDate.getFullYear();
   const maxYear = maxDate.getFullYear();
@@ -46,7 +47,7 @@ export default function CalendarPicker({ value, onChange, min, max, id, classNam
   // Generate calendar grid
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const firstDayOfMonth = new Date(viewYear, viewMonth, 1).getDay();
-  
+
   const days = [];
   // padding days
   for (let i = 0; i < firstDayOfMonth; i++) {
@@ -58,16 +59,16 @@ export default function CalendarPicker({ value, onChange, min, max, id, classNam
 
   const handleSelect = (day) => {
     if (!day) return;
-    
+
     // YYYY-MM-DD formatting, keeping local time logic stable
     const d = new Date(viewYear, viewMonth, day);
-    
+
     if (d < minDate || d > maxDate) return;
 
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
-    
+
     const newValue = `${yyyy}-${mm}-${dd}`;
     onChange({ target: { value: newValue } });
     setIsOpen(false);
@@ -93,13 +94,15 @@ export default function CalendarPicker({ value, onChange, min, max, id, classNam
     if (!day) return true;
     const d = new Date(viewYear, viewMonth, day);
     // compare only dates (zero out hours for safety)
-    d.setHours(0,0,0,0);
-    const mi = new Date(minDate); mi.setHours(0,0,0,0);
-    const ma = new Date(maxDate); ma.setHours(0,0,0,0);
+    d.setHours(0, 0, 0, 0);
+    const mi = new Date(minDate); mi.setHours(0, 0, 0, 0);
+    const ma = new Date(maxDate); ma.setHours(0, 0, 0, 0);
     return d < mi || d > ma;
   };
 
   return (
+    <>
+    <style>{S}</style>
     <div className="frg-cal-wrap" ref={containerRef}>
       <input
         id={id}
@@ -158,5 +161,6 @@ export default function CalendarPicker({ value, onChange, min, max, id, classNam
         </div>
       )}
     </div>
+    </>
   );
 }

@@ -26,10 +26,10 @@ export default function Step02Profile({ ctx }) {
         <div className={`frg-help${usernameStatus === 'available' ? ' ok' : (errors.username || usernameStatus === 'taken' || usernameStatus === 'invalid' || usernameStatus === 'error') ? ' err' : ''}`}>
           {usernameStatus === 'checking' ? 'Checking availability…'
             : usernameStatus === 'available' ? `✓ @${form.username} is available — fameo.vip/@${form.username} is yours`
-            : usernameStatus === 'taken' ? `@${form.username} is already taken — please use another username`
-            : usernameStatus === 'error' ? 'We couldn’t check that username just now — please try again'
-            : errors.username ? errors.username
-            : '1–30 characters · letters, numbers, dots and underscores'}
+              : usernameStatus === 'taken' ? `@${form.username} is already taken — please use another username`
+                : usernameStatus === 'error' ? 'We couldn’t check that username just now — please try again'
+                  : errors.username ? errors.username
+                    : '1–30 characters · letters, numbers, dots and underscores'}
         </div>
       </div>
 
@@ -80,9 +80,9 @@ export default function Step02Profile({ ctx }) {
         <div className={`frg-help${errors.pincode || pinStatus.state === 'invalid' ? ' err' : pinStatus.state === 'found' && !pinMismatch ? ' ok' : ''}`}>
           {errors.pincode ? errors.pincode
             : pinStatus.state === 'invalid' ? 'A PIN code is 6 digits and can’t start with 0.'
-            : pinStatus.state === 'checking' ? 'Checking this PIN code…'
-            : pinStatus.state === 'found' ? [pinStatus.data.area, pinStatus.data.district, pinStatus.data.state].filter(Boolean).join(' · ')
-            : 'Your 6-digit PIN code'}
+              : pinStatus.state === 'checking' ? 'Checking this PIN code…'
+                : pinStatus.state === 'found' ? [pinStatus.data.area, pinStatus.data.district, pinStatus.data.state].filter(Boolean).join(' · ')
+                  : 'Your 6-digit PIN code'}
         </div>
 
         {pinStatus.state === 'found' && !form.stateId && (

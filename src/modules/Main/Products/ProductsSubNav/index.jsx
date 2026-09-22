@@ -7,8 +7,6 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { PRODUCT_CATEGORIES, PRODUCT_MEGA_MENU } from '@/constants/megaMenu';
 import { ROUTES } from '@/constants/routes';
-import { useCartStore, useHydratedCart } from '@/store/cartStore';
-import { useUIStore } from '@/store/uiStore';
 
 
 const S = `
@@ -194,23 +192,7 @@ export default function ProductsSubNav() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Cart count comes from persisted (localStorage) state, which the server
-  // can't know — useHydratedCart returns 0 until rehydration completes so the
-  // server and client markup agree.
-  const { count: cartCount } = useHydratedCart();
-  const openCartDrawer = useUIStore((s) => s.openCartDrawer);
-  const lastAdded = useCartStore((s) => s.lastAdded);
 
-  // Pulse the badge whenever something lands in the bag. The count was already
-  // updating, but a digit quietly changing in the corner was the only feedback
-  // an "Add to Bag" click produced — easy to miss entirely.
-  const [bump, setBump] = useState(false);
-  useEffect(() => {
-    if (!lastAdded?.at) return;
-    setBump(true);
-    const t = setTimeout(() => setBump(false), 520);
-    return () => clearTimeout(t);
-  }, [lastAdded?.at]);
 
   const getActive = () => {
     const seg = pathname.split('/')[2];
@@ -308,19 +290,7 @@ export default function ProductsSubNav() {
             ))}
           </div>
 
-          <div className="psn-bag-wrap">
-            <button
-              className="psn-bag"
 
-              data-cart-anchor=""
-              onClick={() => (cartCount > 0 ? openCartDrawer() : router.push('/cart'))}
-              aria-label={`Shopping bag, ${cartCount} items`}
-            >
-              <span className="psn-bag-icon">◻</span>
-              <span className="psn-bag-label">Bag</span>
-              <span className={`psn-bag-badge${bump ? ' bump' : ''}`}>{cartCount}</span>
-            </button>
-          </div>
 
         </div>
       </div>

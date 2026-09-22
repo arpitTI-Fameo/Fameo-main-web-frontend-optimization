@@ -5,7 +5,7 @@
 
 import { LISTING_VIEWS } from '../constants';
 
-import ProductCard from './ProductCard';
+import ProductCard from '@/components/Common/ProductCard';
 import { S } from './styles';
 
 /**

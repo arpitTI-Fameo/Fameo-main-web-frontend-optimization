@@ -7,6 +7,9 @@
 // filter the strip, arrows / drag / arrow-keys move it, and the ring is circular.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+import { ROUTES } from '@/constants/routes';
 
 import { ArrowIcon, BagIcon } from './icons';
 import {
@@ -33,7 +36,7 @@ const priceLabel = (v) =>
   v == null || v === '' ? null : `${Number(v).toLocaleString('en-US')}$`;
 
 const imageOf = (p) =>
-  p.thumb || p.image || p.images?.[0] || BEST_SELLING_FALLBACK_IMAGE;
+  BEST_SELLING_FALLBACK_IMAGE || p.thumb || p.image || p.images?.[0];
 
 /**
  * Props
@@ -48,6 +51,8 @@ export default function ProductBestSelling({
   onProductClick,
   onAddToCart,
 }) {
+  const router = useRouter();
+
   const pool = useMemo(
     () => products.slice(0, BEST_SELLING_LIMIT),
     [products]
@@ -166,26 +171,10 @@ export default function ProductBestSelling({
       <style>{S}</style>
       <section className="bsp-wrap" aria-label={header.title}>
         <header className="bsp-head">
-          <ProductHeading title={header.title} />
-
-          {!!tabs.length && (
-            <div className="bsp-tabs" role="tablist" aria-label="Bestseller categories">
-              {tabs.map((t, i) => (
-                <span className="bsp-tabcell" key={t}>
-                  {i > 0 && <span className="bsp-sep" aria-hidden="true">/</span>}
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={t === tab}
-                    className={`bsp-tab${t === tab ? ' is-on' : ''}`}
-                    onClick={() => pickTab(t)}
-                  >
-                    {t}
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
+          <ProductHeading title={header.title} eyebrow={header.eyebrow}
+            linkText="View Best Sellers"
+            onLinkClick={() => router.push(ROUTES.PRODUCTS)}
+            className="pc-head-padding" />
         </header>
 
         <div

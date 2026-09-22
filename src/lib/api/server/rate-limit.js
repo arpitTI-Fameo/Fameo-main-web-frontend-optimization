@@ -133,4 +133,8 @@ export const LIMITS = {
   auth: { limit: 10, windowMs: 60_000 },
   // OTP send costs money and is abusable as an SMS bomb.
   otp: { limit: 5, windowMs: 60_000 },
+  // Every assistant call is an LLM completion, so it costs money per request
+  // and is slow enough that a handful in flight ties up the tunnel. 20/min is
+  // far more than a human types and far less than a script can spend.
+  assistant: { limit: 20, windowMs: 60_000 },
 };

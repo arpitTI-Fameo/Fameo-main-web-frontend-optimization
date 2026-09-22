@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { S } from './styles';
 
-export default function SelectPicker({ 
-  value, 
-  onChange, 
-  options = [], 
-  placeholder = 'Select an option', 
-  id, 
-  className, 
+export default function SelectPicker({
+  value,
+  onChange,
+  options = [],
+  placeholder = 'Select an option',
+  id,
+  className,
   disabled,
-  'aria-invalid': ariaInvalid, 
-  'aria-label': ariaLabel 
+  'aria-invalid': ariaInvalid,
+  'aria-label': ariaLabel
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
@@ -37,16 +38,18 @@ export default function SelectPicker({
     const optValue = typeof opt === 'object' ? opt.value : opt;
     return optValue === value;
   });
-  
-  const displayValue = selectedOption 
+
+  const displayValue = selectedOption
     ? (typeof selectedOption === 'object' ? selectedOption.label : selectedOption)
     : '';
 
   return (
+    <>
+    <style>{S}</style>
     <div className={`frg-select-wrap ${disabled ? 'disabled' : ''}`} ref={containerRef}>
       <input
         id={id}
-        className={`${className} frg-select-input`}
+        className={`${className || ''} frg-select-input`}
         type="text"
         readOnly
         value={displayValue}
@@ -89,5 +92,5 @@ export default function SelectPicker({
         </div>
       )}
     </div>
-  );
+    </>);
 }

@@ -8,7 +8,7 @@
 // Member pricing. The listing grid is a storefront surface, so it prints the
 // plan price rather than the raw listed price — a Popular or Elite member
 // browsing a category would otherwise see no discount at all.
-import PlanPrice from '../../../ProductDetails/PlanPrice';
+import PlanPrice from '@/modules/Main/Products/ProductDetails/PlanPrice';
 
 import { BagIcon, HeartIcon, StarIcon } from './icons';
 import { S } from './styles';

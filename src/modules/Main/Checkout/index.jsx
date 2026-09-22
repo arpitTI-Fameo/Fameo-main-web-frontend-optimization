@@ -3,10 +3,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
+import { useCheckoutStore } from '@/store/checkoutStore';
 import CheckoutSteps from './CheckoutSteps';
 import CheckoutSummary from './CheckoutSummary';
-import DeliveryForm, { validateAddress, validateAddressFields, focusFirstError } from './DeliveryForm';
-import { SHIPPING_RATES, shippingCostFor } from '@/utils/shipping';
+import { SHIPPING_RATES, shippingCostFor, rateFor } from '@/utils/shipping';
 import { planTotals, reconcilePlanTotals, planLabel } from '@/utils/planPricing';
 import { useMembership } from '@/lib/hooks/custome/useMembership';
 import PaymentStep from './PaymentStep';
@@ -25,7 +25,6 @@ import { DEFAULT_LOCALE } from '@/constants/locale';
 // Razorpay's default per-transaction ceiling. Keep in sync with RAZORPAY_MAX_INR
 // on the backend — if Razorpay Support raises your account limit, raise both.
 const MAX_ORDER_INR = Number(process.env.NEXT_PUBLIC_MAX_ORDER_INR || 500000);
-const ADDRESS_KEY = 'fameo_saved_address';
 
 
 const loadRazorpay = () =>
@@ -52,6 +51,19 @@ export default function Checkout({ initialAddresses }) {
   const productsCheckoutMutation = useCheckoutMutation();
   const clearServerCartMutation = useClearCartMutation();
 
+  // The cart collects the address and the delivery method now, so this page
+  // opens on payment when they are already settled. Reading the store once on
+  // mount (not subscribing) keeps a later edit from yanking the step backwards
+  // mid-checkout.
+  const [{ cartAddress, cartMethod, cartRateId }] = useState(() => {
+    const cs = useCheckoutStore.getState();
+    return {
+      cartAddress: cs.address,
+      cartMethod: cs.deliveryMethod,
+      cartRateId: cs.shippingRateId,
+    };
+  });
+
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
   const errorRef = useRef(null);
@@ -76,47 +88,29 @@ export default function Checkout({ initialAddresses }) {
   const [repriced, setRepriced] = useState(null);
   // COD removed — products are prepaid only. Razorpay is the only method.
   const [payMethod, setPayMethod] = useState('razorpay');
-  const [shipping, setShipping] = useState(SHIPPING_RATES[0]);
-  const [savedAddr, setSavedAddr] = useState(null);
+  // Pickup is priced as a zero-cost rate by rateFor(), so the totals here need
+  // no special case for it.
+  const [shipping, setShipping] = useState(() => rateFor(cartMethod, cartRateId));
 
-  // Plan resolution moved into useMembership(). The old code did its own fetch
-  // and read `d.data.discountRate` directly — undefined whenever the API answers
-  // with `discountPercent: 2`, which silently charged Popular/Elite members full
-  // price at checkout while /cart still showed them the discount.
   const { plan, rate: discountRate, percent, meta: planMeta } = useMembership();
   const membership = { type: plan, discountRate, discountPercent: percent };
 
-  // Cart totals come from persisted (localStorage) state the server can't see,
-  // so the first client render must match the server's empty-cart render.
-  // Gate the cart-dependent UI until after mount to avoid a hydration mismatch.
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
-  const [addr, setAddr] = useState({
+  const [addr] = useState({
     firstName: user?.name?.split(' ')[0] || '',
     lastName: user?.name?.split(' ').slice(1).join(' ') || '',
     email: user?.email || '',
     phone: '', address: '', city: '',
-    state: 'Telangana', pin: '', country: 'India', saveAddr: true,
+    state: 'Telangana', pin: '', country: 'India',
+    ...(cartAddress || {}),
   });
 
-  // Load saved address from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(ADDRESS_KEY);
-      if (saved) setSavedAddr(JSON.parse(saved));
-    } catch (_) { }
-  }, []);
-
   // Redirect if cart empty.
-  // `step` was missing from the dep array, so this ran against a stale step and
-  // could bounce the user to /products right after clearCart() on a successful
-  // payment — losing the confirmation screen. Also wait for hydration: the
-  // persisted cart doesn't exist during SSR, so on first paint it always looks
-  // empty.
   useEffect(() => {
     if (!mounted) return;
-    if (cartItems.length === 0 && step < 3) router.push('/products');
+    if (cartItems.length === 0 && step < 2) router.push('/products');
   }, [cartItems, step, mounted, router]);
 
   // If the bag changes, drop any server reprice so we recompute cleanly.
@@ -142,32 +136,6 @@ export default function Checkout({ initialAddresses }) {
   // the drawer and this page all reach the same answer.
   const shippingCost = shippingCostFor(shipping, dispPayable);
   const grandTotalINR = Math.round(dispPayable + shippingCost);
-
-  const handleAddrChange = (key, value) => {
-    if (key === '__fill__') { setAddr((a) => ({ ...a, ...value, saveAddr: false })); return; }
-    setAddr((a) => ({ ...a, [key]: value }));
-    setError('');
-  };
-
-  const handleDeliveryNext = () => {
-    // DeliveryForm now validates and scrolls to the offending field itself, so
-    // by the time this fires the address is already clean. Kept as a backstop
-    // in case onNext is ever wired from elsewhere.
-    const fieldErrors = validateAddressFields(addr);
-    if (Object.keys(fieldErrors).length) {
-      focusFirstError(fieldErrors);
-      return setError(validateAddress(addr));
-    }
-    if (addr.saveAddr) {
-      try {
-        const { saveAddr: _, ...toSave } = addr;
-        localStorage.setItem(ADDRESS_KEY, JSON.stringify(toSave));
-        setSavedAddr(toSave);
-      } catch (_) { }
-    }
-    setError('');
-    setStep(1);
-  };
 
   // ── Razorpay ────────────────────────────────────────────────────────────────
   const handleRazorpay = async () => {
@@ -321,7 +289,7 @@ export default function Checkout({ initialAddresses }) {
               fulfilmentWarning,
             });
             if (fulfilmentWarning) setError(fulfilmentWarning);
-            setStep(3);
+            setStep(2);
           } catch (err) {
             setError(`Payment verification failed: ${err.message}`);
           } finally {
@@ -367,7 +335,7 @@ export default function Checkout({ initialAddresses }) {
     );
   }
 
-  if (step === 3 && confOrder) {
+  if (step === 2 && confOrder) {
     return (
       <>
         <style>{S}</style>
@@ -392,15 +360,6 @@ export default function Checkout({ initialAddresses }) {
         <div className="chk-body">
           <div>
             {step === 0 && (
-              <DeliveryForm
-                addr={addr} onAddr={handleAddrChange}
-                shipping={shipping} onShipping={setShipping}
-                savedAddr={savedAddr} cartTotal={dispPayable}
-                initialData={initialAddresses}
-                onNext={handleDeliveryNext} onBack={() => router.push('/cart')}
-              />
-            )}
-            {step === 1 && (
               <PaymentStep
                 payMethod={payMethod} onPayMethod={setPayMethod}
                 grandTotalINR={grandTotalINR}
@@ -408,10 +367,10 @@ export default function Checkout({ initialAddresses }) {
                 shippingCost={shippingCost}
                 memberDiscount={dispDiscount}
                 membership={membership}
-                onNext={() => setStep(2)} onBack={() => setStep(0)}
+                onNext={() => setStep(1)} onBack={() => router.push('/cart')}
               />
             )}
-            {step === 2 && (
+            {step === 1 && (
               <OrderReview
                 addr={addr} shipping={shipping} shippingCost={shippingCost}
                 payMethod={payMethod}
@@ -420,7 +379,7 @@ export default function Checkout({ initialAddresses }) {
                 memberDiscount={dispDiscount}
                 membership={membership}
                 loading={loading}
-                onPlace={handlePlace} onBack={() => setStep(1)}
+                onPlace={handlePlace} onBack={() => setStep(0)}
               />
             )}
           </div>

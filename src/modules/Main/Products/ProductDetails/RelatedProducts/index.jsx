@@ -8,7 +8,7 @@
 // like — and the member price, wishlist heart and bag button would then have
 // to be kept in step in two places.
 
-import ProductCard from '../../ProductListing/ProductGrid/ProductCard';
+import ProductCard from '@/components/Common/ProductCard';
 import { DETAIL_RELATED } from '../constants';
 
 import { S } from './styles';

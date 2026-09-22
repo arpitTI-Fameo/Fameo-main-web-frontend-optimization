@@ -4,6 +4,7 @@ import MainNav from '@/components/Layout/Navbar';
 import SessionWatcher from '@/components/SessionWatcher';
 import Footer from '@/components/Layout/Footer';
 import WelcomeBanner from '@/components/ui/WelcomeBanner';
+import SupportAssistant from '@/modules/Main/Assistant';
 import { JsonLd, organizationJsonLd } from '@/lib/seo/json-ld';
 import { SITE } from '@/lib/seo/metadata';
 
@@ -24,6 +25,7 @@ export default function MainLayout({ children }) {
       <WelcomeBanner />
       {children}
       <Footer />
+      <SupportAssistant />
     </>
   );
 }

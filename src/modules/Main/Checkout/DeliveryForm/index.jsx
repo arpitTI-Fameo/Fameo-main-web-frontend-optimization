@@ -3,6 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore }        from '@/store/authStore';
 import { SHIPPING_RATES, shippingCostFor } from '@/utils/shipping';
+import {
+  ADDRESS_FIELDS,
+  INDIAN_STATES,
+  validateAddress,
+  validateAddressFields,
+} from '@/utils/address';
 import { useAddresses } from '@/lib/hooks/main/useUser';
 import { S } from './styles';
 import { DEFAULT_LOCALE } from '@/constants/locale';
@@ -14,62 +20,10 @@ import { DEFAULT_LOCALE } from '@/constants/locale';
 // '@/modules/Main/Checkout/DeliveryForm'` call sites keep working.
 export { SHIPPING_RATES, shippingCostFor };
 
-const INDIAN_STATES = [
-  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh',
-  'Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka',
-  'Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram',
-  'Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana',
-  'Tripura','Uttar Pradesh','Uttarakhand','West Bengal',
-  'Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli',
-  'Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry',
-];
-
-// Canonical field order — drives which error we scroll to first, so the page
-// always jumps to the topmost problem rather than an arbitrary one.
-export const ADDRESS_FIELDS = [
-  ['firstName', 'First name'],
-  ['lastName',  'Last name'],
-  ['email',     'Email address'],
-  ['phone',     'Phone number'],
-  ['address',   'Street address'],
-  ['city',      'City'],
-  ['state',     'State'],
-  ['pin',       'PIN code'],
-];
-
-/**
- * Validate EVERY field and return a { field: message } map.
- *
- * The old validateAddress() bailed on the first problem and returned a lone
- * string, which is why the shopper had to hunt: the message appeared next to
- * the button at the bottom, named a field they couldn't see, and revealed only
- * one issue at a time — fix it, submit, discover the next one.
- */
-export function validateAddressFields(addr = {}) {
-  const errors = {};
-
-  for (const [key, label] of ADDRESS_FIELDS) {
-    if (!String(addr[key] ?? '').trim()) errors[key] = `${label} is required`;
-  }
-
-  if (!errors.pin && !/^\d{6}$/.test(String(addr.pin || '')))
-    errors.pin = 'PIN code must be exactly 6 digits';
-
-  if (!errors.phone && !/^\d{10}$/.test(String(addr.phone || '').replace(/\D/g, '')))
-    errors.phone = 'Phone must be 10 digits';
-
-  if (!errors.email && !/\S+@\S+\.\S+/.test(String(addr.email || '')))
-    errors.email = 'Enter a valid email address';
-
-  return errors;
-}
-
-/** Kept for existing callers — returns the first message, or null. */
-export function validateAddress(addr) {
-  const errors = validateAddressFields(addr);
-  const first  = ADDRESS_FIELDS.find(([k]) => errors[k]);
-  return first ? errors[first[0]] : null;
-}
+// ADDRESS_FIELDS / INDIAN_STATES / validateAddress / validateAddressFields moved
+// to @/utils/address so the cart can reach them without importing across
+// modules. focusFirstError stays here: it scrolls and focuses real DOM, which
+// is not what src/utils/ is for.
 
 /**
  * Scroll to the first invalid field, focus it, and flag it.

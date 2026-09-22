@@ -1,151 +1,142 @@
 'use client';
-// modules/Cart/CartDrawer/index.jsx
-// Slide-in cart drawer — opens from the right when user adds to bag.
-// Triggered via uiStore: openCartDrawer() / closeCartDrawer()
-// Add <CartDrawer /> once in app/(main)/layout.js alongside MainNav.
+// modules/Main/Cart/CartDrawer/index.jsx
+// Slide-in bag, opened from the nav or after an add-to-cart.
 //
-// Usage:
-//   import { useUIStore } from '@/store/uiStore';
-//   const openCartDrawer = useUIStore((s) => s.openCartDrawer);
-//   <button onClick={openCartDrawer}>Add to Bag</button>
+// Same palette and the same CartItem as /cart, in its compact variant — the
+// drawer and the page are one surface in two sizes, so a change to the row
+// lands in both.
+//
+// It deliberately stops at "View Cart": the shipping step now lives in /cart,
+// and a drawer is the wrong place to pick an address. The old "Proceed to
+// Checkout" link is gone for the same reason — it jumped past the step that
+// collects the delivery details.
 
 import Link from 'next/link';
+
+import { ROUTES } from '@/constants/routes';
+import { useMembership } from '@/lib/hooks/custome/useMembership';
 import { useCartStore, useHydratedCart } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { inr } from '@/utils/formatCurrency';
-import { useMembership } from '@/lib/hooks/custome/useMembership';
-import { planTotals } from '@/utils/planPricing';
-import { FREE_SHIPPING_THRESHOLD } from '@/utils/shipping';
+import { DELIVERY_METHODS, FREE_SHIPPING_THRESHOLD } from '@/utils/shipping';
+
 import CartItem from '../CartItem';
+import { CART_EMPTY } from '../constants';
+import { cartTotals, itemCountLabel } from '../helpers';
+import { ArrowRightIcon, CloseIcon } from '../icons';
 
 import { S } from './styles';
-
-// FREE_SHIPPING_THRESHOLD used to be `200; // USD` — a pseudo-USD leftover being
-// compared against a rupee total, so any bag over ₹200 claimed free shipping
-// while the checkout charged for it. Now imported from lib/shipping.js.
 
 export default function CartDrawer() {
   const updateQty = useCartStore((s) => s.updateQty);
   const removeFromCart = useCartStore((s) => s.removeFromCart);
 
-  // Drawer renders persisted cart state, so gate it on hydration like the other
-  // cart surfaces.
-  const { items: cartItems, total: cartTotal } = useHydratedCart();
+  const { items } = useHydratedCart();
 
   const isOpen = useUIStore((s) => s.cartDrawerOpen);
   const close = useUIStore((s) => s.closeCartDrawer);
 
   const { rate, percent, meta, isMember } = useMembership();
-  const { discount: planDiscount, payable } = planTotals(cartItems, rate);
 
-  // Threshold is judged on the post-discount payable, matching CartClient and
-  // CheckoutClient.
-  const shippingProgress = Math.min((payable / FREE_SHIPPING_THRESHOLD) * 100, 100);
-  const remaining = Math.max(FREE_SHIPPING_THRESHOLD - payable, 0);
-  const freeShipping = payable >= FREE_SHIPPING_THRESHOLD;
+  // Door delivery at the default rate — the drawer only previews the bag, so it
+  // shows the standard case rather than pretending to know the final method.
+  const totals = cartTotals(items, rate, DELIVERY_METHODS.DOOR);
+
+  const remaining = Math.max(FREE_SHIPPING_THRESHOLD - totals.payable, 0);
+  const freeShipping = totals.payable >= FREE_SHIPPING_THRESHOLD;
+  const progress = Math.min((totals.payable / FREE_SHIPPING_THRESHOLD) * 100, 100);
 
   return (
     <>
       <style>{S}</style>
 
-      {/* Backdrop */}
       <div
-        className={`cd-backdrop${isOpen ? ' open' : ''}`}
+        className={`cd-backdrop${isOpen ? ' is-open' : ''}`}
         onClick={close}
         aria-hidden="true"
       />
 
-      {/* Drawer panel */}
-      <div
-        className={`cd-panel${isOpen ? ' open' : ''}`}
+      <aside
+        className={`cd-panel${isOpen ? ' is-open' : ''}`}
         role="dialog"
         aria-modal="true"
-        aria-label="Shopping bag"
+        aria-label="Shopping cart"
       >
-        {/* Header */}
-        <div className="cd-head">
-          <div className="cd-head-left">
-            <h2 className="cd-title">Your <em>Bag</em></h2>
-            <span className="cd-count">{cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}</span>
+        <header className="cd-head">
+          <div>
+            <h2 className="cd-title">Your Cart</h2>
+            <p className="cd-count">{itemCountLabel(totals.count)}</p>
           </div>
-          <button className="cd-close" onClick={close} aria-label="Close cart">✕</button>
-        </div>
+          <button type="button" className="cd-close" onClick={close} aria-label="Close cart">
+            <CloseIcon />
+          </button>
+        </header>
 
-        {cartItems.length === 0 ? (
-          /* Empty state */
+        {items.length === 0 ? (
           <div className="cd-empty">
-            <div className="cd-empty-icon">🛍️</div>
-            <h3 className="cd-empty-title">Your bag is empty</h3>
-            <p className="cd-empty-sub">Add some gear to get started.</p>
+            <h3 className="cd-empty-title">{CART_EMPTY.title}</h3>
+            <p className="cd-empty-body">{CART_EMPTY.body}</p>
+            <Link className="cd-empty-cta" href={ROUTES.PRODUCTS} onClick={close}>
+              Continue Shopping
+            </Link>
           </div>
         ) : (
-          /* Items */
-          <div className="cd-items">
-            {cartItems.map(({ product, qty }, i) => (
-              <CartItem
-                key={product.id}
-                product={product}
-                qty={qty}
-                onUpdate={updateQty}
-                onRemove={removeFromCart}
-                compact
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Footer */}
-        {cartItems.length > 0 && (
-          <div className="cd-foot">
-            {/* Free shipping progress */}
-            {freeShipping ? (
-              <p className="cd-free-ship">✓ Free shipping unlocked</p>
-            ) : (
-              <>
-                <div className="cd-ship-bar">
-                  <div className="cd-ship-fill" style={{ width: `${shippingProgress}%` }} />
-                </div>
-                <p className="cd-ship-note">
-                  Add {inr(remaining)} more for free shipping
-                </p>
-              </>
-            )}
-
-            {/* Subtotal */}
-            <div className="cd-subtotal-row">
-              <span className="cd-subtotal-label">Subtotal</span>
-              <span className="cd-subtotal-val">{inr(cartTotal)}</span>
+          <>
+            <div className="cd-items">
+              {items.map(({ product, qty }) => (
+                <CartItem
+                  key={product.id}
+                  product={product}
+                  qty={qty}
+                  onUpdate={updateQty}
+                  onRemove={removeFromCart}
+                  compact
+                />
+              ))}
             </div>
 
-            {/* Member discount — the drawer previously showed the full listed
-                total with no hint that the creator's plan changes the price. */}
-            {isMember && planDiscount > 0 && (
-              <>
-                <div className="cd-subtotal-row" style={{ paddingTop: 0 }}>
-                  <span className="cd-subtotal-label" style={{ color: meta.color }}>
-                    {meta.icon} {meta.label} −{percent}%
-                  </span>
-                  <span className="cd-subtotal-val" style={{ color: meta.color }}>
-                    −{inr(planDiscount)}
-                  </span>
-                </div>
-                <div className="cd-subtotal-row" style={{ paddingTop: 0 }}>
-                  <span className="cd-subtotal-label">You pay</span>
-                  <span className="cd-subtotal-val">{inr(payable)}</span>
-                </div>
-              </>
-            )}
+            <footer className="cd-foot">
+              {freeShipping ? (
+                <p className="cd-ship is-free">Free delivery unlocked</p>
+              ) : (
+                <>
+                  <div className="cd-ship-bar">
+                    <span className="cd-ship-fill" style={{ width: `${progress}%` }} />
+                  </div>
+                  <p className="cd-ship">Add {inr(remaining)} more for free delivery</p>
+                </>
+              )}
 
-            {/* CTAs */}
-            <Link href="/checkout" className="cd-btn-checkout" onClick={close}>
-              Proceed to Checkout
-            </Link>
-            <Link href="/cart" className="cd-btn-view" onClick={close}>
-              View Full Bag
-            </Link>
-          </div>
+              <div className="cd-row">
+                <span className="cd-row-label">Subtotal</span>
+                <span className="cd-row-value">{inr(totals.listed)}</span>
+              </div>
+
+              {isMember && totals.discount > 0 && (
+                <>
+                  <div className="cd-row">
+                    <span className="cd-row-label" style={{ color: meta.color }}>
+                      {meta.icon} {meta.label} −{percent}%
+                    </span>
+                    <span className="cd-row-value" style={{ color: meta.color }}>
+                      −{inr(totals.discount)}
+                    </span>
+                  </div>
+                  <div className="cd-row">
+                    <span className="cd-row-label">You pay</span>
+                    <span className="cd-row-value">{inr(totals.payable)}</span>
+                  </div>
+                </>
+              )}
+
+              <Link className="cd-cta" href={ROUTES.CART} onClick={close}>
+                View Cart
+                <ArrowRightIcon />
+              </Link>
+            </footer>
+          </>
         )}
-      </div>
+      </aside>
     </>
   );
 }

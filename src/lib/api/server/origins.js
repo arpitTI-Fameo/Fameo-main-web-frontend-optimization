@@ -26,6 +26,22 @@ export const PRODUCTS_ORIGIN = trim(process.env.PRODUCTS_ORIGIN || 'http://local
 /** The "app" backend the registration flow talks to. */
 export const APP_ORIGIN = trim(process.env.APP_ORIGIN || 'https://uat-api.fameo.info');
 
+/**
+ * AI Support Bot backend (RAG over the Fameo knowledge base).
+ *
+ * Deliberately NOT in the fail-fast list below. The other three are load-
+ * bearing — the site cannot serve a page without them, so pointing at
+ * localhost in production is a bug worth refusing to boot over. The assistant
+ * is one optional widget: if this is unset the widget degrades to an error
+ * message in its own bubble and every other page is unaffected. Hard-failing
+ * the whole server over it would be the larger outage.
+ *
+ * Set ASSISTANT_ORIGIN (no NEXT_PUBLIC_ prefix) to the deployed bot.
+ */
+export const ASSISTANT_ORIGIN = trim(
+  process.env.ASSISTANT_ORIGIN || 'https://cc71-14-99-74-6.ngrok-free.app'
+);
+
 // Fail loudly in production rather than silently pointing at localhost.
 //
 // Deliberately skipped during `next build`. A build runs with NODE_ENV

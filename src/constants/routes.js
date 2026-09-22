@@ -18,6 +18,7 @@ export const ROUTES = {
   // /products/lighting/lumiere-pro. A flat /products/<slug> would collide with
   // CATEGORY() — both would match the same [category] segment.
   PRODUCT: (category, slug) => `/products/${category}/${slug}`,
+  FAVORITES: '/favorites',
   CATEGORY: (cat) => `/products/${cat}`,
 
   // Resources
@@ -41,7 +42,6 @@ export const ROUTES = {
   ORDERS: '/account/orders',
   ORDER: (id) => `/account/orders/${id}`,
   TRACK_ORDER: '/account/track-order',
-  FAVORITES: '/account/favorites',
   SETTINGS: '/account/settings',
 };
 

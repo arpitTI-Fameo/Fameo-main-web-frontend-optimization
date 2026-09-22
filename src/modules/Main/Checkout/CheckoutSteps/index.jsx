@@ -6,7 +6,7 @@ import { S } from './styles';
 // Props:
 //   current — 0 | 1 | 2  (active step index)
 
-const STEPS = ['Delivery', 'Payment', 'Review'];
+const STEPS = ['Payment', 'Review'];
 
 export default function CheckoutSteps({ current }) {
   return (

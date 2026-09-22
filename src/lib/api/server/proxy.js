@@ -2,7 +2,7 @@ import 'server-only';
 // lib/api/server/proxy.js
 // Shared BFF proxy factory.
 //
-// Fameo has three upstreams. Each gets its own BFF route built from this
+// Fameo has four upstreams. Each gets its own BFF route built from this
 // factory, so the token is attached server-side in exactly one place no matter
 // which upstream a call is bound for, and the browser never learns an origin.
 //
@@ -92,10 +92,30 @@ async function refreshSession(currentToken) {
  * @param {object} [options]
  * @param {keyof typeof CREDENTIALS} [options.credential]  default 'session'
  * @param {{limit:number,windowMs:number}} [options.rateLimit]
+ * @param {string} [options.bucket]  default 'proxy'
+ *        Name of the rate-limit counter this route spends from. The counter is
+ *        keyed by bucket + client, so two routes sharing a name share a budget.
+ *        The default keeps every existing BFF route on the one shared 'proxy'
+ *        budget it has always used. A route passes its own name only when it
+ *        needs a DIFFERENT limit — a tighter limit on the shared counter would
+ *        not tighten that route, it would impose itself on every other one,
+ *        because whoever calls hit() last decides what the shared count is
+ *        compared against.
+ * @param {Record<string,string>} [options.headers]
+ *        Static headers forced onto every upstream request. For upstream
+ *        quirks that are a property of the BACKEND, not of the caller — an
+ *        API key, a tunnel's interstitial opt-out. They belong here, beside
+ *        the origin and server-side, rather than being sent from the browser
+ *        where they would be both visible and forgeable.
  * @returns {(request: Request, ctx: { params: Promise<{path: string[]}> }) => Promise<Response>}
  */
 export function createProxy(origin, options = {}) {
-  const { credential = 'session', rateLimit = LIMITS.proxy } = options;
+  const {
+    credential = 'session',
+    rateLimit = LIMITS.proxy,
+    headers: forced,
+    bucket = 'proxy',
+  } = options;
   const source = CREDENTIALS[credential] ?? CREDENTIALS.session;
 
   return async function proxy(request, ctx) {
@@ -104,7 +124,7 @@ export function createProxy(origin, options = {}) {
     const target = `${origin}/${path.join('/')}${search}`;
 
     // ── 1. Rate limit ────────────────────────────────────────────────────────
-    const gate = hit(`proxy:${clientKey(request)}`, rateLimit.limit, rateLimit.windowMs);
+    const gate = hit(`${bucket}:${clientKey(request)}`, rateLimit.limit, rateLimit.windowMs);
     if (!gate.ok) {
       return NextResponse.json(
         { success: false, message: 'Too many requests. Please slow down.' },
@@ -120,6 +140,12 @@ export function createProxy(origin, options = {}) {
     // An Authorization header from the browser is never trusted — the whole
     // point is that the credential comes from the httpOnly cookie below.
     headers.delete('authorization');
+
+    // Upstream-specific headers, applied after the caller's are copied so the
+    // caller can never override them.
+    if (forced) {
+      for (const [k, v] of Object.entries(forced)) headers.set(k, v);
+    }
 
     // ── 3. Attach the credential, server-side ────────────────────────────────
     let token = await source.read();

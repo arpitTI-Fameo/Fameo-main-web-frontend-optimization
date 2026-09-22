@@ -1,6 +1,7 @@
 // modules/Products/Category/helpers.js
 
 import { PRODUCT_CATEGORIES } from '@/constants/megaMenu';
+import { sortConfig } from './constants';
 
 // Turn a URL slug back into the canonical category name from PRODUCT_CATEGORIES.
 // Falls back to a title-cased version of the slug if there's no exact match.
@@ -18,19 +19,37 @@ export const slugToCategory = (slug) => {
 // the caller's list is left alone. Unknown values (and 'featured') keep the
 // order the API returned.
 export const sortProducts = (products, sort) => {
-  const list = [...products];
-  const num = (v, fallback) => (typeof v === 'number' ? v : fallback);
+  const config = sortConfig[sort];
+  if (!config) return [...products];
 
-  switch (sort) {
-    case 'price-asc':
-      return list.sort((a, b) => num(a.price, Infinity) - num(b.price, Infinity));
-    case 'price-desc':
-      return list.sort((a, b) => num(b.price, -Infinity) - num(a.price, -Infinity));
-    case 'rating':
-      return list.sort((a, b) => num(b.rating, -1) - num(a.rating, -1));
-    case 'name-asc':
-      return list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    default:
-      return list;
-  }
+  const { field, order } = config;
+  const numOrder = parseInt(order, 10);
+
+  // Helper to resolve nested dot-notation paths (e.g. "skuPrice.salePrice")
+  const getVal = (obj, path) => path.split('.').reduce((acc, part) => (acc && acc[part] !== undefined) ? acc[part] : undefined, obj);
+
+  return [...products].sort((a, b) => {
+    let valA = getVal(a, field);
+    let valB = getVal(b, field);
+
+    // Provide fallbacks for the current mock UI structure while we transition to full API typings
+    if (valA === undefined) {
+      if (field.toLowerCase().includes('price')) valA = a.price;
+      else if (field.toLowerCase().includes('rating')) valA = a.rating;
+      else if (field.toLowerCase().includes('name')) valA = a.name;
+    }
+    if (valB === undefined) {
+      if (field.toLowerCase().includes('price')) valB = b.price;
+      else if (field.toLowerCase().includes('rating')) valB = b.rating;
+      else if (field.toLowerCase().includes('name')) valB = b.name;
+    }
+
+    if (typeof valA === 'string' && typeof valB === 'string') {
+      return valA.localeCompare(valB) * numOrder;
+    }
+
+    const numA = typeof valA === 'number' ? valA : 0;
+    const numB = typeof valB === 'number' ? valB : 0;
+    return (numA - numB) * numOrder;
+  });
 };

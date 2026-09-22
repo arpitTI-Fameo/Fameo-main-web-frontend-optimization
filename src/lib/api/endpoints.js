@@ -202,6 +202,16 @@ export const eventEndpoints = {
 };
 
 // ── Chat ──────────────────────────────────────────────────────────────────────
+// ── AI Support Assistant ──────────────────────────────────────────────────────
+// A DIFFERENT upstream from chatEndpoints below. That one is the community
+// chat (rooms, DMs, uploads, read receipts) on the main API; this is the RAG
+// support bot on its own service. Same word, unrelated backends — keeping them
+// as separate objects is what stops a path from being sent to the wrong one.
+export const assistantEndpoints = {
+  chat: () => '/api/v1/chat',
+  health: () => '/api/v1/health',
+};
+
 export const chatEndpoints = {
   rooms: () => '/chat/rooms',
   dmRoom: (uid) => `/chat/rooms/dm/${uid}`,

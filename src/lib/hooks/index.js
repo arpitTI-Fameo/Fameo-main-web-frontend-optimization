@@ -20,6 +20,7 @@ export * from './custome/useAuthHydrated';
 export * from './custome/useMembership';
 export * from './custome/useProfilePhoto';
 export * from './custome/useSocket';
+export * from './main/useAssistant';
 export * from './main/useChat';
 export * from './main/useCommunity';
 export * from './main/useEvent';

@@ -38,6 +38,33 @@ export const SHIPPING_RATES = [
 
 export const DEFAULT_SHIPPING = SHIPPING_RATES[0];
 
+/**
+ * How the order reaches the shopper. Chosen in the cart's shipping step.
+ * 'pickup' means they collect it themselves, so no address and no carrier.
+ */
+export const DELIVERY_METHODS = {
+  DOOR: 'door',
+  PICKUP: 'pickup',
+};
+
+/**
+ * Pickup is modelled as a zero-cost rate rather than a special case in the
+ * totals, so shippingCostFor() keeps being the only thing that prices delivery.
+ */
+export const PICKUP_RATE = {
+  id: 'pickup',
+  label: 'Pickup From Warehouse',
+  days: 'Ready to collect in 1–2 business days',
+  price: 0,
+  free_above: null,
+};
+
+/** The rate that applies, given a delivery method and the chosen rate id. */
+export const rateFor = (deliveryMethod, rateId) =>
+  deliveryMethod === DELIVERY_METHODS.PICKUP
+    ? PICKUP_RATE
+    : SHIPPING_RATES.find((r) => r.id === rateId) || DEFAULT_SHIPPING;
+
 /** Free-shipping threshold used by the cart page and drawer progress bar. */
 export const FREE_SHIPPING_THRESHOLD = DEFAULT_SHIPPING.free_above;
 

@@ -336,6 +336,50 @@ export const S = `
     color:#c23a3a; background:none; border:none; cursor:pointer; padding:0;
   }
 
+  /* ── bag button (shown on /products) ── */
+  .mn-bag {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    padding: 6px 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  .mn-bag-icon {
+    width: 24px; height: 24px;
+    display: block;
+    filter: brightness(0) invert(1);
+    transition: filter .22s, opacity .22s;
+  }
+  .mn-bar.solid .mn-bag-icon,
+  .mn-bar.light .mn-bag-icon {
+    filter: none;
+  }
+  .mn-bag:hover .mn-bag-icon { opacity: 0.7; }
+
+  .mn-bag-badge {
+    position: absolute;
+    top: 2px; right: 0px;
+    min-width: 16px; height: 16px; border-radius: 8px;
+    background: #A85A2E; /* earthy brown */
+    color: #fff; font-size: 9.5px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; padding: 0 4px;
+    border: 1.5px solid transparent;
+    font-family: 'Jost', sans-serif;
+  }
+  .mn-bar.solid .mn-bag-badge,
+  .mn-bar.light .mn-bag-badge {
+    border-color: #fff;
+  }
+
+  .mn-bag-badge.bump { animation: mnBump .5s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes mnBump {
+    0%   { transform: scale(1);   }
+    35%  { transform: scale(1.5); }
+    100% { transform: scale(1);   }
+  }
+
   /* ── Responsive ─────────────────────────────────────────────── */
   @media(max-width:1100px) {
     .mn-bar { padding: 0 10px 0 16px; }
@@ -361,6 +405,7 @@ export const S = `
     .mn-register { padding: 9px 15px; font-size: 10px; letter-spacing: .06em; }
     .mn-hbg { width: 40px; height: 40px; }
     .mn-dropdown { width: min(268px, calc(100vw - 24px)); }
+    .mn-bag { padding: 6px 8px; }
   }
 
   @media(prefers-reduced-motion: reduce) {

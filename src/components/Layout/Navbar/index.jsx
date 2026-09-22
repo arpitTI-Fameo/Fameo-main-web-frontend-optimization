@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ShoppingBag } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useAuthHydrated } from '@/lib/hooks/custome/useAuthHydrated';
 import { clearProfilePhoto } from '@/lib/hooks/custome/useProfilePhoto';
@@ -11,6 +11,8 @@ import { ROUTES } from '@/constants/routes';
 import AppLogo from '@/components/Common/AppLogo';
 import UserMenu from './UserMenu';
 import { S } from './style';
+import { useCartStore, useHydratedCart } from '@/store/cartStore';
+import { useUIStore } from '@/store/uiStore';
 
 /* Routes that render a dark hero behind the transparent bar.
    Everything else starts in "light" mode so text stays legible. */
@@ -31,6 +33,18 @@ export default function MainNav() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const hydrated = useAuthHydrated();
+
+  const { count: cartCount } = useHydratedCart();
+  const openCartDrawer = useUIStore((s) => s.openCartDrawer);
+  const lastAdded = useCartStore((s) => s.lastAdded);
+
+  const [bump, setBump] = useState(false);
+  useEffect(() => {
+    if (!lastAdded?.at) return;
+    setBump(true);
+    const t = setTimeout(() => setBump(false), 520);
+    return () => clearTimeout(t);
+  }, [lastAdded?.at]);
 
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -152,7 +166,20 @@ export default function MainNav() {
 
           {/* ── Right cluster ───────────────────────────────────── */}
           <div className="mn-right">
+            {pathname.startsWith(ROUTES.PRODUCTS) && (
+              <button
+                className="mn-bag"
+                data-cart-anchor=""
+                onClick={() => (cartCount > 0 ? openCartDrawer() : router.push('/cart'))}
+                aria-label={`Shopping bag, ${cartCount} items`}
+              >
+                <img src="/assets/icons/common/cart.svg" alt="Cart" className="mn-bag-icon" />
+                <span className={`mn-bag-badge${bump ? ' bump' : ''}`}>{cartCount}</span>
+              </button>
+            )}
             <div className="mn-vdiv" aria-hidden="true" />
+
+
 
             {/* skeleton → Login/Register → avatar + name pill, all inside */}
             <UserMenu />
