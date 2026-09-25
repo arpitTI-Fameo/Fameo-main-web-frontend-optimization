@@ -10,11 +10,10 @@ import {
   getOrderAction,
   getMyTicketsAction,
   addToCartAction,
-  checkoutAction,
   removeFromCartAction,
   clearCartAction,
   raiseTicketAction,
-  syncCartToServerAction
+  syncCartToServerAction,
 } from '@/lib/services';
 
 // ── Keys ───────────────────────────────────────────────────────────────────
@@ -29,17 +28,6 @@ export const fameoProductsKeys = {
   order: (id) => [...fameoProductsKeys.all, 'order', id],
   tickets: () => [...fameoProductsKeys.all, 'tickets'],
 };
-
-export const productKeys = {
-  all: () => ['product'],
-  lists: () => [...productKeys.all(), 'list'],
-  list: (params) => [...productKeys.lists(), params],
-  details: () => [...productKeys.all(), 'detail'],
-  detail: (slug) => [...productKeys.details(), slug],
-  featured: () => [...productKeys.all(), 'featured'],
-  bestsellers: () => [...productKeys.all(), 'bestsellers'],
-};
-
 
 export const useLiveProducts = (params = {}, opts = {}) => useQuery({
   queryKey: fameoProductsKeys.liveProducts(params), queryFn: async () => {
@@ -123,7 +111,6 @@ export const useClearCartMutation = (opts = {}) => useApiMutation({
   }, invalidate: [fameoProductsKeys.cart()], ...opts
 });
 
-export const useCheckoutMutation = (opts = {}) => useApiMutation({ mutationFn: ({ cart_id, payment_ref, shipping_address }) => checkoutAction(cart_id, payment_ref, shipping_address), invalidate: [fameoProductsKeys.cart(), fameoProductsKeys.orders()], ...opts });
 
 export const useRaiseTicketMutation = (opts = {}) => useApiMutation({
   mutationFn: async (...args) => {

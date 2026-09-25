@@ -1,51 +1,32 @@
 // app/api/auth/refresh-session/route.js
-// Re-mints the session after a plan change, and re-sets the httpOnly cookie.
+// Re-reads the signed-in member's web profile after a plan change.
 //
-// Entitlement rides in the signed JWT (`plan` claim), so buying a plan is not
-// enough — middleware keeps reading the old claim until the token is replaced.
-// The browser cannot do this any more (it has no token), so it happens here.
+// Entitlement used to ride in a token the main API minted (`plan` claim), so
+// buying a plan meant re-minting it here. The session token is now Fameoinfo's
+// and carries no plan; the plan is read from the main API wherever it is
+// needed (server-side page gates, this route). What callers still need is the
+// fresh user object, which is what this returns.
 
 import { NextResponse } from 'next/server';
 
-import { API_ORIGIN } from '@/lib/api/server/origins';
-import { authEndpoints } from '@/lib/api/endpoints';
-import { getSessionToken, setSessionToken } from '@/lib/auth/session';
+import { hasSession } from '@/lib/auth/session';
+import { getMeServerAction } from '@/lib/services/auth/auth.server';
 
 export async function POST() {
-  const token = await getSessionToken();
-  if (!token) {
+  if (!(await hasSession())) {
     return NextResponse.json(
       { success: false, message: 'Not signed in' },
       { status: 401 }
     );
   }
 
-  let body;
   try {
-    const upstream = await fetch(`${API_ORIGIN}${authEndpoints.refreshSession()}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      cache: 'no-store',
-    });
-    body = await upstream.json();
-    if (!upstream.ok || body?.success === false) {
-      return NextResponse.json(
-        { success: false, message: body?.message || 'Could not refresh session' },
-        { status: upstream.status }
-      );
-    }
-  } catch {
+    const user = await getMeServerAction();
+    return NextResponse.json({ success: true, data: { user: user ?? null } });
+  } catch (err) {
     return NextResponse.json(
-      { success: false, message: 'Cannot reach the authentication server' },
-      { status: 502 }
+      { success: false, message: err?.message || 'Could not refresh session' },
+      { status: err?.status || 502 }
     );
   }
-
-  const next = body?.data?.token;
-  if (next) await setSessionToken(next);
-
-  return NextResponse.json({
-    success: true,
-    data: { user: body?.data?.user ?? null },
-  });
 }

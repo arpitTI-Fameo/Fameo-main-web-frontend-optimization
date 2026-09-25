@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
-import { getAdminContentAction, updateAdminContentStatusAction, getAdminContentByIdAction, createAdminContentAction, updateAdminContentAction } from '@/lib/services/admin/content.service';
+import { getAdminContentAction, updateAdminContentStatusAction, getAdminContentByIdAction, createAdminContentAction, updateAdminContentAction, rollbackAdminContentAction } from '@/lib/services/admin/content.service';
 import { deleteContentAction } from '@/lib/services/admin/archive.service';
 import { adminKeys } from '@/lib/services/admin/admin.keys';
 
@@ -38,4 +38,13 @@ export const useSaveContentMutation = (opts = {}) => {
         ...opts
     });
     return { ...mutation, saveContent: mutation.mutateAsync };
+};
+
+export const useRollbackContentMutation = (opts = {}) => {
+    const mutation = useApiMutation({
+        mutationFn: ({ id, version }) => rollbackAdminContentAction(id, version),
+        invalidate: [adminKeys.content()],
+        ...opts
+    });
+    return { ...mutation, rollback: mutation.mutateAsync };
 };

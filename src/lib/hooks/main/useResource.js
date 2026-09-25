@@ -4,9 +4,17 @@ import {
   getCoursesAction,
   getCourseAction,
   getLearningsAction,
-  getSavedResourcesAction,
   enrollAction,
-  updateProgressAction
+  updateProgressAction,
+  reviewCourseAction,
+  getCourseNotesAction,
+  addCourseNoteAction,
+  deleteCourseNoteAction,
+  getTopicsAction,
+  getTopicAction,
+  getModuleTopicsAction,
+  getPublishedCoursesAction,
+  getPublishedCourseAction,
 } from '@/lib/services';
 
 // ── Keys ───────────────────────────────────────────────────────────────────
@@ -14,10 +22,13 @@ export const resourceKeys = {
   all: () => ['resource'],
   courses: () => [...resourceKeys.all(), 'courses'],
   course: (slug) => [...resourceKeys.courses(), slug],
-  articles: () => [...resourceKeys.all(), 'articles'],
-  article: (slug) => [...resourceKeys.articles(), slug],
-  learnings: () => [...resourceKeys.all(), 'learnings'],
-  saved: () => [...resourceKeys.all(), 'saved'],
+    learnings: () => [...resourceKeys.all(), 'learnings'],
+  notes: (slug, lessonId) => [...resourceKeys.all(), 'notes', slug, lessonId ?? null],
+  topics: (params) => [...resourceKeys.all(), 'topics', params ?? {}],
+  topic: (slug) => [...resourceKeys.all(), 'topic', slug],
+  moduleTopics: (moduleId) => [...resourceKeys.all(), 'topics', 'module', moduleId],
+  published: (params) => [...resourceKeys.all(), 'published', params ?? {}],
+  publishedCourse: (slug) => [...resourceKeys.all(), 'published', slug],
 };
 
 
@@ -56,17 +67,6 @@ export const useLearnings = (opts = {}) => useQuery({
   ...opts,
 });
 
-export const useSavedResources = (opts = {}) => useQuery({
-
-  queryKey: resourceKeys.saved(),
-  queryFn: async () => {
-    const response = await getSavedResourcesAction();
-    if (!response.code) throw response;
-    return response.result;
-  },
-  ...opts,
-});
-
 export const useEnrollMutation = (opts = {}) => useApiMutation({
   mutationFn: async (...args) => {
     const response = await enrollAction(...args);
@@ -83,5 +83,71 @@ export const useUpdateProgressMutation = (opts = {}) => useApiMutation({
     if (!response.code) throw response;
     return response.result;
   },
+  invalidate: [resourceKeys.learnings()],
+  ...opts,
+});
+
+/** Throw a failed action envelope; else its result. */
+const resultOf = (action) => async (...args) => {
+  const response = await action(...args);
+  if (!response.code) throw response;
+  return response.result;
+};
+
+export const useReviewCourseMutation = (opts = {}) => useApiMutation({
+  mutationFn: resultOf(reviewCourseAction),
+  invalidate: [resourceKeys.courses(), resourceKeys.learnings()],
+  ...opts,
+});
+
+export const useCourseNotes = (slug, lessonId, opts = {}) => useQuery({
+  queryKey: resourceKeys.notes(slug, lessonId),
+  queryFn: () => resultOf(getCourseNotesAction)(slug, lessonId),
+  enabled: Boolean(slug),
+  ...opts,
+});
+
+export const useAddCourseNoteMutation = (opts = {}) => useApiMutation({
+  mutationFn: resultOf(addCourseNoteAction),
+  invalidate: [[...resourceKeys.all(), 'notes']],
+  ...opts,
+});
+
+export const useDeleteCourseNoteMutation = (opts = {}) => useApiMutation({
+  mutationFn: resultOf(deleteCourseNoteAction),
+  invalidate: [[...resourceKeys.all(), 'notes']],
+  ...opts,
+});
+
+export const useTopics = (params, opts = {}) => useQuery({
+  queryKey: resourceKeys.topics(params),
+  queryFn: () => resultOf(getTopicsAction)(params),
+  ...opts,
+});
+
+export const useTopic = (slug, opts = {}) => useQuery({
+  queryKey: resourceKeys.topic(slug),
+  queryFn: () => resultOf(getTopicAction)(slug),
+  enabled: Boolean(slug),
+  ...opts,
+});
+
+export const useModuleTopics = (moduleId, opts = {}) => useQuery({
+  queryKey: resourceKeys.moduleTopics(moduleId),
+  queryFn: () => resultOf(getModuleTopicsAction)(moduleId),
+  enabled: moduleId !== undefined && moduleId !== null,
+  ...opts,
+});
+
+export const usePublishedCourses = (params, opts = {}) => useQuery({
+  queryKey: resourceKeys.published(params),
+  queryFn: () => resultOf(getPublishedCoursesAction)(params),
+  ...opts,
+});
+
+export const usePublishedCourse = (slug, opts = {}) => useQuery({
+  queryKey: resourceKeys.publishedCourse(slug),
+  queryFn: () => resultOf(getPublishedCourseAction)(slug),
+  enabled: Boolean(slug),
   ...opts,
 });

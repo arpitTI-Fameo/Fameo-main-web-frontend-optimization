@@ -83,6 +83,48 @@ describe('request', () => {
     });
   });
 
+  it('reads message, code and field errors from the backend error envelope', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({
+      success: false,
+      error: {
+        code: 'VALIDATION_FAILED',
+        message: 'Validation failed',
+        details: [{ field: 'qty', issue: 'qty must be ≥ 1', location: 'body' }],
+      },
+      meta: { requestId: 'r-1' },
+    }, { status: 422 })));
+
+    await expect(request('/x')).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 422,
+      code: 'VALIDATION_FAILED',
+      message: 'Validation failed',
+      serverMessage: 'Validation failed',
+      fieldErrors: [{ field: 'qty', issue: 'qty must be ≥ 1', location: 'body' }],
+    });
+  });
+
+  it('still reads the flat { error, code } body older endpoints send', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () =>
+      jsonResponse({ error: 'Sold out', code: 'INSUFFICIENT_STOCK' }, { status: 409 })));
+
+    await expect(request('/x')).rejects.toMatchObject({
+      status: 409,
+      code: 'INSUFFICIENT_STOCK',
+      message: 'Sold out',
+    });
+  });
+
+  it('hands callers the data of the success envelope, not the meta', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({
+      success: true,
+      data: { products: [], total: 0 },
+      meta: { requestId: 'r-2', pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } },
+    })));
+
+    await expect(request('/x')).resolves.toEqual({ products: [], total: 0 });
+  });
+
   it('strips tags from an HTML error page instead of surfacing markup', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(
       '<html><body><h1>413 Request Entity Too Large</h1></body></html>',

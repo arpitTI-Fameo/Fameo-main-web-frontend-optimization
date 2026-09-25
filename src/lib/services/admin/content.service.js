@@ -46,3 +46,12 @@ export const updateAdminContentAction = async (id, form) => {
     body: form,
   });
 };
+
+/** Restore a topic's body from one of its last 10 versions. */
+export const rollbackAdminContentAction = async (id, version) => {
+  return createAdminAction({
+    url: adminEndpoints.contentRollback(id),
+    method: 'PATCH',
+    body: { version },
+  });
+};

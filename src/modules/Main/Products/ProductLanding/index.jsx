@@ -14,6 +14,8 @@ import {
 } from '@/constants/mockData';
 import { PRODUCT_BRANDS } from '@/constants/megaMenu';
 import { useStorefrontProducts } from '@/lib/hooks/main/useProduct';
+import { useAuthStore } from '@/store/authStore';
+import { useAddToCart } from '@/lib/hooks/main/useCart';
 
 import ProductShowcase from '../ProductListing/ProductShowcase';
 import ProductDiscountSections from './ProductDiscountSections';
@@ -30,14 +32,28 @@ export default function ProductsLanding() {
   const showToast = useUIStore((s) => s.showToast);
   const usingMockDataRef = useRef(false);
 
+  const isAuth = useAuthStore((s) => Boolean(s.user));
+  const { mutateAsync: serverAddToCart } = useAddToCart();
 
-  const addToCart = useCallback((product, qty = 1, sourceEl = null) => {
+  const addToCart = useCallback(async (product, qty = 1, sourceEl = null) => {
     if (usingMockDataRef.current) {
       showToast('Catalogue is still loading — please try again in a moment.', 'error');
       return { ok: false, status: 'unavailable' };
     }
 
-    const res = addToCartRaw(product, qty);
+    let res;
+    if (!isAuth) {
+      res = addToCartRaw(product, qty);
+    } else {
+      try {
+        await serverAddToCart({ productId: product.id, quantity: qty });
+        res = { ok: true };
+      } catch (error) {
+        res = { ok: false, status: 'error' };
+        showToast(error.message || 'Could not add to cart', 'error');
+        return res;
+      }
+    }
 
     if (res?.status === 'at-max') {
       showToast(`Only ${res.max} in stock — your bag already has them all.`, 'warn');
@@ -59,13 +75,12 @@ export default function ProductsLanding() {
         sourceEl?.tagName === 'IMG'
           ? sourceEl
           : sourceEl?.querySelector?.('img') || null;
-
       flyToCart(img || sourceEl, {
         imageUrl: product?.thumb || product?.image || product?.images?.[0],
       });
     }
     return res;
-  }, [addToCartRaw, showToast]);
+  }, [isAuth, addToCartRaw, serverAddToCart, showToast]);
 
   const [loaded, setLoaded] = useState(false);
   const [pageVis, setPageVis] = useState(false);

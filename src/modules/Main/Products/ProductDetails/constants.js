@@ -26,6 +26,39 @@ export const DETAIL_TABS = [
 
 export const [{ id: DETAIL_DEFAULT_TAB }] = DETAIL_TABS;
 
+/* A tab whose authored half is missing is renamed for what it does hold —
+   live catalogue rows carry a spec sheet but no written description, and no
+   materials list beside the care copy. */
+export const DETAIL_TAB_FALLBACK_LABELS = {
+  description: 'Specifications',
+  materials:   'Care',
+};
+
+/* ── live catalogue specs ─────────────────────────────────────────────────
+   The Products service returns the ERP sheet verbatim. These keys are
+   bookkeeping (Tally, BI, channel flags, marketplace ids) — never shown. */
+export const DETAIL_HIDDEN_SPECS = [
+  'Display Name',
+  'Tally Product Name',
+  'Unit',
+  'Is Active',
+  'Is Allow Back Orders',
+  'Is Visible',
+  'Ignore For BI',
+  'Sales Channels',
+  'asin',
+  'url_path',
+  'Buyer Group Margin',
+  'Available Image Count',
+];
+
+/* Sheet column → the label a shopper reads. Unlisted keys print as-is. */
+export const DETAIL_SPEC_LABELS = {
+  'Country Of Origin':     'Country of origin',
+  'Global Product Number': 'Global product number',
+  HSN:                     'HSN code',
+};
+
 /* Care and shipping are site-wide policy, not per-product facts — one copy,
    read by every SKU's tab body. */
 export const DETAIL_CARE_BODY = [

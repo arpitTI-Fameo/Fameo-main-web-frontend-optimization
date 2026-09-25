@@ -7,7 +7,9 @@
 //   - the caller's Authorization header is IGNORED (otherwise the httpOnly
 //     cookie is decorative and anyone can pass their own bearer)
 //   - the caller's Cookie header never reaches the upstream
-//   - a 401 triggers exactly one refresh, and the retry carries the new token
+//   - a 401 triggers exactly one refresh (at Fameoinfo-Backend), and the retry
+//     carries the new token
+//   - concurrent refreshes are shared per user and NEVER across users
 //   - rate limiting actually refuses
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -26,14 +28,14 @@ vi.mock('next/server', () => ({
 
 const session = vi.hoisted(() => ({
   token: 'session-token',
-  appToken: 'app-token',
+  refresh: 'refresh-token',
   set: vi.fn(),
 }));
 
 vi.mock('@/lib/auth/session', () => ({
   getSessionToken: async () => session.token,
-  getAppToken: async () => session.appToken,
-  setSessionToken: async (t) => { session.set(t); session.token = t; },
+  getRefreshToken: async () => session.refresh,
+  setSessionTokens: async (pair) => { session.set(pair); session.token = pair.accessToken; },
 }));
 
 vi.mock('@/lib/api/server/origins', () => ({
@@ -43,6 +45,7 @@ vi.mock('@/lib/api/server/origins', () => ({
 }));
 
 const { createProxy } = await import('@/lib/api/server/proxy');
+const { identityRefresh } = await import('@/lib/api/server/identity');
 
 const ctx = (path) => ({ params: Promise.resolve({ path }) });
 const ok = (body = { success: true }) =>
@@ -57,7 +60,18 @@ const req = (url, init = {}) => new Request(url, {
   headers: { 'x-forwarded-for': `10.0.0.${++ip}`, ...(init.headers || {}) },
 });
 
-beforeEach(() => { session.token = 'session-token'; session.set.mockClear(); });
+// Refreshes are shared per refresh token for a short window, so each test gets
+// its own or it would be handed the previous test's result.
+let refreshSeq = 0;
+beforeEach(() => {
+  session.token = 'session-token';
+  session.refresh = `refresh-token-${++refreshSeq}`;
+  session.set.mockClear();
+});
+
+// Fameoinfo-Backend's refresh envelope.
+const refreshed = (access, refresh = `${access}-refresh`) =>
+  ok({ success: true, data: [{ access_token: access, refresh_token: refresh, expires_in: 900 }] });
 
 describe('credential attachment', () => {
   it('attaches the session token from the cookie', async () => {
@@ -95,7 +109,7 @@ describe('credential attachment', () => {
     expect(fetchMock.mock.calls[0][1].headers.get('cookie')).toBeNull();
   });
 
-  it('uses the APP credential when the route asks for it', async () => {
+  it('sends the SAME session token to the app backend — one credential for every backend', async () => {
     const fetchMock = vi.fn(async () => ok());
     vi.stubGlobal('fetch', fetchMock);
 
@@ -103,7 +117,7 @@ describe('credential attachment', () => {
       req('https://x.test/api/bff-app/profile'), ctx(['api', 'profile']),
     );
 
-    expect(fetchMock.mock.calls[0][1].headers.get('authorization')).toBe('Bearer app-token');
+    expect(fetchMock.mock.calls[0][1].headers.get('authorization')).toBe('Bearer session-token');
   });
 
   it('preserves the query string', async () => {
@@ -119,11 +133,11 @@ describe('credential attachment', () => {
 });
 
 describe('token refresh on 401', () => {
-  it('refreshes once and replays the request with the new token', async () => {
+  it('refreshes once at Fameoinfo-Backend and replays the request with the new token', async () => {
     const fetchMock = vi.fn()
-      .mockResolvedValueOnce(unauthorized())                                  // original
-      .mockResolvedValueOnce(ok({ success: true, data: { token: 'fresh' } })) // refresh
-      .mockResolvedValueOnce(ok({ success: true, data: 'payload' }));         // replay
+      .mockResolvedValueOnce(unauthorized())                             // original
+      .mockResolvedValueOnce(refreshed('fresh', 'rotated'))              // refresh
+      .mockResolvedValueOnce(ok({ success: true, data: 'payload' }));    // replay
     vi.stubGlobal('fetch', fetchMock);
 
     const res = await createProxy('https://upstream.test')(
@@ -132,8 +146,31 @@ describe('token refresh on 401', () => {
 
     expect(res.status).toBe(200);
     expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(session.set).toHaveBeenCalledWith('fresh');
+
+    // The refresh goes to the authentication authority, with the refresh token
+    // from the cookie — never the access token.
+    const [refreshUrl, refreshInit] = fetchMock.mock.calls[1];
+    expect(refreshUrl).toBe('https://app.test/api/v1/auth/refresh');
+    expect(JSON.parse(refreshInit.body)).toEqual({ refresh_token: session.refresh });
+
+    // Both halves of the rotated pair are persisted.
+    expect(session.set).toHaveBeenCalledWith({ accessToken: 'fresh', refreshToken: 'rotated', expiresIn: 900 });
     expect(fetchMock.mock.calls[2][1].headers.get('authorization')).toBe('Bearer fresh');
+  });
+
+  it('refreshes app-backend calls too — the credential is the same session', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(unauthorized())
+      .mockResolvedValueOnce(refreshed('fresh-app'))
+      .mockResolvedValueOnce(ok());
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await createProxy('https://app.test', { credential: 'app' })(
+      req('https://x.test/api/bff-app/me'), ctx(['api', 'me']),
+    );
+
+    expect(res.status).toBe(200);
+    expect(fetchMock.mock.calls[2][1].headers.get('authorization')).toBe('Bearer fresh-app');
   });
 
   it('gives up and returns the 401 when the refresh itself fails', async () => {
@@ -150,15 +187,32 @@ describe('token refresh on 401', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('does not attempt a refresh for the non-refreshable app credential', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(unauthorized());
+  it('never hands one user another user\'s refreshed token', async () => {
+    // Two users' refreshes in flight at the same moment. Each answer is named
+    // after the refresh token it was given.
+    const fetchMock = vi.fn(async (url, init) =>
+      refreshed(`access-for-${JSON.parse(init.body).refresh_token}`));
     vi.stubGlobal('fetch', fetchMock);
 
-    const res = await createProxy('https://app.test', { credential: 'app' })(
-      req('https://x.test/api/bff-app/me'), ctx(['api', 'me']),
-    );
+    const [a, b] = await Promise.all([
+      identityRefresh('user-a-refresh-token'),
+      identityRefresh('user-b-refresh-token'),
+    ]);
 
-    expect(res.status).toBe(401);
+    expect(a.accessToken).toBe('access-for-user-a-refresh-token');
+    expect(b.accessToken).toBe('access-for-user-b-refresh-token');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('shares ONE refresh among concurrent requests of the same user', async () => {
+    // Fameoinfo rotates refresh tokens; a second refresh with the same token
+    // would fail and sign the user out.
+    const fetchMock = vi.fn(async () => refreshed('shared'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const results = await Promise.all([1, 2, 3].map(() => identityRefresh('same-user-refresh-token')));
+
+    expect(results.map((r) => r.accessToken)).toEqual(['shared', 'shared', 'shared']);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

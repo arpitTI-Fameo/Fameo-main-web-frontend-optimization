@@ -1,4 +1,5 @@
 import 'server-only';
+import { env } from '@/env';
 // lib/api/server/origins.js
 // The three upstream origins. Server-only, by construction.
 //
@@ -18,13 +19,13 @@ import 'server-only';
 const trim = (v) => v.replace(/\/+$/, '');
 
 /** Main API (auth, community, orders, resources…). */
-export const API_ORIGIN = trim(process.env.API_ORIGIN || 'http://localhost:5000');
+export const API_ORIGIN = trim(env.API_ORIGIN);
 
 /** Products backend. Shares JWT_SECRET with the main API. */
-export const PRODUCTS_ORIGIN = trim(process.env.PRODUCTS_ORIGIN || 'http://localhost:5001/api');
+export const PRODUCTS_ORIGIN = trim(env.PRODUCTS_ORIGIN);
 
 /** The "app" backend the registration flow talks to. */
-export const APP_ORIGIN = trim(process.env.APP_ORIGIN || 'https://uat-api.fameo.info');
+export const APP_ORIGIN = trim(env.APP_ORIGIN);
 
 /**
  * AI Support Bot backend (RAG over the Fameo knowledge base).
@@ -38,9 +39,7 @@ export const APP_ORIGIN = trim(process.env.APP_ORIGIN || 'https://uat-api.fameo.
  *
  * Set ASSISTANT_ORIGIN (no NEXT_PUBLIC_ prefix) to the deployed bot.
  */
-export const ASSISTANT_ORIGIN = trim(
-  process.env.ASSISTANT_ORIGIN || 'https://cc71-14-99-74-6.ngrok-free.app'
-);
+export const ASSISTANT_ORIGIN = env.ASSISTANT_ORIGIN ? trim(env.ASSISTANT_ORIGIN) : undefined;
 
 // Fail loudly in production rather than silently pointing at localhost.
 //

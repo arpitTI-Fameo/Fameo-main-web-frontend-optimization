@@ -24,7 +24,7 @@ const call = (path, options = {}) =>
 export const getLiveProductsAction = async (params = {}) => {
   const qs = new URLSearchParams({ status: 'live', limit: PRODUCTS_PAGE_SIZE, ...params });
   return createServerAction({
-    url: `/products?${qs}`,
+    url: `/api/products?${qs}`,
     method: 'GET',
     base: BFF_PRODUCTS_BASE
   });
@@ -36,7 +36,7 @@ export const getLiveProductsAction = async (params = {}) => {
 export const getStorefrontProductsAction = async (params = {}) => {
   const qs = new URLSearchParams({ limit: PRODUCTS_PAGE_SIZE, ...params });
   return createServerAction({
-    url: `/public/products?${qs}`,
+    url: `/api/public/products?${qs}`,
     method: 'GET',
     base: BFF_PRODUCTS_BASE
   });
@@ -44,7 +44,7 @@ export const getStorefrontProductsAction = async (params = {}) => {
 
 export const getStorefrontProductAction = async (id) => {
   return createServerAction({
-    url: `/public/products/${id}`,
+    url: `/api/public/products/${id}`,
     method: 'GET',
     base: BFF_PRODUCTS_BASE
   });
@@ -72,7 +72,7 @@ export const getCartAction = async () => {
 
 export const addToCartAction = async (product_id, quantity = 1) => {
   return createServerAction({
-    url: '/cart/items',
+    url: '/api/cart/items',
     method: 'POST',
     body: { product_id, quantity },
     base: BFF_PRODUCTS_BASE
@@ -81,7 +81,7 @@ export const addToCartAction = async (product_id, quantity = 1) => {
 
 export const removeFromCartAction = async (productId) => {
   return createServerAction({
-    url: `/cart/items/${productId}`,
+    url: `/api/cart/items/${productId}`,
     method: 'DELETE',
     base: BFF_PRODUCTS_BASE
   });
@@ -91,16 +91,6 @@ export const clearCartAction = async () => {
   return createServerAction({
     url: fameoProductEndpoints.cart(),
     method: 'DELETE',
-    base: BFF_PRODUCTS_BASE
-  });
-};
-
-// ── Checkout (§5.5 + §6.1) ──────────────────────────────────────
-export const checkoutAction = async (cart_id, payment_ref, shipping_address = null) => {
-  return createServerAction({
-    url: '/orders/checkout',
-    method: 'POST',
-    body: { cart_id, payment_ref, shipping_address },
     base: BFF_PRODUCTS_BASE
   });
 };
@@ -124,7 +114,7 @@ export const getOrderAction = async (id) => {
 
 export const raiseTicketAction = async ({ issue, type, priority, order_id }) => {
   return createServerAction({
-    url: '/support',
+    url: '/api/support',
     method: 'POST',
     body: { issue, type, priority, order_id },
     base: BFF_PRODUCTS_BASE

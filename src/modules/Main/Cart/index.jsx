@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 
 import { ROUTES } from '@/constants/routes';
 import { useMembership } from '@/lib/hooks/custome/useMembership';
+import { useCart, useUpdateCartItem, useRemoveCartItem } from '@/lib/hooks/main/useCart';
 import { useAddresses } from '@/lib/hooks/main/useUser';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore, useHydratedCart } from '@/store/cartStore';
@@ -37,7 +38,7 @@ import {
   CART_HEADER,
   CART_STEPS,
 } from './constants';
-import { cartTotals } from './helpers';
+import { cartTotals, serverCartItems, serverCartTotals } from './helpers';
 import { styles } from './styles';
 
 const [ITEMS_STEP, SHIPPING_STEP] = CART_STEPS.map((s) => s.id);
@@ -45,16 +46,44 @@ const [ITEMS_STEP, SHIPPING_STEP] = CART_STEPS.map((s) => s.id);
 export default function Cart() {
   const router = useRouter();
 
-  const updateQty = useCartStore((s) => s.updateQty);
-  const removeFromCart = useCartStore((s) => s.removeFromCart);
+  const updateQtyLocal = useCartStore((s) => s.updateQty);
+  const removeFromCartLocal = useCartStore((s) => s.removeFromCart);
   const toggleWish = useWishlistStore((s) => s.toggle);
   const hasWish = useWishlistStore((s) => s.has);
   const user = useAuthStore((s) => s.user);
 
+  const isAuth = Boolean(user);
+  const { data: serverCartData, isLoading: serverCartLoading } = useCart({ enabled: isAuth });
+  const { mutate: serverUpdateQty } = useUpdateCartItem();
+  const { mutate: serverRemoveFromCart } = useRemoveCartItem();
+
   // Persisted cart state does not exist during SSR, so render the empty state
   // until hydration completes — React 19 throws away the tree on a mismatch
   // rather than just warning.
-  const { items, ready } = useHydratedCart();
+  const { items: localItems, ready: localReady } = useHydratedCart();
+
+  const ready = isAuth ? !serverCartLoading : localReady;
+
+  const items = useMemo(
+    () => (isAuth ? serverCartItems(serverCartData) : localItems),
+    [isAuth, localItems, serverCartData]
+  );
+
+  const updateQty = useCallback((productId, nextQty, cartItemId) => {
+    if (isAuth) {
+      serverUpdateQty({ itemId: cartItemId || productId, data: { quantity: nextQty } });
+    } else {
+      updateQtyLocal(productId, nextQty);
+    }
+  }, [isAuth, serverUpdateQty, updateQtyLocal]);
+
+  const removeFromCart = useCallback((productId, cartItemId) => {
+    if (isAuth) {
+      serverRemoveFromCart(cartItemId || productId);
+    } else {
+      removeFromCartLocal(productId);
+    }
+  }, [isAuth, serverRemoveFromCart, removeFromCartLocal]);
 
   const address = useCheckoutStore((s) => s.address);
   const deliveryMethod = useCheckoutStore((s) => s.deliveryMethod);
@@ -71,8 +100,11 @@ export default function Cart() {
   const [drafts, setDrafts] = useState([]);
 
   const totals = useMemo(
-    () => cartTotals(items, discountRate, deliveryMethod, shippingRateId),
-    [items, discountRate, deliveryMethod, shippingRateId]
+    () =>
+      isAuth
+        ? serverCartTotals(items, deliveryMethod, shippingRateId)
+        : cartTotals(items, discountRate, deliveryMethod, shippingRateId),
+    [isAuth, items, discountRate, deliveryMethod, shippingRateId]
   );
 
   // The account's saved addresses plus anything added here this session. Both
@@ -149,13 +181,13 @@ export default function Cart() {
             <div className="ct-body">
               <div className="ct-main">
                 {step === ITEMS_STEP ? (
-                  items.map(({ product, qty }) => (
+                  items.map(({ product, qty, cartItemId }) => (
                     <CartItem
-                      key={product.id}
+                      key={cartItemId || product.id}
                       product={product}
                       qty={qty}
-                      onUpdate={updateQty}
-                      onRemove={removeFromCart}
+                      onUpdate={(pid, nextQty) => updateQty(pid, nextQty, cartItemId)}
+                      onRemove={(pid) => removeFromCart(pid, cartItemId)}
                       onWishlist={toggleWish}
                       isWished={hasWish(product.id)}
                     />

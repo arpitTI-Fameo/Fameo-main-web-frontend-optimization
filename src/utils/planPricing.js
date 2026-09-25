@@ -15,6 +15,16 @@
 // products backend locks into the server cart at add time (discount_pct_locked /
 // final_price). Never charge from these numbers — see reconcilePlanTotals().
 
+/**
+ * The plan discount checkout actually applies: none. The backend charges
+ * Product.fameoDiscountedPrice, which already IS the discounted platform price
+ * (products-server src/domain/checkout/chargeRules.js) — applying a plan rate on
+ * top would show a total lower than the one Razorpay charges. Cart and checkout
+ * totals pass this, not the member's rate. The plan table below stays for
+ * labels and for when a plan discount is reintroduced on the backend.
+ */
+export const CHECKOUT_DISCOUNT_RATE = 0;
+
 // free = 0% · popular = 2% · elite = 5%
 // `pro` is a dead legacy tier — it maps to free (no product discount).
 // `premium` was an old name for elite; kept so old JWTs/user docs still work.

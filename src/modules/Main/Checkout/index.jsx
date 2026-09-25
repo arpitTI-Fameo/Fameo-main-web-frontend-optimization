@@ -1,4 +1,5 @@
 'use client';
+import { env } from '@/env';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
@@ -7,14 +8,22 @@ import { useCheckoutStore } from '@/store/checkoutStore';
 import CheckoutSteps from './CheckoutSteps';
 import CheckoutSummary from './CheckoutSummary';
 import { SHIPPING_RATES, shippingCostFor, rateFor } from '@/utils/shipping';
-import { planTotals, reconcilePlanTotals, planLabel } from '@/utils/planPricing';
+import { planTotals, planLabel, CHECKOUT_DISCOUNT_RATE } from '@/utils/planPricing';
+import { toOrderShippingAddress, isCompleteAddress } from '@/utils/address';
+import { paiseToRupees } from '@/utils/formatCurrency';
 import { useMembership } from '@/lib/hooks/custome/useMembership';
 import PaymentStep from './PaymentStep';
 import OrderReview from './OrderReview';
 import OrderConfirmation from './OrderConfirmation';
-import { useCreateRazorpayOrderMutation } from '@/lib/hooks/main/useSubscription';
-import { useVerifyPaymentMutation } from '@/lib/hooks/main/useOrder';
-import { useSyncCartToServerMutation, useCheckoutMutation, useClearCartMutation } from '@/lib/hooks/main/useProduct';
+import { newCheckoutAttemptId } from '@/lib/hooks/main/useSubscription';
+import {
+  usePreviewCheckoutMutation,
+  useCreateCustomerOrderMutation,
+  useCreateOrderPaymentMutation,
+  useCancelCustomerOrderMutation,
+  useVerifyCustomerPaymentMutation,
+} from '@/lib/hooks/main/useEcommerce';
+import { useSyncCartToServerMutation } from '@/lib/hooks/main/useProduct';
 import { S } from './styles';
 import { BFF_BASE } from '@/lib/api/config';
 import { DEFAULT_LOCALE } from '@/constants/locale';
@@ -24,7 +33,7 @@ import { DEFAULT_LOCALE } from '@/constants/locale';
 
 // Razorpay's default per-transaction ceiling. Keep in sync with RAZORPAY_MAX_INR
 // on the backend — if Razorpay Support raises your account limit, raise both.
-const MAX_ORDER_INR = Number(process.env.NEXT_PUBLIC_MAX_ORDER_INR || 500000);
+const MAX_ORDER_INR = Number(env.NEXT_PUBLIC_MAX_ORDER_INR || 500000);
 
 
 const loadRazorpay = () =>
@@ -45,11 +54,18 @@ export default function Checkout({ initialAddresses }) {
   const cartTotal = useCartStore((s) => s.cartTotal());
   const clearCart = useCartStore((s) => s.clearCart);
 
-  const { mutateAsync: createRazorpayOrder } = useCreateRazorpayOrderMutation();
-  const { mutateAsync: verifyPayment } = useVerifyPaymentMutation();
   const syncCartToServerMutation = useSyncCartToServerMutation();
-  const productsCheckoutMutation = useCheckoutMutation();
-  const clearServerCartMutation = useClearCartMutation();
+  const { mutateAsync: previewCheckout } = usePreviewCheckoutMutation();
+  const { mutateAsync: createCustomerOrder } = useCreateCustomerOrderMutation();
+  const { mutateAsync: createOrderPayment } = useCreateOrderPaymentMutation();
+  const { mutateAsync: cancelCustomerOrder } = useCancelCustomerOrderMutation();
+  const { mutateAsync: verifyPayment } = useVerifyCustomerPaymentMutation();
+
+  // The unpaid order this page created, if any. Tapping Pay again (after the
+  // Razorpay sheet was closed, or an attempt failed) pays THIS order rather
+  // than creating a second one that would hold the same stock. `cartKey` ties
+  // it to the bag it was made from.
+  const pendingOrderRef = useRef(null);
 
   // The cart collects the address and the delivery method now, so this page
   // opens on payment when they are already settled. Reading the store once on
@@ -113,19 +129,30 @@ export default function Checkout({ initialAddresses }) {
     if (cartItems.length === 0 && step < 2) router.push('/products');
   }, [cartItems, step, mounted, router]);
 
-  // If the bag changes, drop any server reprice so we recompute cleanly.
-  useEffect(() => { setRepriced(null); }, [cartItems]);
+  // Which bag an unpaid order was created from.
+  const cartKey = cartItems.map((i) => `${i.product?.id}:${i.qty}`).join('|');
+
+  // If the bag changes, drop any server reprice so we recompute cleanly, and
+  // release an unpaid order made from the old bag — it holds that bag's stock.
+  useEffect(() => {
+    setRepriced(null);
+    const pending = pendingOrderRef.current;
+    if (pending && pending.cartKey !== cartKey) {
+      pendingOrderRef.current = null;
+      cancelCustomerOrder({ orderId: pending.orderId, reason: 'Bag changed before payment' })
+        .catch(() => { });
+    }
+  }, [cartKey, cancelCustomerOrder]);
 
   // ── Pricing calculations ────────────────────────────────────────────────────
-  // DISPLAY ONLY. The amount actually charged comes from the products server
-  // cart in handleRazorpay (STEP 2) — but the two are now reconciled before the
+  // DISPLAY ONLY. The amount actually charged is the backend's (checkout
+  // preview → order → Razorpay), and the two are reconciled before the
   // Razorpay sheet opens instead of being allowed to silently disagree.
   //
-  // Discount is computed per line then summed, matching how the products backend
-  // rounds each item's final_price before multiplying by quantity. Summing first
-  // and discounting once drifted by a rupee or two and made this page disagree
-  // with the invoice.
-  const { subtotal, discount: memberDiscount, payable } = planTotals(cartItems, discountRate);
+  // Checkout applies no plan discount (CHECKOUT_DISCOUNT_RATE) and delivery is
+  // free (utils/shipping), matching the backend's charge rules — so this shows
+  // exactly what Razorpay will take.
+  const { subtotal, discount: memberDiscount, payable } = planTotals(cartItems, CHECKOUT_DISCOUNT_RATE);
   // Once the server tells us the real price (after a first Pay attempt that
   // disagreed), the summary AND the pay-guard both use THAT figure — so the
   // shopper sees exactly what they'll be charged and the second tap goes through.
@@ -145,93 +172,97 @@ export default function Checkout({ initialAddresses }) {
       const sdkLoaded = await loadRazorpay();
       if (!sdkLoaded) throw new Error('Razorpay SDK failed to load');
 
-      const headers = { 'Content-Type': 'application/json' };
-
-      // STEP 1 — push the local cart into the products server cart.
-      // This reserves stock and locks the plan discount (doc §1.3).
-      const { cart: serverCart, failed } = await syncCartToServerMutation.mutateAsync(cartItems);
-      if (failed.length) {
+      // The order API needs a delivery address. Warehouse pickup collects none
+      // in the cart, and orders cannot be created without one yet.
+      if (!isCompleteAddress(addr)) {
         throw new Error(
-          `Could not reserve: ${failed.map(f => `${f.name} (${f.reason})`).join('; ')}`
+          'Please add a delivery address in your bag before paying — ' +
+          'pickup orders need contact details too.'
         );
       }
-      if (!serverCart?.id || !serverCart.items?.length) {
-        throw new Error('Cart could not be prepared. Please try again.');
-      }
+      const shippingAddress = toOrderShippingAddress(addr);
 
-      // STEP 2 — the SERVER decides the price, not the browser.
-      // Products API returns paise.
-      //
-      // Reconcile against what we just showed the user. Previously the page
-      // displayed `cartTotal + shipping - clientDiscount` but charged
-      // `serverTotal + shipping`; when the membership lookup failed those were
-      // different numbers and nothing noticed — the user saw one price and
-      // Razorpay took another. Now a real disagreement stops the flow.
-      const { serverPayable, drift, mismatch } = reconcilePlanTotals({
-        serverItems: serverCart.items,
-        displayedPayable: dispPayable,
-      });
+      let pending = pendingOrderRef.current?.cartKey === cartKey ? pendingOrderRef.current : null;
 
-      if (mismatch) {
-        console.error('[checkout] price mismatch', {
-          displayedPayable: dispPayable, serverPayable, drift, plan,
-        });
-        // The server is the source of truth. If it wants MORE than we showed
-        // (the plan discount doesn't apply to this item), never charge it
-        // silently — reprice the summary to the server figure and ask the
-        // shopper to confirm. The next Pay tap sees displayed === server and
-        // sails through. If the server is CHEAPER, just proceed at that price.
-        if (serverPayable > Math.round(dispPayable)) {
+      if (!pending) {
+        // STEP 1 — push the local cart into the server cart. This reserves stock.
+        const { cart: serverCart, failed } = await syncCartToServerMutation.mutateAsync(cartItems);
+        if (failed.length) {
+          throw new Error(
+            `Could not reserve: ${failed.map(f => `${f.name} (${f.reason})`).join('; ')}`
+          );
+        }
+        if (!serverCart?.id || !serverCart.items?.length) {
+          throw new Error('Cart could not be prepared. Please try again.');
+        }
+
+        // STEP 2 — the SERVER decides the price, not the browser (paise).
+        // Reconcile against what we just showed. If the server wants MORE,
+        // never charge it silently — reprice the summary to the server figure
+        // and ask the shopper to confirm; the next Pay tap sails through. If
+        // the server is CHEAPER, proceed at that price.
+        const preview = await previewCheckout(shippingAddress);
+        if (!preview.can_checkout) {
+          const issue = preview.issues?.[0];
+          throw new Error(issue?.message || 'Some items in your bag are no longer available.');
+        }
+        const serverPayable = paiseToRupees(preview.summary.grand_total);
+        // Against the unrounded figure: grandTotalINR is rounded for display
+        // and would flag a ₹9,799.40 order as "more than shown".
+        if (serverPayable - (dispPayable + shippingCost) > 0.009) {
+          console.error('[checkout] price mismatch', { displayed: grandTotalINR, serverPayable });
           setRepriced({ serverPayable });
           setError(
-            `Heads up — your plan discount doesn't apply to this item, so the total is ` +
-            `₹${serverPayable.toLocaleString(DEFAULT_LOCALE)} (not ₹${Math.round(dispPayable).toLocaleString(DEFAULT_LOCALE)}). ` +
+            `Heads up — the price of an item in your bag has changed, so the total is ` +
+            `₹${serverPayable.toLocaleString(DEFAULT_LOCALE)} (not ₹${grandTotalINR.toLocaleString(DEFAULT_LOCALE)}). ` +
             `We've updated your order summary — tap Pay again to confirm.`
           );
           setLoading(false);
           return;
         }
+
+        // Razorpay rejects anything above its per-transaction ceiling (₹5,00,000
+        // by default). Catch it here so the shopper gets an actionable message
+        // instead of the Pay button failing with an opaque gateway error.
+        if (serverPayable > MAX_ORDER_INR) {
+          throw new Error(
+            `Order total ₹${serverPayable.toLocaleString(DEFAULT_LOCALE)} is above the ` +
+            `₹${MAX_ORDER_INR.toLocaleString(DEFAULT_LOCALE)} per-transaction limit. ` +
+            `Please split this into two orders, or contact us to place it manually.`
+          );
+        }
+
+        // STEP 3 — freeze the order: prices, address and stock are fixed now.
+        const { order } = await createCustomerOrder({
+          shippingAddress,
+          idempotencyKey: newCheckoutAttemptId(),
+        });
+        pending = { orderId: order.id, orderNumber: order.order_number, cartKey };
+        pendingOrderRef.current = pending;
       }
 
-      // Shipping is recomputed from the SERVER payable for the same reason.
-      const serverShipping = shippingCostFor(shipping, serverPayable);
-      const payableINR = serverPayable + serverShipping;
-      // What the server actually discounted, for the audit record below.
-      const serverDiscount = Math.round(subtotal - serverPayable);
-
-      // Razorpay rejects anything above its per-transaction ceiling (₹5,00,000
-      // by default). Catch it here so the shopper gets an actionable message
-      // instead of the Pay button failing with an opaque gateway error.
-      if (payableINR > MAX_ORDER_INR) {
-        throw new Error(
-          `Order total ₹${payableINR.toLocaleString(DEFAULT_LOCALE)} is above the ` +
-          `₹${MAX_ORDER_INR.toLocaleString(DEFAULT_LOCALE)} per-transaction limit. ` +
-          `Please split this into two orders, or contact us to place it manually.`
-        );
-      }
-
-      // STEP 3 — Razorpay order. The backend now prices this itself from the
-      // expectedINR is sent only so it can
-      // refuse if what we displayed has drifted from what it computes. It
-      // cannot raise or lower the charge.
-      const orderData = await createRazorpayOrder({
-        shippingMethod: shipping.id,
-        expectedINR: payableINR,
+      // STEP 4 — a Razorpay order for exactly the order's total. Reuses the
+      // live attempt when there is one, so a retry never double-charges.
+      const { payment } = await createOrderPayment({
+        orderId: pending.orderId,
+        idempotencyKey: newCheckoutAttemptId(),
       });
+      const chargedINR = paiseToRupees(payment.amount);
 
       const rzpOptions = {
-        key: orderData.data.key,
-        amount: orderData.data.amount,
-        currency: orderData.data.currency,
+        key: payment.key_id,
+        amount: payment.amount,
+        currency: payment.currency,
         name: 'Fameo',
         description: `${cartItems.length} item${cartItems.length > 1 ? 's' : ''}`,
-        order_id: orderData.data.orderId,
+        order_id: payment.provider_order_id,
         prefill: {
           name: `${addr.firstName} ${addr.lastName}`,
           email: addr.email,
           contact: addr.phone,
         },
         notes: {
+          order_number: payment.order_number,
           address: `${addr.address}, ${addr.city}, ${addr.state} - ${addr.pin}`,
           membership: membership.type,
         },
@@ -239,68 +270,53 @@ export default function Checkout({ initialAddresses }) {
 
         handler: async (response) => {
           try {
-            // STEP 4 — record the payment on the main backend (PostgreSQL)
-            const verifyData = await verifyPayment({
+            // STEP 5 — the backend checks the payment with Razorpay and
+            // confirms the order: stock, fulfillment, invoice and emails all
+            // happen there, in one place.
+            const { verification } = await verifyPayment({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              addr,
             });
 
-            // STEP 5 — create the products orders (MongoDB).
-            // This is what makes the order appear in the retailer/admin dashboard,
-            // deducts stock, and generates the creator invoice.
-            let productsOrderIds = [];
-            let fulfilmentWarning = '';
-            try {
-              // Delivery address captured on this checkout — sent so it lands on
-              // the order and the box (customer) invoice's Ship-To.
-              const shippingAddress = {
-                name: `${addr.firstName || ''} ${addr.lastName || ''}`.trim(),
-                phone: addr.phone,
-                email: addr.email,
-                line1: addr.address,
-                city: addr.city,
-                state: addr.state,
-                pincode: addr.pin,
-                country: 'India',
-              };
-              const res = await productsCheckoutMutation.mutateAsync({ cart_id: serverCart.id, payment_ref: response.razorpay_payment_id, shipping_address: shippingAddress });
-              productsOrderIds = (res.orders || []).map(o => o.id);
-            } catch (e) {
-              // Payment already succeeded — never fail the user here.
-              // Surface it so support can reconcile against the payment ref.
-              console.error('[products checkout] failed', e);
-              fulfilmentWarning =
-                `Payment received (${response.razorpay_payment_id}) but the order needs ` +
-                `manual confirmation. Please contact support with this payment ID.`;
-            }
+            // Paid for, but an item sold out before the payment landed: the
+            // backend has queued a refund.
+            const fulfilmentWarning = verification.status === 'CAPTURED_REFUND_PENDING'
+              ? `Payment received (${response.razorpay_payment_id}) but an item sold out before it ` +
+                `completed. It will be refunded — please contact support with this payment ID.`
+              : '';
 
+            pendingOrderRef.current = null;
             clearCart();
             setConfOrder({
-              id: verifyData.data.orderId,
+              id: verification.order_number || pending.orderNumber,
               paymentId: response.razorpay_payment_id,
-              totalINR: payableINR,
-              memberDiscount: serverDiscount,
-              shippingCost: serverShipping,
+              totalINR: chargedINR,
+              memberDiscount: 0,
+              shippingCost: 0,
               membershipType: membership.type,
-              discountRate,
-              productsOrderIds,
+              discountRate: CHECKOUT_DISCOUNT_RATE,
               fulfilmentWarning,
             });
             if (fulfilmentWarning) setError(fulfilmentWarning);
             setStep(2);
           } catch (err) {
-            setError(`Payment verification failed: ${err.message}`);
+            // The money may have been taken even though this call failed —
+            // Razorpay's webhook confirms the order on its own. Never ask the
+            // shopper to pay again.
+            setError(
+              `Payment verification failed: ${err.message}. If you were charged, order ` +
+              `${pending.orderNumber} will confirm automatically — please don't pay again.`
+            );
           } finally {
             setLoading(false);
           }
         },
 
         modal: {
-          ondismiss: async () => {
-            // Release reserved stock so an abandoned checkout doesn't hold units.
-            await clearServerCartMutation.mutateAsync().catch(() => { });
+          ondismiss: () => {
+            // The order stays open (its stock held) until it expires, so a
+            // second tap on Pay retries it instead of starting over.
             setLoading(false);
             setError('Payment cancelled.');
           },
@@ -308,8 +324,7 @@ export default function Checkout({ initialAddresses }) {
       };
 
       const rzp = new window.Razorpay(rzpOptions);
-      rzp.on('payment.failed', async (r) => {
-        await clearServerCartMutation.mutateAsync().catch(() => { });
+      rzp.on('payment.failed', (r) => {
         setError(`Payment failed: ${r.error.description}`);
         setLoading(false);
       });

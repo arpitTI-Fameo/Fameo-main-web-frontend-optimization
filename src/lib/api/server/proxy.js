@@ -11,18 +11,19 @@ import 'server-only';
 //   2. strip hop-by-hop    — and the caller's Cookie header, which must not leak
 //   3. attach credential   — from an httpOnly cookie, never from the request
 //   4. refresh on 401      — the BFF is the only code holding the cookie, so
-//                            per CLAUDE.md this is the only correct place for it
+//                            per CLAUDE.md this is the only correct place for it.
+//                            The refresh happens at Fameoinfo-Backend, the one
+//                            authentication authority, for every upstream.
 //   5. no-store the reply  — a per-user response must never be shared-cached
 
 import { NextResponse } from 'next/server';
 
-import { API_ORIGIN } from './origins';
 import { hit, clientKey, limitHeaders, LIMITS } from './rate-limit';
-import { authEndpoints } from '../endpoints';
+import { identityRefresh } from './identity';
 import {
   getSessionToken,
-  setSessionToken,
-  getAppToken,
+  getRefreshToken,
+  setSessionTokens,
 } from '@/lib/auth/session';
 
 // Hop-by-hop and body-framing headers must not be forwarded. `cookie` is on the
@@ -39,52 +40,34 @@ const STRIP = new Set([
 // streams and simply forgoes the retry. 1 MB covers every JSON call.
 const REPLAYABLE_BODY_LIMIT = 1024 * 1024;
 
-/** Credential sources. A route picks the one its upstream authenticates with. */
+/**
+ * Credential sources. A route picks the one its upstream authenticates with.
+ *
+ * Every backend now accepts the same Fameoinfo access token, so `app` — once a
+ * separate credential for the app backend — is the session under its old name,
+ * kept so /api/bff-app did not have to change.
+ */
 export const CREDENTIALS = {
   session: { read: getSessionToken, refreshable: true },
-  app: { read: getAppToken, refreshable: false },
+  app: { read: getSessionToken, refreshable: true },
   none: { read: async () => null, refreshable: false },
 };
 
 /**
- * Exchange the current session token for a fresh one.
+ * Exchange this user's refresh token (httpOnly cookie) for a new pair at
+ * Fameoinfo-Backend and persist it.
  *
- * Single-flighted: a page that fires ten calls at once will see ten 401s, and
- * without this they would all race to refresh and nine would be issued against
- * a token that was just rotated.
+ * Concurrent refreshes are shared per refresh token inside identityRefresh(),
+ * never across users — so a page that fires ten calls at once refreshes once,
+ * and nobody can be handed somebody else's new token.
  *
- * @returns {Promise<string | null>}
+ * @returns {Promise<string | null>} the new access token
  */
-let inflightRefresh = null;
-
-async function refreshSession(currentToken) {
-  if (inflightRefresh) return inflightRefresh;
-
-  inflightRefresh = (async () => {
-    try {
-      const res = await fetch(`${API_ORIGIN}${authEndpoints.refreshSession()}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${currentToken}` },
-        cache: 'no-store',
-      });
-      if (!res.ok) return null;
-
-      const body = await res.json().catch(() => null);
-      const next = body?.data?.token;
-      if (!next) return null;
-
-      await setSessionToken(next);
-      return next;
-    } catch {
-      return null;
-    } finally {
-      // Clear on the next tick so callers already awaiting this promise get the
-      // same result, but a later 401 starts a new attempt.
-      setTimeout(() => { inflightRefresh = null; }, 0);
-    }
-  })();
-
-  return inflightRefresh;
+async function refreshSession() {
+  const pair = await identityRefresh(await getRefreshToken());
+  if (!pair) return null;
+  await setSessionTokens(pair);
+  return pair.accessToken;
 }
 
 /**
@@ -191,7 +174,7 @@ export function createProxy(origin, options = {}) {
     // ── 4. Refresh once on 401, then replay ──────────────────────────────────
     const retryable = buffered !== null || !hasBody;
     if (upstream.status === 401 && token && source.refreshable && retryable) {
-      const next = await refreshSession(token);
+      const next = await refreshSession();
       if (next && next !== token) {
         token = next;
         const retryHeaders = new Headers(headers);

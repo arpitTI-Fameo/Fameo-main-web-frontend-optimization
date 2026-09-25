@@ -11,28 +11,35 @@
 // The numbers 0/18/35/200 were pseudo-USD left over from the mock data era.
 //
 // These are now real rupee amounts. Everything imports from here.
+//
+// Delivery is currently FREE on every option: checkout charges exactly what the
+// backend computes, and its shipping rule (products-server
+// src/domain/checkout/chargeRules.js, resolveShippingFee) returns 0. The prices
+// below must match that rule — when real shipping is introduced there, set the
+// rates here in the same release, or the page shows one total and Razorpay
+// charges another. (Before the backend merge these were ₹79 / ₹199 / ₹399.)
 
 export const SHIPPING_RATES = [
   {
     id: 'standard',
     label: 'Standard Delivery',
     days: '5–7 business days',
-    price: 79,
-    free_above: 2000,          // free over ₹2,000
+    price: 0,
+    free_above: 0,
   },
   {
     id: 'express',
     label: 'Express Delivery',
     days: '2–3 business days',
-    price: 199,
-    free_above: null,
+    price: 0,
+    free_above: 0,
   },
   {
     id: 'overnight',
     label: 'Overnight Delivery',
     days: 'Next business day',
-    price: 399,
-    free_above: null,
+    price: 0,
+    free_above: 0,
   },
 ];
 

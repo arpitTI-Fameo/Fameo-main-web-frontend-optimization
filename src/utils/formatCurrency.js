@@ -40,6 +40,15 @@ const USD_TO_INR = 1;
 export const inr = (usd) =>
   `₹${(usd * USD_TO_INR).toLocaleString(DEFAULT_LOCALE)}`;
 
+/**
+ * The products backend sends money in paise; inr() takes rupees. Every
+ * response mapper converts through this, never an inline `/ 100`.
+ * @param {number|null|undefined} paise
+ * @returns {number|null}
+ */
+export const paiseToRupees = (paise) =>
+  paise == null ? null : Math.round(paise) / 100;
+
 /* formatINR() and `export default inr` used to live here. Neither had a single
    consumer: all twelve importers take the named `inr`. The dead formatINR was
    also worse than useless — it made the codemap flag a duplicate against

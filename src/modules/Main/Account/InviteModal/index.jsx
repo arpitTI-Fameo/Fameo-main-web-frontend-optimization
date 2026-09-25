@@ -1,4 +1,5 @@
 'use client';
+import { env } from '@/env';
 // modules/Account/InviteModal/index.jsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Step 2 of the referral journey: pick a tier, read the qualification warning,
@@ -29,7 +30,7 @@ const TIER_COPY = {
 // Format and host follow the Integration Guide (§5.4 shareUrl example):
 //   https://www.fameo.vip/register?referral=FAMEO-AB12CD34
 // NEXT_PUBLIC_SITE_URL overrides the host for staging/preview environments.
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.fameo.vip';
+const SITE_URL = env.NEXT_PUBLIC_SITE_URL || 'https://www.fameo.vip';
 
 // Prefer the shareUrl the referral API returns (portal.service carries it
 // through on each coupon) so the backend stays the source of truth; build the

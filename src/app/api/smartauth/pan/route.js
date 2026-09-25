@@ -1,3 +1,4 @@
+import { env } from '@/env';
 // app/api/smartauth/pan/route.js
 // Authenticated proxy to the SmartAuth PAN verification endpoint.
 //
@@ -30,7 +31,7 @@ export async function POST(req) {
   });
   if (!ok) return tooManyRequests(retryAfter);
 
-  if (!process.env.SMARTAUTH_KEY) {
+  if (!env.SMARTAUTH_KEY) {
     console.error('[smartauth/pan] SMARTAUTH_KEY is not configured');
     return NextResponse.json(
       { message: 'Verification is temporarily unavailable.' },
@@ -54,7 +55,7 @@ export async function POST(req) {
     const res = await fetch('https://prod.smartauth.co/EHEK', {
       method: 'POST',
       headers: {
-        authkey: process.env.SMARTAUTH_KEY,
+        authkey: env.SMARTAUTH_KEY,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),

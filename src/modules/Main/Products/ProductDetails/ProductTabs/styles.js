@@ -45,6 +45,7 @@ export const S = `
     padding: clamp(28px, 4.5vh, 48px) 0;
     align-items: start;
   }
+  .ptb-panel.is-single { grid-template-columns: minmax(0, 1fr); }
 
   .ptb-body { display: grid; gap: 15px; }
   .ptb-para {

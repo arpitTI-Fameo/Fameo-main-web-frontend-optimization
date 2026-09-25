@@ -15,6 +15,8 @@ import { useStorefrontProducts } from '@/lib/hooks/main/useProduct';
 import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { useWishlistStore } from '@/store/wishlistStore';
+import { useAuthStore } from '@/store/authStore';
+import { useAddToCart } from '@/lib/hooks/main/useCart';
 
 import { flyToCart } from '../flyToCart';
 import { productHref, toUiProduct } from '../helpers';
@@ -123,6 +125,9 @@ export default function ProductListing() {
   const toggleWish = useWishlistStore((s) => s.toggle);
   const hasWish = useWishlistStore((s) => s.has);
 
+  const isAuth = useAuthStore((s) => Boolean(s.user));
+  const { mutateAsync: serverAddToCart } = useAddToCart();
+
   // The route's category is the pill that starts selected.
   const routeCategory = slugToCategory(slug || '');
   const [category, setCategory] = useState(
@@ -168,8 +173,20 @@ export default function ProductListing() {
   }, []);
 
   const addToCart = useCallback(
-    (product, sourceEl) => {
-      const res = addToCartRaw(product, 1);
+    async (product, sourceEl) => {
+      let res;
+      if (!isAuth) {
+        res = addToCartRaw(product, 1);
+      } else {
+        try {
+          await serverAddToCart({ productId: product.id, quantity: 1 });
+          res = { ok: true };
+        } catch (error) {
+          res = { ok: false, status: 'error' };
+          showToast(error.message || 'Could not add to cart', 'error');
+          return;
+        }
+      }
 
       if (res?.status === 'at-max') {
         showToast(`Only ${res.max} in stock — your bag already has them all.`, 'warn');
@@ -188,7 +205,7 @@ export default function ProductListing() {
         });
       }
     },
-    [addToCartRaw, showToast]
+    [isAuth, addToCartRaw, serverAddToCart, showToast]
   );
 
   return (

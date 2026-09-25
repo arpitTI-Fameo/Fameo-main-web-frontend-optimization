@@ -7,6 +7,7 @@
 // store/adminAuthStore.js for why the localStorage version was removed.
 
 import { clientFetch } from '@/lib/api/client/fetcher';
+import { BFF_PRODUCTS_BASE } from '@/lib/api/config';
 import { STORAGE_KEYS } from '@/constants/storageKeys';
 import { ADMIN_ROUTES } from '@/constants/routes';
 
@@ -32,7 +33,7 @@ export function clearTokens() {
  */
 export const adminFetch = async (path, opts = {}) => {
   try {
-    const data = await clientFetch(`/api${path}`, opts);
+    const data = await clientFetch(`/api${path}`, { ...opts, base: BFF_PRODUCTS_BASE });
     return { data };
   } catch (error) {
     if (error.status === 401) {

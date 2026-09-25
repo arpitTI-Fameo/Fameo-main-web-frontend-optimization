@@ -10,7 +10,7 @@ import 'server-only';
 
 import { API_ORIGIN, APP_ORIGIN } from './origins';
 import { request, qs } from '../core';
-import { getSessionToken, getAppToken } from '@/lib/auth/session';
+import { getSessionToken } from '@/lib/auth/session';
 
 // A path starting with http(s) is treated as an absolute override, so a caller
 // bound for a different upstream (the products or app backend) can reuse these
@@ -64,17 +64,17 @@ export async function privateFetch(path, { params, ...init } = {}) {
 /**
  * Authenticated read against the "app" backend (APP_ORIGIN).
  *
- * Separate from privateFetch because the two upstreams issue DIFFERENT
- * credentials: privateFetch sends the main session token, which the app
- * backend does not recognise. Always `no-store` for the same reason
- * privateFetch is — the response is per-user.
+ * Separate from privateFetch only because the ORIGIN differs: both send the
+ * same session token, which Fameoinfo-Backend issued and every backend
+ * accepts. Always `no-store` for the same reason privateFetch is — the
+ * response is per-user.
  *
  * @param {string} path  absolute URL, or a path appended to APP_ORIGIN
  * @param {object} [opts]
  * @param {object} [opts.params]
  */
 export async function appPrivateFetch(path, { params, ...init } = {}) {
-  const token = await getAppToken();
+  const token = await getSessionToken();
   const target =
     (/^https?:\/\//.test(path) ? path : `${APP_ORIGIN}${path}`) + qs(params);
 

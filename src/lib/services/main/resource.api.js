@@ -8,12 +8,18 @@ import { createServerAction } from '@/lib/api/action';
 // directly and skipped this one. The request expressions are unchanged.
 
 import { clientFetch } from '@/lib/api/client/fetcher';
-import { resourceEndpoints } from '@/lib/api/endpoints';
+import {
+  resourceEndpoints,
+  topicEndpoints,
+  publishedCourseEndpoints,
+} from '@/lib/api/endpoints';
 
 export const getCoursesAction = async (params) => {
   return createServerAction({
     url: resourceEndpoints.courses(),
     method: 'GET',
+    // category, search, sortBy, page, limit → query string
+    ...(params ? { body: params } : {}),
   });
 };
 
@@ -24,31 +30,52 @@ export const getCourseAction = async (slug) => {
   });
 };
 
-export const getLearningsAction = async () => {
-  return createServerAction({
-    url: resourceEndpoints.learnings(),
+/** The signed-in learner's enrolled courses (with progress). */
+export const getLearningsAction = async () =>
+  createServerAction({ url: resourceEndpoints.myCourses(), method: 'GET' });
+
+export const enrollAction = async (slug) =>
+  createServerAction({ url: resourceEndpoints.enroll(slug), method: 'POST' });
+
+/** updateProgressAction({ id: courseSlug, data: { lessonId } }). */
+export const updateProgressAction = async ({ id, data }) =>
+  createServerAction({ url: resourceEndpoints.updateProgress(id), method: 'PATCH', body: data });
+
+/** reviewCourseAction({ slug, data: { rating: 1–5, review? } }). */
+export const reviewCourseAction = async ({ slug, data }) =>
+  createServerAction({ url: resourceEndpoints.review(slug), method: 'POST', body: data });
+
+export const getCourseNotesAction = async (slug, lessonId) =>
+  createServerAction({
+    url: resourceEndpoints.notes(slug),
     method: 'GET',
+    ...(lessonId ? { body: { lessonId } } : {}),
   });
-};
 
-export const getSavedResourcesAction = async () => {
-  return createServerAction({
-    url: resourceEndpoints.saved(),
+/** addCourseNoteAction({ slug, data: { lessonId, text } }). */
+export const addCourseNoteAction = async ({ slug, data }) =>
+  createServerAction({ url: resourceEndpoints.notes(slug), method: 'POST', body: data });
+
+export const deleteCourseNoteAction = async (noteId) =>
+  createServerAction({ url: resourceEndpoints.note(noteId), method: 'DELETE' });
+
+// ── Learner Hub topics (public) ─────────────────────────────────────────────
+export const getTopicsAction = async (params) =>
+  createServerAction({ url: topicEndpoints.list(), method: 'GET', ...(params ? { body: params } : {}) });
+
+export const getTopicAction = async (slug) =>
+  createServerAction({ url: topicEndpoints.bySlug(slug), method: 'GET' });
+
+export const getModuleTopicsAction = async (moduleId) =>
+  createServerAction({ url: topicEndpoints.byModule(moduleId), method: 'GET' });
+
+// ── Published course catalogue (content/courses, public) ────────────────────
+export const getPublishedCoursesAction = async (params) =>
+  createServerAction({
+    url: publishedCourseEndpoints.list(),
     method: 'GET',
+    ...(params ? { body: params } : {}),
   });
-};
 
-export const enrollAction = async (id) => {
-  return createServerAction({
-    url: resourceEndpoints.enroll(id),
-    method: 'POST',
-  });
-};
-
-export const updateProgressAction = async ({ id, data }) => {
-  return createServerAction({
-    url: resourceEndpoints.updateProgress(id),
-    method: 'POST',
-    body: data,
-  });
-};
+export const getPublishedCourseAction = async (slug) =>
+  createServerAction({ url: publishedCourseEndpoints.bySlug(slug), method: 'GET' });

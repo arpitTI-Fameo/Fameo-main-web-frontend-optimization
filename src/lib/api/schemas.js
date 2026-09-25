@@ -39,16 +39,21 @@ export const loginResponseSchema = obj({
   user: userSchema.nullable().optional(),
 });
 
-/** The upstream app-login envelope, read server-side in the login route. */
-export const upstreamLoginSchema = obj({
-  token: z.string().min(1, 'upstream returned no session token'),
-  user: userSchema,
-  appToken: z.string().nullable().optional(),
-  app_token: z.string().nullable().optional(),
-}).transform(val => ({
-  ...val,
-  appToken: val.appToken ?? val.app_token ?? null
-}));
+/**
+ * A token pair as Fameoinfo-Backend issues it — the `data[0].tokens` of a
+ * login, or the `data[0]` of a refresh. Read server-side only.
+ */
+export const identityTokensSchema = obj({
+  access_token: z.string().min(1, 'Fameoinfo returned no access token'),
+  refresh_token: z.string().min(1).nullable().optional(),
+  expires_in: z.union([z.number(), z.string()]).nullable().optional(),
+});
+
+/** Fameoinfo-Backend's login entry (`data[0]`), read server-side in the login routes. */
+export const identityLoginSchema = obj({
+  tokens: identityTokensSchema,
+  user: obj({ user_id: z.string().optional() }).nullable().optional(),
+});
 
 // ── Master / reference data ──────────────────────────────────────────────────
 // Registration renders these as <select> options. An array is the only thing

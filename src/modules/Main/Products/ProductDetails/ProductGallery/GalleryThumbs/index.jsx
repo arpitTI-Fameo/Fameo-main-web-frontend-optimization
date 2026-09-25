@@ -11,14 +11,19 @@ import { S } from './styles';
  *  active    number
  *  onSelect  (index) => void
  *  alt       string    – product name, for each thumb's label
+ *  fit       'cover'|'contain'
  */
-export default function GalleryThumbs({ images = [], active = 0, onSelect, alt = '' }) {
+export default function GalleryThumbs({ images = [], active = 0, onSelect, alt = '', fit = 'cover' }) {
   if (images.length < 2) return null;
 
   return (
     <>
       <style>{S}</style>
-      <div className="pgt-strip" role="tablist" aria-label={`${alt} images`}>
+      <div
+        className={`pgt-strip${fit === 'contain' ? ' is-contain' : ''}`}
+        role="tablist"
+        aria-label={`${alt} images`}
+      >
         {images.map((src, i) => (
           <button
             type="button"

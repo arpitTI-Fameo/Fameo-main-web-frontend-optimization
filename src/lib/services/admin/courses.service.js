@@ -54,3 +54,12 @@ export const toggleFeatureAdminCourseAction = async (id) => {
     method: 'PATCH',
   });
 };
+
+/** order: [{ id, order }] — the admin catalogue order. */
+export const reorderAdminCoursesAction = async (order) => {
+  return createAdminAction({
+    url: adminEndpoints.coursesReorder(),
+    method: 'PATCH',
+    body: { order },
+  });
+};

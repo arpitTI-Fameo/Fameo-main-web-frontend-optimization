@@ -1,3 +1,4 @@
+import { env } from '@/env';
 import { createServerAction } from '@/lib/api/action';
 import { clientFetch } from '@/lib/api/client/fetcher';
 import { BFF_APP_BASE } from '@/lib/api/config';
@@ -15,7 +16,7 @@ import {
 } from '@/constants/portalMockData';
 
 // ─── Toggle ──────────────────────────────────────────────────────────────────
-const USE_MOCK = process.env.NEXT_PUBLIC_PORTAL_MOCK !== 'false';
+const USE_MOCK = env.NEXT_PUBLIC_PORTAL_MOCK !== 'false';
 
 // Referral calls go through /api/bff-app. The upstream host is no longer here
 // (it was a NEXT_PUBLIC_ value, so it shipped in the bundle) and neither is the

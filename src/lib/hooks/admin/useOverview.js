@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
-import { getAdminStatsAction, getAdminActivityAction, getAdminSettingsAction, updateAdminFeatureFlagAction } from '@/lib/services/admin/overview.service';
+import { getAdminStatsAction, getAdminActivityAction, getAdminSettingsAction, updateAdminFeatureFlagAction, updateAdminIntegrationsAction } from '@/lib/services/admin/overview.service';
 import { adminKeys } from '@/lib/services/admin/admin.keys';
 
 export const useAdminStats = (opts = {}) => useQuery({
@@ -27,4 +27,13 @@ export const useUpdateAdminFeatureFlagMutation = (opts = {}) => {
         ...opts
     });
     return { ...mutation, toggleFlag: mutation.mutateAsync };
+};
+
+export const useUpdateAdminIntegrationsMutation = (opts = {}) => {
+    const mutation = useApiMutation({
+        mutationFn: updateAdminIntegrationsAction,
+        invalidate: [adminKeys.settings()],
+        ...opts
+    });
+    return { ...mutation, updateIntegrations: mutation.mutateAsync };
 };

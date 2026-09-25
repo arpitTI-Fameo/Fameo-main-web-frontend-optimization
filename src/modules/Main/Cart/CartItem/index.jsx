@@ -45,7 +45,7 @@ export default function CartItem({
     <>
       <style>{S}</style>
       <article className={`cti-row${compact ? ' is-compact' : ''}`}>
-        <div className="cti-media">
+        <div className={`cti-media${product.imageFit === 'contain' ? ' is-contain' : ''}`}>
           {image ? (
             <img className="cti-img" src={image} alt={product.name} loading="lazy" />
           ) : (
@@ -115,8 +115,10 @@ export default function CartItem({
             </div>
 
             <div className="cti-price">
+              {/* Struck price is per line like the one under it — a unit price
+                  above a line total would read as a saving it is not. */}
               {product.original > product.price && (
-                <p className="cti-price-was">{inr(product.original)}</p>
+                <p className="cti-price-was">{inr(product.original * qty)}</p>
               )}
               <p className="cti-price-now">{inr(product.price * qty)}</p>
             </div>

@@ -28,6 +28,14 @@ export const S = `
     transition: transform .6s cubic-bezier(.22,1,.36,1);
   }
   .cti-row:hover .cti-img { transform: scale(1.04); }
+
+  /* Packshots: whole product in frame, white ground multiplied into the tile. */
+  .cti-media.is-contain .cti-img {
+    box-sizing: border-box;
+    padding: 8%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+  }
   .cti-img-fallback { font-size: 28px; }
 
   /* ── body ── */

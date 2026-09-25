@@ -16,7 +16,7 @@ export const getMeAction = async () => {
   });
 };
 
-// Posts to OUR route, which calls the upstream app-login server-side and
+// Posts to OUR route, which signs in at Fameoinfo-Backend server-side and
 // returns only a Set-Cookie. It used to post authEndpoints.login() through the
 // BFF, which reached the UPSTREAM /api/auth/login instead: that endpoint
 // authenticates by email, so a username login answered "Invalid email or

@@ -7,7 +7,12 @@
 
 import { describe, it, expect } from 'vitest';
 
-import { upstreamLoginSchema, userSchema, loginResponseSchema } from '@/lib/api/schemas';
+import {
+  identityLoginSchema,
+  identityTokensSchema,
+  userSchema,
+  loginResponseSchema,
+} from '@/lib/api/schemas';
 
 describe('every response schema is loose', () => {
   it('userSchema keeps fields it does not declare', () => {
@@ -19,12 +24,15 @@ describe('every response schema is loose', () => {
     expect(parsed.membershipTier).toBe('gold');
   });
 
-  it('upstreamLoginSchema keeps fields it does not declare', () => {
-    const parsed = upstreamLoginSchema.parse({
-      token: 't', user: { _id: '1' }, refreshToken: 'r', expiresIn: 3600,
+  it('identityLoginSchema keeps fields it does not declare', () => {
+    const parsed = identityLoginSchema.parse({
+      tokens: { access_token: 't', refresh_token: 'r', token_type: 'Bearer' },
+      user: { user_id: 'u', username: 'FAMEO1' },
+      session_id: 's',
     });
-    expect(parsed.refreshToken).toBe('r');
-    expect(parsed.expiresIn).toBe(3600);
+    expect(parsed.session_id).toBe('s');
+    expect(parsed.tokens.token_type).toBe('Bearer');
+    expect(parsed.user.username).toBe('FAMEO1');
   });
 
   it('loginResponseSchema tolerates a null user', () => {
@@ -32,24 +40,17 @@ describe('every response schema is loose', () => {
   });
 });
 
-describe('upstreamLoginSchema', () => {
-  it('rejects a response with no token — the bug it exists to catch', () => {
-    const r = upstreamLoginSchema.safeParse({ user: { _id: '1' } });
-    expect(r.success).toBe(false);
+describe('identity token contract (Fameoinfo-Backend)', () => {
+  it('rejects a login with no access token — the bug it exists to catch', () => {
+    expect(identityLoginSchema.safeParse({ tokens: {}, user: null }).success).toBe(false);
+    expect(identityLoginSchema.safeParse({ user: { user_id: 'u' } }).success).toBe(false);
   });
 
-  it('rejects an empty-string token, which would set a useless cookie', () => {
-    const r = upstreamLoginSchema.safeParse({ token: '', user: { _id: '1' } });
-    expect(r.success).toBe(false);
+  it('rejects an empty-string access token, which would set a useless cookie', () => {
+    expect(identityTokensSchema.safeParse({ access_token: '' }).success).toBe(false);
   });
 
-  it('accepts a missing appToken — not every account has one', () => {
-    const r = upstreamLoginSchema.safeParse({ token: 't', user: { _id: '1' } });
-    expect(r.success).toBe(true);
-  });
-
-  it('accepts both _id and id, since the backends disagree', () => {
-    expect(upstreamLoginSchema.safeParse({ token: 't', user: { id: 5 } }).success).toBe(true);
-    expect(upstreamLoginSchema.safeParse({ token: 't', user: { _id: 'x' } }).success).toBe(true);
+  it('accepts a refresh answer without a user', () => {
+    expect(identityTokensSchema.safeParse({ access_token: 'a', refresh_token: 'r', expires_in: 900 }).success).toBe(true);
   });
 });

@@ -31,7 +31,11 @@ export default function SessionWatcher() {
 
         if (res.status === 401) {
           const data = await res.json().catch(() => ({}));
-          if (data.message === 'SESSION_EXPIRED') {
+          // Backend error envelope: { success:false, error:{ code, message } }.
+          // The flat { message } form is still read for older responses.
+          const expired =
+            data?.error?.code === 'SESSION_EXPIRED' || data?.message === 'SESSION_EXPIRED';
+          if (expired) {
             await logout();
             router.push('/login?reason=session_expired');
           }

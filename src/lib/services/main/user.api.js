@@ -50,10 +50,26 @@ export const getAddressesAction = async () => {
   });
 };
 
+// Name, photo, password and the account itself belong to Fameoinfo-Backend:
+// products-server answers these four with 410 (identity moved). The methods
+// below match its routes so callers get that answer instead of a 404.
+// ── Saved addresses (each call answers the full, updated list) ──────────────
+export const addAddressAction = async (data) =>
+  createServerAction({ url: userEndpoints.addresses(), method: 'POST', body: data });
+
+export const updateAddressAction = async (addrId, data) =>
+  createServerAction({ url: userEndpoints.address(addrId), method: 'PUT', body: data });
+
+export const deleteAddressAction = async (addrId) =>
+  createServerAction({ url: userEndpoints.address(addrId), method: 'DELETE' });
+
+export const setDefaultAddressAction = async (addrId) =>
+  createServerAction({ url: userEndpoints.addressDefault(addrId), method: 'PATCH' });
+
 export const updateProfileAction = async (data) => {
   return createServerAction({
     url: userEndpoints.updateProfile(),
-    method: 'PUT',
+    method: 'PATCH',
     body: data,
   });
 };
@@ -61,7 +77,7 @@ export const updateProfileAction = async (data) => {
 export const changePasswordAction = async (data) => {
   return createServerAction({
     url: userEndpoints.changePassword(),
-    method: 'POST',
+    method: 'PATCH',
     body: data,
   });
 };
@@ -83,7 +99,7 @@ export const deleteAccountAction = async () => {
 export const uploadAvatarAction = async (formData) => {
   return createServerAction({
     url: userEndpoints.avatar(),
-    method: 'POST',
+    method: 'PATCH',
     body: formData,
   });
 };

@@ -1,8 +1,9 @@
 export const S = `
+  /* Four to a row whatever the count: two shots stay thumbnail-sized instead
+     of stretching to half the stage, and a sixth wraps rather than overflows. */
   .pgt-strip {
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
     margin-top: 12px;
   }
@@ -27,6 +28,12 @@ export const S = `
     height: 100%;
     object-fit: cover;
     display: block;
+  }
+  .pgt-strip.is-contain .pgt-img {
+    box-sizing: border-box;
+    padding: 10%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
   }
 
   @media (max-width: 600px) {

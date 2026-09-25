@@ -9,7 +9,11 @@ import {
   changePasswordAction,
   toggleFavoriteAction,
   deleteAccountAction,
-  uploadAvatarAction
+  uploadAvatarAction,
+  addAddressAction,
+  updateAddressAction,
+  deleteAddressAction,
+  setDefaultAddressAction,
 } from '@/lib/services';
 
 // ── Keys ───────────────────────────────────────────────────────────────────
@@ -117,3 +121,26 @@ export const useUploadAvatarMutation = (opts = {}) => useApiMutation({
   invalidate: [userKeys.profile()],
   ...opts,
 });
+
+// ── Saved addresses ─────────────────────────────────────────────────────────
+const useAddressMutation = (mutationFn, opts) =>
+  useApiMutation({
+    mutationFn: async (...args) => {
+      const response = await mutationFn(...args);
+      if (!response.code) throw response;
+      return response.result;
+    },
+    invalidate: [userKeys.addresses()],
+    ...opts,
+  });
+
+export const useAddAddressMutation = (opts = {}) => useAddressMutation(addAddressAction, opts);
+
+/** mutate({ addrId, data }). */
+export const useUpdateAddressMutation = (opts = {}) =>
+  useAddressMutation(({ addrId, data }) => updateAddressAction(addrId, data), opts);
+
+export const useDeleteAddressMutation = (opts = {}) => useAddressMutation(deleteAddressAction, opts);
+
+export const useSetDefaultAddressMutation = (opts = {}) =>
+  useAddressMutation(setDefaultAddressAction, opts);

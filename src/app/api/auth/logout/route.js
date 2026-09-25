@@ -1,14 +1,13 @@
 // app/api/auth/logout/route.js
-// Clears the httpOnly session cookie and tells upstream.
+// Clears the httpOnly session cookies and tells Fameoinfo-Backend.
 //
-// The cookie is cleared FIRST and unconditionally: if the upstream call fails,
-// the user must still end up signed out locally. Failing the other way would
-// leave a live session behind after the user asked to leave.
+// The cookies are cleared FIRST and unconditionally: if the upstream call
+// fails, the user must still end up signed out locally. Failing the other way
+// would leave a live session behind after the user asked to leave.
 
 import { NextResponse } from 'next/server';
 
-import { API_ORIGIN } from '@/lib/api/server/origins';
-import { authEndpoints } from '@/lib/api/endpoints';
+import { identityLogout } from '@/lib/api/server/identity';
 import { getSessionToken, clearSessionToken } from '@/lib/auth/session';
 
 export async function POST() {
@@ -16,17 +15,8 @@ export async function POST() {
 
   await clearSessionToken();
 
-  if (token) {
-    try {
-      await fetch(`${API_ORIGIN}${authEndpoints.logout()}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        cache: 'no-store',
-      });
-    } catch {
-      // Non-fatal — the local session is already gone.
-    }
-  }
+  // Revokes the token and ends the session for every Fameo backend at once.
+  await identityLogout(token);
 
   return NextResponse.json({ success: true, data: null });
 }

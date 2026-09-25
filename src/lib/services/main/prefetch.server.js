@@ -21,13 +21,13 @@ import 'server-only';
 // to what the client would have fetched or hydration hands the component a
 // shape it does not recognise.
 
-import { publicFetch, privateFetch } from '@/lib/api/server/fetcher';
+import { privateFetch } from '@/lib/api/server/fetcher';
 import { PRODUCTS_ORIGIN } from '@/lib/api/server/origins';
 import { PRODUCTS_PAGE_SIZE } from '@/lib/api/config';
 import {
   subscriptionEndpoints,
   communityEndpoints,
-  revalidate,
+  fameoProductEndpoints,
 } from '@/lib/api/endpoints';
 
 /**
@@ -50,14 +50,13 @@ async function envelope(run) {
 }
 
 /**
- * Membership plans — /plans is a PUBLIC route and the plan list is identical
- * for every visitor, so this is a publicFetch with a revalidate window. Using
- * privateFetch here would make the page dynamic for no benefit.
+ * Membership plans. /api/subscriptions/plans requires a signed-in member (it
+ * forwards their token to the central subscription API), so this sends the
+ * session token and is never shared-cached. A publicFetch here sent no token
+ * and always got 401 SESSION_EXPIRED.
  */
 export const getPlansServer = () =>
-  envelope(() =>
-    publicFetch(subscriptionEndpoints.plans(), { revalidate: revalidate.master }),
-  );
+  envelope(() => privateFetch(subscriptionEndpoints.plans()));
 
 /**
  * Storefront products. The upstream path is public, but /products sits behind
@@ -67,7 +66,7 @@ export const getPlansServer = () =>
 export const getStorefrontProductsServer = (params = {}) => {
   const qs = new URLSearchParams({ limit: PRODUCTS_PAGE_SIZE, ...params });
   return envelope(() =>
-    privateFetch(`${PRODUCTS_ORIGIN}/public/products?${qs}`),
+    privateFetch(`${PRODUCTS_ORIGIN}${fameoProductEndpoints.publicProducts()}?${qs}`),
   );
 };
 

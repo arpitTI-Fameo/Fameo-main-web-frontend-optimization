@@ -83,3 +83,18 @@ export const formatAddressLine = (addr = {}) =>
 /** "Jane Doe" from the two name fields. */
 export const addressName = (addr = {}) =>
   `${addr.firstName || ''} ${addr.lastName || ''}`.trim();
+
+/**
+ * A storefront address → the `shipping_address` the order API expects
+ * (POST /api/checkout/preview, POST /api/customer-orders). The backend
+ * validates it again; this only renames the fields.
+ */
+export const toOrderShippingAddress = (addr = {}) => ({
+  full_name: addressName(addr),
+  phone: String(addr.phone || '').replace(/\D/g, '').slice(-10),
+  address_line1: String(addr.address || '').trim(),
+  city: String(addr.city || '').trim(),
+  state: String(addr.state || '').trim(),
+  postal_code: String(addr.pin || '').trim(),
+  country: 'IN',
+});

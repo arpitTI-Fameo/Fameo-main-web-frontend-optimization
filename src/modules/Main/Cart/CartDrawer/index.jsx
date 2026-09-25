@@ -11,10 +11,13 @@
 // Checkout" link is gone for the same reason — it jumped past the step that
 // collects the delivery details.
 
+import { useMemo, useCallback } from 'react';
 import Link from 'next/link';
 
 import { ROUTES } from '@/constants/routes';
 import { useMembership } from '@/lib/hooks/custome/useMembership';
+import { useCart, useUpdateCartItem, useRemoveCartItem } from '@/lib/hooks/main/useCart';
+import { useAuthStore } from '@/store/authStore';
 import { useCartStore, useHydratedCart } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { inr } from '@/utils/formatCurrency';
@@ -22,16 +25,44 @@ import { DELIVERY_METHODS, FREE_SHIPPING_THRESHOLD } from '@/utils/shipping';
 
 import CartItem from '../CartItem';
 import { CART_EMPTY } from '../constants';
-import { cartTotals, itemCountLabel } from '../helpers';
+import { cartTotals, itemCountLabel, serverCartItems, serverCartTotals } from '../helpers';
 import { ArrowRightIcon, CloseIcon } from '../icons';
 
 import { S } from './styles';
 
 export default function CartDrawer() {
-  const updateQty = useCartStore((s) => s.updateQty);
-  const removeFromCart = useCartStore((s) => s.removeFromCart);
+  const updateQtyLocal = useCartStore((s) => s.updateQty);
+  const removeFromCartLocal = useCartStore((s) => s.removeFromCart);
 
-  const { items } = useHydratedCart();
+  const user = useAuthStore((s) => s.user);
+  const isAuth = Boolean(user);
+
+  const { data: serverCartData } = useCart({ enabled: isAuth });
+  const { mutate: serverUpdateQty } = useUpdateCartItem();
+  const { mutate: serverRemoveFromCart } = useRemoveCartItem();
+
+  const { items: localItems } = useHydratedCart();
+
+  const items = useMemo(
+    () => (isAuth ? serverCartItems(serverCartData) : localItems),
+    [isAuth, localItems, serverCartData]
+  );
+
+  const updateQty = useCallback((productId, nextQty, cartItemId) => {
+    if (isAuth) {
+      serverUpdateQty({ itemId: cartItemId || productId, data: { quantity: nextQty } });
+    } else {
+      updateQtyLocal(productId, nextQty);
+    }
+  }, [isAuth, serverUpdateQty, updateQtyLocal]);
+
+  const removeFromCart = useCallback((productId, cartItemId) => {
+    if (isAuth) {
+      serverRemoveFromCart(cartItemId || productId);
+    } else {
+      removeFromCartLocal(productId);
+    }
+  }, [isAuth, serverRemoveFromCart, removeFromCartLocal]);
 
   const isOpen = useUIStore((s) => s.cartDrawerOpen);
   const close = useUIStore((s) => s.closeCartDrawer);
@@ -40,7 +71,9 @@ export default function CartDrawer() {
 
   // Door delivery at the default rate — the drawer only previews the bag, so it
   // shows the standard case rather than pretending to know the final method.
-  const totals = cartTotals(items, rate, DELIVERY_METHODS.DOOR);
+  const totals = isAuth
+    ? serverCartTotals(items, DELIVERY_METHODS.DOOR)
+    : cartTotals(items, rate, DELIVERY_METHODS.DOOR);
 
   const remaining = Math.max(FREE_SHIPPING_THRESHOLD - totals.payable, 0);
   const freeShipping = totals.payable >= FREE_SHIPPING_THRESHOLD;
@@ -83,13 +116,13 @@ export default function CartDrawer() {
         ) : (
           <>
             <div className="cd-items">
-              {items.map(({ product, qty }) => (
+              {items.map(({ product, qty, cartItemId }) => (
                 <CartItem
-                  key={product.id}
+                  key={cartItemId || product.id}
                   product={product}
                   qty={qty}
-                  onUpdate={updateQty}
-                  onRemove={removeFromCart}
+                  onUpdate={(pid, nextQty) => updateQty(pid, nextQty, cartItemId)}
+                  onRemove={(pid) => removeFromCart(pid, cartItemId)}
                   compact
                 />
               ))}

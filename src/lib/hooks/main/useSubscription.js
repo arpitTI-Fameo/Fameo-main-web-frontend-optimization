@@ -13,7 +13,12 @@ import {
   cancelSubscriptionAction,
   resumeSubscriptionAction,
   setAutoRenewAction,
-  quoteMarketingCouponAction
+  quoteMarketingCouponAction,
+  getSubscriptionTransactionsAction,
+  getUpgradePreviewAction,
+  createSubscriptionOrderAction,
+  subscribeAction,
+  upgradeSubscriptionAction,
 } from '@/lib/services';
 
 // ── Keys ───────────────────────────────────────────────────────────────────
@@ -25,6 +30,7 @@ export const subscriptionKeys = {
   membership: () => [...subscriptionKeys.all(), 'membership'],
   history: () => [...subscriptionKeys.all(), 'history'],
   transactions: () => [...subscriptionKeys.all(), 'transactions'],
+  upgradePreview: (params) => [...subscriptionKeys.all(), 'upgrade-preview', params ?? {}],
 };
 
 
@@ -143,5 +149,42 @@ export const useQuoteMarketingCouponMutation = (opts = {}) => useApiMutation({
     if (!response.code) throw response;
     return response.result;
   },
+  ...opts,
+});
+
+/** Throw a failed action envelope; else its result. */
+const resultOf = (action) => async (...args) => {
+  const response = await action(...args);
+  if (!response.code) throw response;
+  return response.result;
+};
+
+export const useSubscriptionTransactions = (params, opts = {}) => useQuery({
+  queryKey: [...subscriptionKeys.transactions(), params ?? {}],
+  queryFn: () => resultOf(getSubscriptionTransactionsAction)(params),
+  ...opts,
+});
+
+export const useUpgradePreview = (params, opts = {}) => useQuery({
+  queryKey: subscriptionKeys.upgradePreview(params),
+  queryFn: () => resultOf(getUpgradePreviewAction)(params),
+  enabled: Boolean(params),
+  ...opts,
+});
+
+export const useCreateSubscriptionOrderMutation = (opts = {}) => useApiMutation({
+  mutationFn: resultOf(createSubscriptionOrderAction),
+  ...opts,
+});
+
+export const useSubscribeMutation = (opts = {}) => useApiMutation({
+  mutationFn: resultOf(subscribeAction),
+  invalidate: [subscriptionKeys.current(), subscriptionKeys.membership()],
+  ...opts,
+});
+
+export const useUpgradeSubscriptionMutation = (opts = {}) => useApiMutation({
+  mutationFn: resultOf(upgradeSubscriptionAction),
+  invalidate: [subscriptionKeys.current(), subscriptionKeys.membership()],
   ...opts,
 });

@@ -39,3 +39,26 @@ export const createAdminSupportFaqAction = async (form) => {
     body: form,
   });
 };
+
+export const getAdminSupportTicketAction = async (id) => {
+  return createAdminAction({
+    url: adminEndpoints.supportTicket(id),
+    method: 'GET',
+  });
+};
+
+/** A help-desk ticket raised by staff on a learner's behalf. */
+export const createAdminSupportTicketAction = async (form) => {
+  return createAdminAction({
+    url: adminEndpoints.supportTicketCreate(),
+    method: 'POST',
+    body: form,
+  });
+};
+
+export const deleteAdminSupportFaqAction = async (id) => {
+  return createAdminAction({
+    url: adminEndpoints.supportFaq(id),
+    method: 'DELETE',
+  });
+};

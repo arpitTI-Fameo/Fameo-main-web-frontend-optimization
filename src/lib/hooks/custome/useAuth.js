@@ -2,7 +2,7 @@
 // Thin wrapper around authStore — use this in components
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
-import { logoutRequest as logout } from '@/lib/services/auth/auth.api';
+import { logoutAction } from '@/lib/services/auth/auth.api';
 import { ROUTES } from '@/constants/routes';
 
 export const useAuth = () => {
@@ -10,7 +10,7 @@ export const useAuth = () => {
   const store = useAuthStore();
 
   const handleLogout = async () => {
-    await logout();
+    await logoutAction();
     router.push(ROUTES.LOGIN);
   };
 

@@ -1,3 +1,4 @@
+import { env } from '@/env';
 import 'server-only';
 // lib/api/server/rate-limit.js
 // A fixed-window limiter for the BFF and auth routes.
@@ -81,7 +82,7 @@ export function hit(key, limit, windowMs) {
  */
 const TRUSTED_PROXY_HOPS = Math.max(
   1,
-  Number.parseInt(process.env.TRUSTED_PROXY_HOPS ?? '1', 10) || 1,
+  Number.parseInt(env.TRUSTED_PROXY_HOPS ?? '1', 10) || 1,
 );
 
 // Set by the edge, stripped from inbound requests by the platform.

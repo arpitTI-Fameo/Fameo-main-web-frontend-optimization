@@ -1,3 +1,4 @@
+import { env } from '@/env';
 // app/api/smartauth/liveness/route.js
 // Authenticated proxy to the SmartAuth liveness check endpoint.
 //
@@ -30,7 +31,7 @@ export async function POST(req) {
   });
   if (!ok) return tooManyRequests(retryAfter);
 
-  if (!process.env.SMARTAUTH_KEY) {
+  if (!env.SMARTAUTH_KEY) {
     console.error('[smartauth/liveness] SMARTAUTH_KEY is not configured');
     return NextResponse.json(
       { message: 'Verification is temporarily unavailable.' },
@@ -54,7 +55,7 @@ export async function POST(req) {
     const res = await fetch('https://prod.smartauth.co/9UEF', {
       method: 'POST',
       headers: {
-        authkey: process.env.SMARTAUTH_KEY,
+        authkey: env.SMARTAUTH_KEY,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),

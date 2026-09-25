@@ -8,13 +8,17 @@
 //
 // Now the credentials go to this route, the route calls upstream, and only the
 // Set-Cookie comes back. The token never touches client JavaScript.
+//
+// Upstream is Fameoinfo-Backend, the single authentication authority. Its
+// access token is THE session for every Fameo backend; its refresh token goes
+// in a second httpOnly cookie for the BFF and middleware to renew it. The
+// main API contributes only the member's web profile (role, membership).
 
 import { NextResponse } from 'next/server';
 
-import { API_ORIGIN } from '@/lib/api/server/origins';
-import { authEndpoints } from '@/lib/api/endpoints';
-import { setSessionToken, setAppToken } from '@/lib/auth/session';
-import { upstreamLoginSchema } from '@/lib/api/schemas';
+import { identityLogin } from '@/lib/api/server/identity';
+import { setSessionTokens } from '@/lib/auth/session';
+import { getMeServerAction } from '@/lib/services/auth/auth.server';
 
 export async function POST(request) {
   let credentials;
@@ -27,71 +31,34 @@ export async function POST(request) {
     );
   }
 
-  let upstream, body;
+  // The form collects a USERNAME; Fameoinfo also accepts an email here.
+  const login = await identityLogin({
+    username: credentials?.username,
+    password: credentials?.password,
+  });
+  if (!login.ok) {
+    return NextResponse.json(
+      { success: false, message: login.message },
+      { status: login.status }
+    );
+  }
+
+  // Fetch the web profile (role, membership, etc.) from the main server.
+  // Falls back to the user object Fameoinfo already returned if the main
+  // server is unreachable or rejects the token.
+  let user;
   try {
-    // app-login, NOT login.
-    //
-    // The upstream has two credential endpoints and they are not
-    // interchangeable: /api/auth/login authenticates by EMAIL, while
-    // /api/auth/app-login authenticates by USERNAME — which is what this form
-    // collects. Pointing at the wrong one answers "Invalid email or password"
-    // for a perfectly valid username/password pair, which reads like a bad
-    // credential rather than a wrong endpoint.
-    //
-    // app-login is also the only one that returns `appToken`, which the profile
-    // and referral reads need.
-    upstream = await fetch(`${API_ORIGIN}${authEndpoints.appLogin()}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials),
-      cache: 'no-store',
-    });
-    body = await upstream.json();
+    user = await getMeServerAction({ token: login.tokens.accessToken });
   } catch {
-    return NextResponse.json(
-      { success: false, message: 'Cannot reach the authentication server' },
-      { status: 502 }
-    );
+    user = login.user ?? null;
   }
 
-  if (!upstream.ok || body?.success === false) {
-    return NextResponse.json(
-      { success: false, message: body?.message || 'Login failed' },
-      { status: upstream.status === 200 ? 401 : upstream.status }
-    );
-  }
+  await setSessionTokens(login.tokens);
 
-  // Validate the upstream contract before trusting it. A rename of `token` or
-  // `user` would otherwise set an undefined cookie and hand the browser a
-  // "logged in" response for a session that does not exist.
-  const parsed = upstreamLoginSchema.safeParse(body?.data);
-  if (!parsed.success) {
-    console.error('[auth/login] upstream contract mismatch', {
-      issues: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`),
-    });
-    return NextResponse.json(
-      { success: false, message: 'Login succeeded but no token was returned' },
-      { status: 502 }
-    );
-  }
-
-  const token = parsed.data.token;
-
-  await setSessionToken(token);
-
-  // The "app" backend's token goes into its own httpOnly cookie so the profile
-  // and portal reads can authenticate through /api/bff-app without the browser
-  // ever holding it.
-  const appToken = parsed.data.appToken ?? null;
-  if (appToken) await setAppToken(appToken);
-
-  // The token is deliberately NOT in this response. The client gets the user
+  // The tokens are deliberately NOT in this response. The client gets the user
   // object only — everything it legitimately needs to render.
-  //
-  // `appToken` is NOT returned. It now rides in the httpOnly cookie set above
-  // and is attached by /api/bff-app server-side, so no client code needs it.
   return NextResponse.json({
     success: true,
-    data: { user: parsed.data.user ?? null },
+    data: { user: user ?? null },
   });
 }

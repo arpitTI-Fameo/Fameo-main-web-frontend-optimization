@@ -14,18 +14,27 @@
 // `jsonwebtoken` cannot run in the Edge runtime (it needs Node crypto), which
 // is why this uses `jose`. Install it:  npm i jose
 //
-// JWT_SECRET must be the same value the Express backend signs with — the two
-// already share it for cross-backend SSO. It is a SERVER-ONLY variable: never
-// rename it to NEXT_PUBLIC_*, or the signing key ships to the browser and every
-// token in the system becomes forgeable.
+// The token is the access token issued by Fameoinfo-Backend's STS — the single
+// authentication authority — and follows the same contract every Fameo backend
+// verifies (server/products-server: src/config/authContract.js): HS256,
+// `sub` = the canonical user id, `exp` required, `iss`/`aud` once configured.
+//
+// JWT_SECRET must be the same value the STS signs with. It is a SERVER-ONLY
+// variable: never rename it to NEXT_PUBLIC_*, or the signing key ships to the
+// browser and every token in the system becomes forgeable.
 
 import { jwtVerify } from 'jose';
-import { ADMIN_ROLES as ADMIN_ROLE_LIST } from '@/constants/roles';
+import { env } from '@/env';
 
-const secretRaw = process.env.JWT_SECRET;
+const secretRaw = env.JWT_SECRET;
 const secret = secretRaw ? new TextEncoder().encode(secretRaw) : null;
 
-if (!secretRaw && process.env.NODE_ENV === 'production') {
+// Enforced when set, exactly as on the backends. Set them only after the STS
+// emits them.
+const issuer = env.JWT_ISSUER || undefined;
+const audience = env.JWT_AUDIENCE || undefined;
+
+if (!secretRaw && env.NODE_ENV === 'production') {
   // Fail loudly at boot rather than silently letting everyone through.
   throw new Error(
     'JWT_SECRET is not set. Middleware cannot verify sessions and every ' +
@@ -38,9 +47,10 @@ if (!secretRaw && process.env.NODE_ENV === 'production') {
  *
  * Returns null — never throws — so callers can treat "invalid" and "absent"
  * identically. Anything that fails signature, expiry or algorithm checks is
- * simply not a session.
+ * simply not a session. That includes an EXPIRED access token: middleware
+ * then renews it with the refresh token rather than signing the user out.
  *
- * @returns {Promise<{id:string, role?:string, plan?:string} | null>}
+ * @returns {Promise<{sub:string, roleId?:string} | null>}
  */
 export async function verifyToken(token) {
   if (!token || !secret) return null;
@@ -56,8 +66,14 @@ export async function verifyToken(token) {
       // confirmed by test: an exp-less superAdmin token was accepted. A
       // session that cannot expire also cannot be revoked by waiting.
       requiredClaims: ['exp'],
+      ...(issuer ? { issuer } : {}),
+      ...(audience ? { audience } : {}),
     });
-    if (!payload?.id) return null;
+    // The canonical user id. A legacy main-API token (`{ id }`) has no `sub`
+    // and is not a session any more.
+    if (!payload?.sub) return null;
+    // A refresh token is signed with the same key; it is never a session.
+    if (payload.token_use !== undefined && payload.token_use !== 'access') return null;
     return payload;
   } catch (err) {
     // Rejecting a token is normal (expired, forged, absent) and must stay
@@ -75,30 +91,4 @@ export async function verifyToken(token) {
   }
 }
 
-/* Membership lookup for the hot path. Deliberately NOT exported: the roles
-   themselves live in @/constants/roles, and a second exported ADMIN_ROLES —
-   a Set here, an array there — is an import waiting to pick the wrong one.
-   isAdminRole() is the only thing any caller has ever needed. */
-const ADMIN_ROLE_SET = new Set(ADMIN_ROLE_LIST);
-
-export const isAdminRole = (role) => ADMIN_ROLE_SET.has(role);
-
-/**
- * Tiers that unlock paid areas (community, talent-hire).
- *
- * SAST C-4. This used to be read from the `fameo_membership` cookie, which the
- * client wrote itself without HttpOnly — so `document.cookie =
- * 'fameo_membership=elite'` bought a free upgrade. The tier now comes from the
- * `plan` claim inside the signed token, which the browser cannot forge without
- * JWT_SECRET.
- *
- * `pro` is a dead legacy tier but still grants ACCESS (it was a paid tier) even
- * though it carries no product discount — matching lib/planPricing.js, where
- * pro maps to a 0% rate rather than to no entitlement.
- */
-export const PAID_PLANS = new Set(['pro', 'popular', 'elite', 'premium']);
-
-export const hasPaidPlan = (claims) =>
-  PAID_PLANS.has(String(claims?.plan ?? '').trim().toLowerCase());
-
-export default { verifyToken, isAdminRole, hasPaidPlan, PAID_PLANS };
+export default { verifyToken };

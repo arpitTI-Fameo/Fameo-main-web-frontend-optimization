@@ -13,9 +13,10 @@ import { useWebProfile } from '@/lib/hooks/main/useUser';
 import { STORAGE_KEYS } from '@/constants/storageKeys';
 
 export default function Profile({ initialData }) {
+
   const { data: json, isLoading: loading, error: apiError } = useWebProfile({ initialData });
   const [profile, setProfile] = useState(null);
-  
+
   const error = apiError?.message || "";
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function Profile({ initialData }) {
         documents: registration.documents || up.documents || [],
         recommended_tier: registration.recommended_tier || null,
       };
-      
+
       if (typeof window !== "undefined") {
         if (merged.profile_picture) localStorage.setItem(STORAGE_KEYS.PROFILE_PHOTO, merged.profile_picture);
         else localStorage.removeItem(STORAGE_KEYS.PROFILE_PHOTO);

@@ -82,10 +82,17 @@ export function unwrap(body) {
   return body;
 }
 
+/**
+ * The Fameo backend's error envelope:
+ *   { success: false, error: { code, message, details: [{ field, issue }] }, meta }
+ * Older shapes ({ message }, { error: '<string>' }) are still read — other
+ * upstreams use them, and backend modules move to the envelope one by one.
+ */
 function messageFrom(body, fallback) {
   if (body && typeof body === 'object') {
     if (typeof body.message === 'string' && body.message) return body.message;
     if (typeof body.error === 'string' && body.error) return body.error;
+    if (typeof body.error?.message === 'string' && body.error.message) return body.error.message;
     return fallback;
   }
   if (typeof body === 'string' && body) {
@@ -107,11 +114,18 @@ function fieldErrorsFrom(body) {
   if (!body || typeof body !== 'object') return [];
   const raw =
     body.error?.details?.errors ||
+    (Array.isArray(body.error?.details) ? body.error.details : null) ||
     body.errors ||
     body.details ||
     body.data?.errors ||
     [];
   return Array.isArray(raw) ? raw : [];
+}
+
+/** The machine-readable error code, from the envelope or an older flat body. */
+function codeFrom(body) {
+  if (!body || typeof body !== 'object') return undefined;
+  return (typeof body.error === 'object' && body.error?.code) || body.code;
 }
 
 /**
@@ -179,11 +193,11 @@ export async function request(url, init = {}) {
   if (!isSuccessEnvelope(body, res.ok)) {
     throw new ApiError(messageFrom(body, 'Request failed'), {
       status: res.status,
-      code: body?.code,
+      code: codeFrom(body),
       details: body,
       url,
       fieldErrors: fieldErrorsFrom(body),
-      serverMessage: typeof body?.message === 'string' ? body.message : '',
+      serverMessage: messageFrom(body, ''),
     });
   }
 

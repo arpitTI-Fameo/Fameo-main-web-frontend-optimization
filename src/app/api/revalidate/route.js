@@ -1,3 +1,4 @@
+import { env } from '@/env';
 // app/api/revalidate/route.js
 // The backend's publish flow calls this to drop a cache tag.
 //
@@ -18,7 +19,7 @@ import { revalidateTag, revalidatePath } from 'next/cache';
 
 import { hit, clientKey, limitHeaders, LIMITS } from '@/lib/api/server/rate-limit';
 
-const SECRET = process.env.REVALIDATE_SECRET;
+const SECRET = env.REVALIDATE_SECRET;
 
 /**
  * Constant-time compare. A plain `===` on a secret leaks its length and a

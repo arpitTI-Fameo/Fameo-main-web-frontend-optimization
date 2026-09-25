@@ -8,17 +8,21 @@
 import { PRODUCTS } from '@/constants/mockData';
 
 import { toSlug } from '../helpers';
+import { adaptProduct } from '../productAdapter';
 
 import {
   DETAIL_CARE_BODY,
+  DETAIL_HIDDEN_SPECS,
   DETAIL_MAX_RATING,
   DETAIL_SHIPPING,
   DETAIL_SKUS,
+  DETAIL_SPEC_LABELS,
+  DETAIL_TAB_FALLBACK_LABELS,
   DETAIL_TABS,
 } from './constants';
 
 // Storefront row + SKU record → the single object every section renders from.
-const merge = (base) => {
+export const mergeDetailProduct = (base) => {
   const detail = DETAIL_SKUS[base.id] || {};
   const mrp = base.original && base.original > base.price ? base.original : null;
 
@@ -38,7 +42,95 @@ const merge = (base) => {
   };
 };
 
-export const DETAIL_CATALOGUE = PRODUCTS.map(merge);
+export const DETAIL_CATALOGUE = PRODUCTS.map(mergeDetailProduct);
+
+/* ── live catalogue rows ─────────────────────────────────────────────────── */
+
+const HIDDEN_SPECS = new Set(DETAIL_HIDDEN_SPECS);
+
+// "Mirrorless Cameras ø Nikon" — the sheet joins a path with a stray glyph.
+const SUBCATEGORY_SEP = /\s+[ø›»>|]\s+/;
+
+// One sheet cell → display text, or null when there is nothing to show.
+function specValue(key, value) {
+  if (value == null || value === '' || typeof value === 'object') return null;
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+
+  const text = String(value).trim().replace(/\.$/, '');
+  if (!text) return null;
+  if (key === 'GST') return text.replace(/^GST\s*/i, '');            // "GST 18%" → "18%"
+  if (key === 'Dimensions') return text.replace(/\s*x\s*/gi, ' × ');
+  // "china" → "China", but "iPhone" stays as the sheet wrote it.
+  return text === text.toLowerCase() ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+}
+
+// "Kit Lens option: Nikon Z7II With 24-70mm" → one pill axis per labelled
+// pair. The payload names only this SKU's own value, not the rest of its
+// variant group, so each axis carries the one option, already selected.
+function liveVariantAxes(text) {
+  return String(text || '')
+    .split(/\s*[;|]\s*/)
+    .map((pair) => {
+      const at = pair.indexOf(':');
+      const label = pair.slice(0, at).trim();
+      const value = pair.slice(at + 1).trim();
+      if (at < 1 || !label || !value) return null;
+      return {
+        id: toSlug(label),
+        label,
+        type: 'pill',
+        values: [{ value: toSlug(value), label: value }],
+      };
+    })
+    .filter(Boolean);
+}
+
+/**
+ * A Products service row → the same merged object the dummy catalogue yields.
+ *
+ * The service sends no copy of its own — no description, tagline or
+ * highlights — so those are drawn from facts it does send rather than left
+ * blank or invented: the variant group names the product, the spec sheet
+ * supplies manufacturer and origin, and the ERP bookkeeping is dropped.
+ */
+export function liveDetailProduct(raw) {
+  const base = adaptProduct(raw);
+  const sheet = raw.specs || {};
+  const fact = (key) => specValue(key, sheet[key]);
+
+  const type = String(raw.subcategory || '').split(SUBCATEGORY_SEP)[0].trim();
+  const axes = liveVariantAxes(raw.variant_values);
+  const group = raw.variant_group_name?.trim();
+
+  const specs = {
+    // Brand, model and type lead; the sheet's own order follows.
+    Brand: base.brand,
+    Model: fact('Model'),
+    Type: type,
+    ...Object.fromEntries(axes.map((a) => [a.label, a.values[0].label])),
+  };
+  Object.keys(sheet).forEach((key) => {
+    if (!HIDDEN_SPECS.has(key)) specs[DETAIL_SPEC_LABELS[key] || key] = fact(key);
+  });
+
+  const origin = fact('Country Of Origin');
+  const maker = fact('Manufacturer');
+  const gst = fact('GST');
+
+  return mergeDetailProduct({
+    ...base,
+    tagline: group && group !== base.name ? group : [base.brand, type].filter(Boolean).join(' · '),
+    variantAxes: axes,
+    highlights: [
+      maker && `Manufactured by ${maker}`,
+      origin && `Country of origin: ${origin}`,
+      gst && `GST invoice included (${gst})`,
+    ].filter(Boolean),
+    specs: Object.fromEntries(Object.entries(specs).filter(([, value]) => value)),
+    // Catalogue shots are packshots on white — framed whole, never cropped.
+    imageFit: 'contain',
+  });
+}
 
 // Whole rupees off, rounded — the "Save 13%" pill next to the price.
 export function discountPercent(mrp, price) {
@@ -75,13 +167,22 @@ export function buildDetailTabs(product) {
 
   const { length, width, height, unit } = product.dimensions || {};
   const hasDims = length != null && width != null && height != null;
+  const description = product.description || [product.longDesc].filter(Boolean);
+  const materials = product.materials || [];
+
+  // Renames a tab for what it holds when its authored half is missing.
+  const fallback = (id, missing) => (missing ? { label: DETAIL_TAB_FALLBACK_LABELS[id] } : {});
 
   const bodies = {
     description: {
-      body: product.description || [product.longDesc].filter(Boolean),
+      body: description,
       specs: Object.entries(product.specs || {}).map(([label, value]) => ({ label, value })),
+      ...fallback('description', !description.length),
     },
-    dimensions: {
+    // Only a measured SKU gets this tab. A live row's single "Dimensions"
+    // figure already sits in its spec sheet, and the copy below is about
+    // assembled size, which that figure does not claim to be.
+    dimensions: (hasDims || product.weight || product.packedWeight) && {
       body: [
         hasDims
           ? `Assembled it measures ${length} × ${width} × ${height} ${unit}. Every figure below is taken from a production unit, not the drawing.`
@@ -97,7 +198,8 @@ export function buildDetailTabs(product) {
     },
     materials: {
       body: DETAIL_CARE_BODY,
-      specs: product.materials || [],
+      specs: materials,
+      ...fallback('materials', !materials.length),
     },
     shipping: {
       body: DETAIL_SHIPPING.body,

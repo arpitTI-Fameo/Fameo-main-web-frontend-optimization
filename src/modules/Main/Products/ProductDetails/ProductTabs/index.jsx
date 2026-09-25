@@ -37,6 +37,8 @@ export default function ProductTabs({ tabs = [], active, onSelect }) {
   if (!tabs.length) return null;
 
   const panel = tabs.find((t) => t.id === active) || tabs[0];
+  const body = panel.body || [];
+  const specs = panel.specs || [];
 
   return (
     <>
@@ -76,19 +78,23 @@ export default function ProductTabs({ tabs = [], active, onSelect }) {
         </div>
 
         <div className="pdp-inner">
+          {/* A panel with only copy or only specs takes the full width rather
+              than leaving an empty column beside it. */}
           <div
-            className="ptb-panel"
+            className={`ptb-panel${body.length && specs.length ? '' : ' is-single'}`}
             role="tabpanel"
             id={`ptb-panel-${panel.id}`}
             aria-labelledby={`ptb-tab-${panel.id}`}
           >
-            <div className="ptb-body">
-              {(panel.body || []).map((para) => (
-                <p className="ptb-para" key={para}>{para}</p>
-              ))}
-            </div>
+            {body.length > 0 && (
+              <div className="ptb-body">
+                {body.map((para) => (
+                  <p className="ptb-para" key={para}>{para}</p>
+                ))}
+              </div>
+            )}
 
-            <SpecTable rows={panel.specs} />
+            <SpecTable rows={specs} wide={!body.length} />
           </div>
         </div>
       </section>

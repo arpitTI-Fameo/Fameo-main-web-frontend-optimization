@@ -21,7 +21,10 @@ import DurationSelector from '../DurationSelector';
 export default function PlansContainer() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { user, token, updateMembership, logout } = useAuthStore();
+    const { user, updateMembership, logout } = useAuthStore();
+    // The session token is an httpOnly cookie now (never in this store), so
+    // `user` is the client-side sign-in signal — `token` is always null.
+    const signedIn = !!user;
 
     const isUpgrade = searchParams.get('upgrade') === 'true';
     const fromPage = searchParams.get('from') || '';
@@ -55,8 +58,8 @@ export default function PlansContainer() {
     // We MERGE backend data (prices, features, billing_options) with the static
     // PLANS design metadata (icon, color, appPlanCode, popular) matched by code,
     // so the backend drives pricing while YOUR design stays intact.
-    const { data: plansData } = usePlans({ enabled: !!token });
-    const { data: curData, refetch: refreshCurrent, error: curError } = useCurrentSubscription({ enabled: !!token });
+    const { data: plansData } = usePlans({ enabled: signedIn });
+    const { data: curData, refetch: refreshCurrent, error: curError } = useCurrentSubscription({ enabled: signedIn });
     const quoteCouponMutation = useQuoteMarketingCouponMutation();
 
     useEffect(() => {
@@ -136,7 +139,7 @@ export default function PlansContainer() {
 
     // Card button opens the checkout modal (does NOT pay yet).
     const openCheckout = (plan) => {
-        if (!token) { router.push('/login?redirect=/plans'); return; }
+        if (!signedIn) { router.push('/login?redirect=/plans'); return; }
         if (planCodeOf(plan) === 'free') return;
         if (isCurrentPlan(plan)) return;
         setError('');
@@ -175,7 +178,7 @@ export default function PlansContainer() {
     // Pay button in the modal. Prices come from the order, never computed here.
     const handleConfirmPay = async () => {
         const plan = checkoutPlan;
-        if (!plan || !token) return;
+        if (!plan || !signedIn) return;
 
         const chosen = billingOptionFor(plan) || (plan.billing_options || [])[0];
         if (!chosen) { setError('This plan has no billing option available. Please refresh and try again.'); return; }

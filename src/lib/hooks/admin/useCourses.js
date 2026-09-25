@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApiMutation } from '@/lib/query/mutation';
-import { getAdminCoursesAction, getAdminCourseAction, createAdminCourseAction, updateAdminCourseAction, deleteAdminCourseAction, togglePublishAdminCourseAction, toggleFeatureAdminCourseAction } from '@/lib/services/admin/courses.service';
+import { getAdminCoursesAction, getAdminCourseAction, createAdminCourseAction, updateAdminCourseAction, deleteAdminCourseAction, togglePublishAdminCourseAction, toggleFeatureAdminCourseAction, reorderAdminCoursesAction } from '@/lib/services/admin/courses.service';
 import { adminKeys } from '@/lib/services/admin/admin.keys';
 
 export const useAdminCourses = (opts = {}) => useQuery({
@@ -53,4 +53,13 @@ export const useToggleFeatureAdminCourseMutation = (opts = {}) => {
         ...opts
     });
     return { ...mutation, toggleFeature: mutation.mutateAsync };
+};
+
+export const useReorderAdminCoursesMutation = (opts = {}) => {
+    const mutation = useApiMutation({
+        mutationFn: reorderAdminCoursesAction,
+        invalidate: [adminKeys.courses()],
+        ...opts
+    });
+    return { ...mutation, reorder: mutation.mutateAsync };
 };

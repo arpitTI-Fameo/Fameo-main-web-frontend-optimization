@@ -16,7 +16,13 @@ export default async function PlansPage() {
 
   await queryClient.prefetchQuery({
     queryKey: subscriptionKeys.plans(),
-    queryFn: () => getPlansServer(),
+    // Cache only the plans themselves (the shape usePlans returns). On a
+    // failure nothing is cached, so the browser fetches them with the session.
+    queryFn: async () => {
+      const response = await getPlansServer();
+      if (!response.code) throw response;
+      return response.result;
+    },
   });
 
   return (

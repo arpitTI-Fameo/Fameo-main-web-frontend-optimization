@@ -28,6 +28,7 @@ import { request, qs } from '../core';
  * @param {object} [opts.params]  serialised to a query string
  * @param {string} [opts.base]    BFF_BASE | BFF_PRODUCTS_BASE | BFF_APP_BASE
  */
+
 export function clientFetch(path, { params, base = BFF_BASE, ...init } = {}) {
   return request(`${base}${path}${qs(params)}`, {
     ...init,

@@ -19,8 +19,29 @@
 export const SESSION_COOKIE = 'fameo_session';
 
 /**
+ * httpOnly cookie holding the Fameoinfo-Backend REFRESH token. Only server code
+ * (the BFF proxy, middleware and our auth routes) ever reads it, to exchange it
+ * at Fameoinfo for a new access token.
+ */
+export const REFRESH_COOKIE = 'fameo_refresh';
+
+/**
+ * Attributes shared by every auth cookie. Lives here, not in lib/auth/session.js,
+ * because middleware (Edge runtime) sets cookies too and cannot import that
+ * server-only module.
+ */
+export const AUTH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: 'strict',
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+  maxAge: 60 * 60 * 24 * 7, // 7 days — the refresh token's lifetime
+};
+
+/**
  * Pre-migration cookie, still present for sessions issued before this change.
- * Read-only fallback.
+ * No longer honoured: it holds a token from the retired main-API login, which
+ * no backend accepts. Only ever deleted.
  */
 export const LEGACY_SESSION_COOKIE = 'fameo_token';
 
@@ -31,11 +52,9 @@ export const LEGACY_SESSION_COOKIE = 'fameo_token';
 export const LEGACY_MEMBERSHIP_COOKIE = 'fameo_membership';
 
 /**
- * httpOnly cookie holding the "app" backend's token (the one that used to live
- * in localStorage as `fameo_app_token`). It is a DIFFERENT credential from the
- * main session token, issued by a different upstream, so it gets its own
- * cookie and its own BFF attachment rather than being conflated with the
- * session.
+ * Retired. It held the "app" backend's token when that was a different
+ * credential from the session. Fameoinfo-Backend now issues THE session token,
+ * so there is one credential and one cookie (SESSION_COOKIE). Only deleted.
  */
 export const APP_SESSION_COOKIE = 'fameo_app_session';
 
@@ -76,5 +95,6 @@ export const PRODUCTS_PAGE_SIZE = 50;
  * purpose — exposing the realtime endpoint does not expose the REST upstream,
  * and the socket still authenticates with its own token handshake.
  */
-export const SOCKET_ORIGIN =
-  process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+import { env } from '@/env';
+
+export const SOCKET_ORIGIN = env.NEXT_PUBLIC_SOCKET_URL;

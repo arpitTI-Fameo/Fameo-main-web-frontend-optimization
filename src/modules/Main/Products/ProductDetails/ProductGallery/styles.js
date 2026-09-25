@@ -21,6 +21,15 @@ export const S = `
   }
   .pgl-stage:hover .pgl-img { transform: scale(1.03); }
 
+  /* Packshots: the whole product in frame, and the shot's white ground
+     multiplied into the tile so image and stage read as one surface. */
+  .pgl-stage.is-contain .pgl-img {
+    box-sizing: border-box;
+    padding: 8%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+  }
+
   .pgl-empty { width: 100%; height: 100%; background: var(--pdp-line); }
 
   .pgl-badge {

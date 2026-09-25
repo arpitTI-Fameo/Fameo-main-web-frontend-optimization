@@ -30,3 +30,12 @@ export const updateAdminFeatureFlagAction = async (flags) => {
     body: flags,
   });
 };
+
+/** Body: { razorpay?, cloudflareR2?, sendgrid?, firebase? } — each an object. */
+export const updateAdminIntegrationsAction = async (integrations) => {
+  return createAdminAction({
+    url: adminEndpoints.settingsIntegrations(),
+    method: 'PATCH',
+    body: integrations,
+  });
+};

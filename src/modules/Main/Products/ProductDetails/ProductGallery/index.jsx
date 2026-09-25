@@ -18,6 +18,7 @@ import { S } from './styles';
  *  images      string[]
  *  name        string
  *  badge       string|null       – 'New', 'Sale', 'Bestseller' …
+ *  fit         'cover'|'contain' – contain for packshots, which must not be cropped
  *  isWished    boolean
  *  onWishlist  () => void
  */
@@ -25,6 +26,7 @@ export default function ProductGallery({
   images = [],
   name = '',
   badge = null,
+  fit = 'cover',
   isWished = false,
   onWishlist,
 }) {
@@ -40,7 +42,7 @@ export default function ProductGallery({
     <>
       <style>{S}</style>
       <section className="pgl-wrap" aria-label={`${name} gallery`}>
-        <div className="pgl-stage">
+        <div className={`pgl-stage${fit === 'contain' ? ' is-contain' : ''}`}>
           {badge && <span className="pgl-badge">{badge}</span>}
 
           <button
@@ -65,6 +67,7 @@ export default function ProductGallery({
           active={active}
           onSelect={setActive}
           alt={name}
+          fit={fit}
         />
       </section>
     </>

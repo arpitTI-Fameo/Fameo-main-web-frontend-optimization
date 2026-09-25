@@ -4,17 +4,24 @@
 // These are FUNCTIONS, not a flat enum — an enum cannot express `/products/:id`
 // without string concatenation at the call site, which is defect #12.
 
+/**
+ * Main API (API_ORIGIN) — the signed-in member's WEB profile. The main API no
+ * longer signs anyone in; that is Fameoinfo-Backend (identityEndpoints).
+ */
 export const authEndpoints = {
-  appLogin: () => '/api/auth/app-login',
-  login: () => '/api/auth/login',
-  logout: () => '/api/auth/logout',
   me: () => '/api/auth/me',
-  register: () => '/api/auth/register',
-  sendOtp: () => '/api/auth/send-otp',
-  verifyOtp: () => '/api/auth/verify-otp',
-  forgotPassword: () => '/api/auth/forgot-password',
-  resetPassword: () => '/api/auth/reset-password',
-  refreshSession: () => '/api/auth/refresh-session',
+  entitlements: () => '/api/auth/entitlements',
+};
+
+/**
+ * Fameoinfo-Backend (APP_ORIGIN) — the ONE authentication authority. Sign-in,
+ * token refresh and logout for every Fameo service happen here. Called only
+ * from server code (our route handlers, the BFF proxy and middleware).
+ */
+export const identityEndpoints = {
+  login: () => '/api/v1/auth/login',
+  refresh: () => '/api/v1/auth/refresh',
+  logout: () => '/api/v1/auth/logout',
 };
 
 /**
@@ -59,7 +66,7 @@ export const registerEndpoints = {
 
 /**
  * Signed-in reads against the "app" backend (APP_ORIGIN), reached through
- * /api/bff-app so the app token stays in an httpOnly cookie.
+ * /api/bff-app with the session token from the httpOnly cookie.
  */
 export const userConfigEndpoints = {
   webProfile: () => '/api/v1/user-config/web-profile',
@@ -103,45 +110,140 @@ export const userEndpoints = {
   deleteAccount: () => '/api/user/account',
   avatar: () => '/api/user/avatar',
   addresses: () => '/api/user/addresses',
+  address: (addrId) => `/api/user/addresses/${encodeURIComponent(addrId)}`,
+  addressDefault: (addrId) => `/api/user/addresses/${encodeURIComponent(addrId)}/default`,
 };
 
-// ── Products ──────────────────────────────────────────────────────────────────
-export const productEndpoints = {
-  getAll: () => '/api/products',
-  getOne: (slug) => `/api/products/${encodeURIComponent(slug)}`,
-  getByCategory: (cat) => `/api/products/category/${encodeURIComponent(cat)}`,
-  getFeatured: () => '/api/products/featured',
-  getBestsellers: () => '/api/products/bestsellers',
-  search: () => '/api/products/search',
-};
-
-// ── Fameo Products backend (PRODUCTS_ORIGIN) ─────────────────────────────────
-// A SEPARATE service from productEndpoints above. Same session (shared
-// JWT_SECRET) but a different contract: bare /products and /cart rather than
-// /api/products. Kept distinct on purpose — conflating the two would send
-// calls to the wrong backend.
+// ── Products (catalog, cart, fulfillment orders, support) ─────────────────────
+// Reached through the products BFF (BFF_PRODUCTS_BASE), which forwards the
+// path as-is to PRODUCTS_ORIGIN — the same backend as API_ORIGIN. Product
+// purchases go through customerOrderEndpoints below.
 export const fameoProductEndpoints = {
-  products: () => '/products',
-  product: (id) => `/products/${id}`,
-  publicProducts: () => '/public/products',
-  publicProduct: (id) => `/public/products/${id}`,
-  cart: () => '/cart',
-  cartItems: () => '/cart/items',
-  cartItem: (productId) => `/cart/items/${productId}`,
-  orders: () => '/orders',
-  order: (id) => `/orders/${id}`,
-  checkout: () => '/orders/checkout',
-  support: () => '/support',
+  products: () => '/api/products',
+  product: (id) => `/api/products/${encodeURIComponent(id)}`,
+  publicProducts: () => '/api/public/products',
+  publicProduct: (id) => `/api/public/products/${encodeURIComponent(id)}`,
+  cart: () => '/api/cart',
+  cartItems: () => '/api/cart/items',
+  cartItem: (productId) => `/api/cart/items/${encodeURIComponent(productId)}`,
+  orders: () => '/api/orders',
+  order: (id) => `/api/orders/${encodeURIComponent(id)}`,
+  support: () => '/api/support',
 };
 
-// ── Orders ────────────────────────────────────────────────────────────────────
-export const orderEndpoints = {
-  createRazorpayOrder: () => '/api/orders/create-razorpay-order',
-  verifyPayment: () => '/api/orders/verify-payment',
-  placeCOD: () => '/api/orders',
+// ── Customer Orders ───────────────────────────────────────────────────────────
+// The product purchase path: cart → checkout preview → customer order →
+// Razorpay payment → verify. One backend, reached through the products BFF.
+export const customerOrderEndpoints = {
+  create: () => '/api/customer-orders',
+  getAll: () => '/api/customer-orders',
+  getOne: (id) => `/api/customer-orders/${encodeURIComponent(id)}`,
+  // Buyers cannot set an order's status; staff move fulfillment lines instead
+  // (fulfillmentEndpoints.status). Staff read a purchase through `staff`.
+  staff: (id) => `/api/customer-orders/${encodeURIComponent(id)}/staff`,
+  cancel: (id) => `/api/customer-orders/${encodeURIComponent(id)}/cancel`,
+  payment: (id) => `/api/customer-orders/${encodeURIComponent(id)}/payment`,
+  paymentRetry: (id) => `/api/customer-orders/${encodeURIComponent(id)}/payment/retry`,
+};
+
+// ── Fulfillment lines (staff / retailers) ─────────────────────────────────────
+export const fulfillmentEndpoints = {
   getAll: () => '/api/orders',
   getOne: (id) => `/api/orders/${encodeURIComponent(id)}`,
-  track: (id) => `/api/orders/track/${encodeURIComponent(id)}`,
+  status: (id) => `/api/orders/${encodeURIComponent(id)}/status`,
+  customerInvoiceView: (id) => `/api/orders/${encodeURIComponent(id)}/customer-invoice/view`,
+  customerInvoiceDownload: (id) =>
+    `/api/orders/${encodeURIComponent(id)}/customer-invoice/download`,
+};
+
+export const checkoutEndpoints = {
+  preview: () => '/api/checkout/preview',
+};
+
+export const paymentEndpoints = {
+  verify: () => '/api/payments/verify',
+};
+
+// ── Inventory ─────────────────────────────────────────────────────────────────
+export const inventoryEndpoints = {
+  getAll: () => '/api/inventory',
+  create: () => '/api/inventory',
+  forProduct: (productId) => `/api/inventory/product/${encodeURIComponent(productId)}`,
+  // `id` below is the stock record's id (from getAll / forProduct), not the product's.
+  stock: (id) => `/api/inventory/${encodeURIComponent(id)}/stock`,
+  cost: (id) => `/api/inventory/${encodeURIComponent(id)}/cost`,
+  reviewed: (id) => `/api/inventory/${encodeURIComponent(id)}/reviewed`,
+};
+
+// ── Pricing ───────────────────────────────────────────────────────────────────
+// Prices change through reprice requests (propose → approve / reject); the
+// safety table shows each product's discount headroom. There is no direct
+// per-product price write.
+export const pricingEndpoints = {
+  safety: () => '/api/pricing/safety',
+  reprice: () => '/api/pricing/reprice',
+  propose: (productId) => `/api/pricing/reprice/${encodeURIComponent(productId)}/propose`,
+  approve: (id) => `/api/pricing/reprice/${encodeURIComponent(id)}/approve`,
+  reject: (id) => `/api/pricing/reprice/${encodeURIComponent(id)}/reject`,
+};
+
+// ── Invoice ───────────────────────────────────────────────────────────────────
+export const invoiceEndpoints = {
+  getAll: () => '/api/invoices',
+  getOne: (id) => `/api/invoices/${encodeURIComponent(id)}`,
+  // Retailer invoices are raised over fulfillment lines: body { order_ids, gst_rate? }.
+  raise: () => '/api/invoices/raise',
+  view: (id) => `/api/invoices/${encodeURIComponent(id)}/view`,
+  download: (id) => `/api/invoices/${encodeURIComponent(id)}/download`,
+  settle: (id) => `/api/invoices/${encodeURIComponent(id)}/settle`,
+  dispute: (id) => `/api/invoices/${encodeURIComponent(id)}/dispute`,
+  eway: (id) => `/api/invoices/${encodeURIComponent(id)}/eway`,
+  retryEway: (id) => `/api/invoices/${encodeURIComponent(id)}/retry-eway`,
+};
+
+// ── Catalog administration (commerce staff: PRODUCTS_* roles) ─────────────────
+export const catalogEndpoints = {
+  products: () => '/api/products',
+  product: (id) => `/api/products/${encodeURIComponent(id)}`,
+  productApprove: (id) => `/api/products/${encodeURIComponent(id)}/approve`,
+  productReject: (id) => `/api/products/${encodeURIComponent(id)}/reject`,
+  productArchive: (id) => `/api/products/${encodeURIComponent(id)}/archive`,
+  productMargin: (id) => `/api/products/${encodeURIComponent(id)}/margin`,
+  productImages: (id) => `/api/products/${encodeURIComponent(id)}/images`,
+  productImage: (id, imageId) =>
+    `/api/products/${encodeURIComponent(id)}/images/${encodeURIComponent(imageId)}`,
+  productImageMain: (id, imageId) =>
+    `/api/products/${encodeURIComponent(id)}/images/${encodeURIComponent(imageId)}/main`,
+  categories: () => '/api/categories',
+  category: (id) => `/api/categories/${encodeURIComponent(id)}`,
+  categoriesSchema: () => '/api/categories/schema',
+  categoriesUsed: () => '/api/categories/used',
+  categoryUsage: (id) => `/api/categories/${encodeURIComponent(id)}/usage`,
+  categoryFieldDeactivate: (id, key) =>
+    `/api/categories/${encodeURIComponent(id)}/fields/${encodeURIComponent(key)}/deactivate`,
+  vendors: () => '/api/vendors',
+  vendor: (id) => `/api/vendors/${encodeURIComponent(id)}`,
+  vendorsExpiring: () => '/api/vendors/expiring',
+  staffUsers: () => '/api/users',
+  staffUser: (id) => `/api/users/${encodeURIComponent(id)}`,
+};
+
+// ── Imports (retailer stock sheets, catalog sheets) ──────────────────────────
+export const importEndpoints = {
+  jobs: () => '/api/imports',
+  job: (id) => `/api/imports/${encodeURIComponent(id)}`,
+  template: () => '/api/imports/template',
+  commit: (id) => `/api/imports/${encodeURIComponent(id)}/commit`,
+  cancel: (id) => `/api/imports/${encodeURIComponent(id)}/cancel`,
+  catalog: () => '/api/products/import',
+  catalogJob: (jobId) => `/api/products/import/${encodeURIComponent(jobId)}`,
+};
+
+// ── Commerce support tickets (buyers, retailers, staff) ──────────────────────
+export const commerceSupportEndpoints = {
+  tickets: () => '/api/support',
+  ticket: (id) => `/api/support/${encodeURIComponent(id)}`,
+  stats: () => '/api/support/stats',
 };
 
 // ── Community ─────────────────────────────────────────────────────────────────
@@ -236,16 +338,29 @@ export const podcastEndpoints = {
 };
 
 // ── Resources ─────────────────────────────────────────────────────────────────
+// Articles and saved resources have no backend; the learner's courses are
+// `myCourses`, and enrolment / progress / reviews / notes are keyed by slug.
 export const resourceEndpoints = {
   courses: () => '/api/resources/courses',
   course: (slug) => `/api/resources/courses/${encodeURIComponent(slug)}`,
-  articles: () => '/api/resources/articles',
-  article: (slug) => `/api/resources/articles/${encodeURIComponent(slug)}`,
-  learnings: () => '/api/resources/learnings',
-  enroll: (id) => `/api/resources/learnings/${encodeURIComponent(id)}/enroll`,
-  updateProgress: (id) => `/api/resources/learnings/${encodeURIComponent(id)}/progress`,
-  saved: () => '/api/resources/saved',
-  toggleSaved: (id) => `/api/resources/saved/${encodeURIComponent(id)}`,
+  myCourses: () => '/api/resources/my-courses',
+  enroll: (slug) => `/api/resources/courses/${encodeURIComponent(slug)}/enroll`,
+  updateProgress: (slug) => `/api/resources/courses/${encodeURIComponent(slug)}/progress`,
+  review: (slug) => `/api/resources/courses/${encodeURIComponent(slug)}/review`,
+  notes: (slug) => `/api/resources/courses/${encodeURIComponent(slug)}/notes`,
+  note: (noteId) => `/api/resources/notes/${encodeURIComponent(noteId)}`,
+};
+
+// ── Learner Hub topics + the published course catalogue (public) ────────────
+export const topicEndpoints = {
+  list: () => '/api/topics',
+  bySlug: (slug) => `/api/topics/${encodeURIComponent(slug)}`,
+  byModule: (moduleId) => `/api/topics/module/${encodeURIComponent(moduleId)}`,
+};
+
+export const publishedCourseEndpoints = {
+  list: () => '/api/courses',
+  bySlug: (slug) => `/api/courses/${encodeURIComponent(slug)}`,
 };
 
 // ── Talent ────────────────────────────────────────────────────────────────────
@@ -323,6 +438,7 @@ export const adminEndpoints = {
   contentStatus: (id) => `/admin/content/${id}/status`,
   content: (id) => `/admin/content/${id}`,
   contentCreate: () => `/admin/content`,
+  contentRollback: (id) => `/admin/content/${id}/rollback`,
   
   // Media
   mediaList: () => "/admin/media",
@@ -340,6 +456,19 @@ export const adminEndpoints = {
   coursesCreate: () => "/courses/admin",
   courseTogglePublish: (id) => `/courses/admin/${id}/toggle-publish`,
   courseFeature: (id) => `/courses/admin/${id}/feature`,
+  coursesReorder: () => "/courses/admin/reorder",
+
+  // Resource catalogue (static courses + DB overrides)
+  resourceStats: () => "/resources/admin/stats",
+  resourceCourses: () => "/resources/admin/courses",
+  resourceTogglePublish: (slug) => `/resources/admin/courses/${slug}/toggle-publish`,
+  resourceLessonUpload: (id, chapterId) =>
+    `/resources/admin/courses/${id}/chapters/${chapterId}/lessons/upload`,
+
+  // Learners
+  learners: () => "/admin/learners",
+  learner: (id) => `/admin/learners/${id}`,
+  contacts: () => "/admin/contacts",
   
   // Notifications
   notificationsAdmin: () => "/admin/notifications",
@@ -370,10 +499,13 @@ export const adminEndpoints = {
   supportFaqs: () => "/admin/support/faqs",
   supportTicketReply: (id) => `/admin/support/tickets/${id}/reply`,
   supportTicket: (id) => `/admin/support/tickets/${id}`,
+  supportTicketCreate: () => "/admin/support/tickets",
+  supportFaq: (id) => `/admin/support/faqs/${id}`,
   
   // Overview
   stats: () => "/admin/stats",
   activity: (limit) => `/admin/activity?limit=${limit}`,
   settings: () => "/admin/settings",
   settingsFeatures: () => "/admin/settings/features",
+  settingsIntegrations: () => "/admin/settings/integrations",
 };

@@ -1,4 +1,5 @@
 'use client';
+import { env } from '@/env';
 // components/community/pages/CommunityEvents.js
 // §3.7 — Live Audio Events — FULL PRODUCTION VERSION
 //
@@ -313,7 +314,7 @@ export default function CommunityEvents({ onOpenProfile, currentUser }) {
       // In production: initialize LiveKit/Agora SDK here
       // Example for LiveKit:
       // const room = new Room();
-      // await room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL, token, { audio: false });
+      // await room.connect(env.NEXT_PUBLIC_LIVEKIT_URL, token, { audio: false });
     } catch (e) {
       // Fallback: join without audio token (demo mode)
       setInRoom(true);

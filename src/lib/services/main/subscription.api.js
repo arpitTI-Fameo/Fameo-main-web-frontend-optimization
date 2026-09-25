@@ -162,6 +162,30 @@ export const setAutoRenewAction = async (data) => {
   });
 };
 
+export const getSubscriptionTransactionsAction = async (params) =>
+  createServerAction({
+    url: subscriptionEndpoints.transactions(),
+    method: 'GET',
+    ...(params ? { body: params } : {}),
+  });
+
+/** What an upgrade to `params.plan_code` / `params.billing_id` would cost now. */
+export const getUpgradePreviewAction = async (params) =>
+  createServerAction({
+    url: subscriptionEndpoints.upgradePreview(),
+    method: 'GET',
+    ...(params ? { body: params } : {}),
+  });
+
+export const createSubscriptionOrderAction = async (data) =>
+  createServerAction({ url: subscriptionEndpoints.createOrder(), method: 'POST', body: data });
+
+export const subscribeAction = async (data) =>
+  createServerAction({ url: subscriptionEndpoints.subscribe(), method: 'POST', body: data });
+
+export const upgradeSubscriptionAction = async (data) =>
+  createServerAction({ url: subscriptionEndpoints.upgrade(), method: 'POST', body: data });
+
 // The central API returns the current subscription as an ARRAY (the active one
 // plus any cancelled-but-still-valid record). Normalise to the single most
 // relevant subscription so callers can read sub.plan.plan_code directly.
