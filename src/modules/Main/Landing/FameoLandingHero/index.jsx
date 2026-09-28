@@ -27,34 +27,59 @@ import ChainImg from './ChainImg';
    Picsum) exactly like the source file, so something always loads.
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* ── media fallback chains ─────────────────────────────────────────────── */
-const VIDEOS = [
-  ['https://videos.pexels.com/video-files/3195394/3195394-hd_1920_1080_25fps.mp4', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'],
-  ['https://videos.pexels.com/video-files/3184291/3184291-hd_1920_1080_25fps.mp4', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'],
-  ['https://videos.pexels.com/video-files/3184338/3184338-hd_1920_1080_25fps.mp4', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4'],
-  ['https://videos.pexels.com/video-files/3184465/3184465-hd_1920_1080_25fps.mp4', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4'],
-  ['https://videos.pexels.com/video-files/4434246/4434246-hd_1920_1080_24fps.mp4', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4'],
-];
 const SLIDE_IMGS = [
-  ['https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=1920&q=80&auto=format&fit=crop', 'https://picsum.photos/seed/fslide0/1920/1080'],
-  ['https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=1920&q=80&auto=format&fit=crop', 'https://picsum.photos/seed/fslide1/1920/1080'],
-  ['https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&q=80&auto=format&fit=crop', 'https://picsum.photos/seed/fslide2/1920/1080'],
-  ['https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1920&q=80&auto=format&fit=crop', 'https://picsum.photos/seed/fslide3/1920/1080'],
-  ['https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?w=1920&q=80&auto=format&fit=crop', 'https://picsum.photos/seed/fslide4/1920/1080'],
+  // ── 5 Desktop Heroes ──
+  ['/assets/landing/hero/hero-01-wedding-filmmaker.webp', 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=1920&q=80&auto=format&fit=crop'],
+  ['/assets/landing/hero/hero-02-street-photographer.webp', 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=1920&q=80&auto=format&fit=crop'],
+  ['/assets/landing/hero/hero-03-fashion-creator.webp', 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&q=80&auto=format&fit=crop'],
+  ['/assets/landing/hero/hero-04-culinary-creator.webp', 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1920&q=80&auto=format&fit=crop'],
+  ['/assets/landing/hero/hero-05-dance-creator.webp', 'https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?w=1920&q=80&auto=format&fit=crop'],
+
+  // ── Editorial & Discovery Scenes ──
+  ['/assets/landing/hero/scene-01-wedding.webp', 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1920&q=80&auto=format&fit=crop'],
+  ['/assets/landing/hero/scene-02-home-studio.webp', 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1920&q=80&auto=format&fit=crop'],
+  ['/assets/landing/hero/scene-03-mumbai-food.webp', 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80&auto=format&fit=crop'],
+  ['/assets/landing/hero/scene-06-festival-fits.webp', 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1920&q=80&auto=format&fit=crop'],
+  ['/assets/landing/hero/scene-07-dream-studio.webp', 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1920&q=80&auto=format&fit=crop'],
+  ['/assets/landing/hero/scene-08-rooftop-light.webp', 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1920&q=80&auto=format&fit=crop'],
 ];
+
 const AVATARS = [
-  ['https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80&auto=format&fit=crop', 'https://picsum.photos/seed/fav0/200/200'],
-  ['https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80&auto=format&fit=crop', 'https://picsum.photos/seed/fav1/200/200'],
-  ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80&auto=format&fit=crop', 'https://picsum.photos/seed/fav2/200/200'],
-  ['https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&q=80&auto=format&fit=crop', 'https://picsum.photos/seed/fav3/200/200'],
-  ['https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&q=80&auto=format&fit=crop', 'https://picsum.photos/seed/fav4/200/200'],
+  // ── 5 Desktop Heroes ──
+  ['/assets/landing/avatars/hero-01-wedding-filmmaker.webp', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80&auto=format&fit=crop'],
+  ['/assets/landing/avatars/hero-02-street-photographer.webp', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80&auto=format&fit=crop'],
+  ['/assets/landing/avatars/hero-03-fashion-creator.webp', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80&auto=format&fit=crop'],
+  ['/assets/landing/avatars/hero-04-culinary-creator.webp', 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&q=80&auto=format&fit=crop'],
+  ['/assets/landing/avatars/hero-05-dance-creator.webp', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&q=80&auto=format&fit=crop'],
+
+  // ── Editorial & Discovery Scenes ──
+  ['/assets/landing/avatars/hero-01-wedding-filmmaker.webp', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80&auto=format&fit=crop'],
+  ['/assets/landing/avatars/portrait-02-design-curator.webp', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80&auto=format&fit=crop'],
+  ['/assets/landing/avatars/hero-04-culinary-creator.webp', 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&q=80&auto=format&fit=crop'],
+  ['/assets/landing/avatars/hero-03-fashion-creator.webp', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80&auto=format&fit=crop'],
+  ['/assets/landing/avatars/portrait-02-design-curator.webp', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80&auto=format&fit=crop'],
+  ['/assets/landing/avatars/hero-02-street-photographer.webp', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80&auto=format&fit=crop'],
 ];
+
 const SLIDES = [
+  // ── 5 Desktop Heroes ──
   { rows: ['Your realest', 'creator circle'], cap: "Riya is filming India's boldest wedding stories" },
   { rows: ['From one reel', 'to real reach'], cap: 'Arjun is turning street photography into a movement' },
   { rows: ['Verified faces', 'real collabs'], cap: 'Meera is styling the next wave of Indian fashion' },
   { rows: ['Your fame', 'your terms'], cap: 'Dev is plating stories from his Bengaluru kitchen' },
   { rows: ['Double the reach', 'zero fakes'], cap: "Zara is choreographing Chennai's street-dance scene" },
+
+  // ── 10 Editorial & Discovery Scenes ──
+  { rows: ['Cinematic love', 'captured live'], cap: 'Wedding reel collection & preset pack' },
+  { rows: ['Built at home', 'streamed live'], cap: 'Home studio setups & creator acoustics' },
+  // { rows: ['Flavors found', 'stories told'], cap: 'Mumbai food crawl & culinary journal' },
+  // { rows: ['Chasing dawn', 'riding free'], cap: 'Early morning coastal ride diaries' },
+  { rows: ['Rain swept', 'colors bloomed'], cap: 'Monsoon botanical photo walk' },
+  { rows: ['Street vibe', 'festive drip'], cap: 'Festival wear and cultural lookbooks' },
+  { rows: ['Pure vision', 'creative space'], cap: 'Minimalist creative workspace design' },
+  { rows: ['Golden hour', 'rooftop moods'], cap: 'Natural light portrait masterclass' },
+  // { rows: ['Every tool', 'one bag'], cap: 'Essential daily carry for creators' },
+  // { rows: ['Heritage taste', 'modern craft'], cap: 'Regional spices & secret recipe zines' },
 ];
 const N = SLIDES.length;
 const AUTO_MS = 7000;
@@ -76,7 +101,7 @@ function starPoly(cx, cy, rOut, rot) {
 /* image with a fallback chain */
 export default function FameoLandingHero() {
   const [cur, setCur] = useState(0);
-  const [vidIdx, setVidIdx] = useState(() => VIDEOS.map(() => 0)); // fallback chains
+  // const [vidIdx, setVidIdx] = useState(() => VIDEOS.map(() => 0)); // fallback chains
   const [env, setEnv] = useState({ rm: false, isTouch: false });
 
   const heroRef = useRef(null);
@@ -257,8 +282,8 @@ export default function FameoLandingHero() {
     }
   };
 
-  const vidSrc = i => VIDEOS[i][Math.min(vidIdx[i], VIDEOS[i].length - 1)];
-  const bumpVid = i => setVidIdx(a => a.map((v, k) => (k === i ? Math.min(v + 1, VIDEOS[i].length - 1) : v)));
+  // const vidSrc = i => VIDEOS[i][Math.min(vidIdx[i], VIDEOS[i].length - 1)];
+  // const bumpVid = i => setVidIdx(a => a.map((v, k) => (k === i ? Math.min(v + 1, VIDEOS[i].length - 1) : v)));
 
   return (
     <div className="flh">
@@ -274,44 +299,17 @@ export default function FameoLandingHero() {
         onPointerLeave={peekOff}
         onClick={onClick}
       >
-        {/* NAV — links · logo · actions */}
-        {/* <nav className="nav">
-          <div className="nav-in">
-            <div className="nav-left">
-              <a href="#creators">Creators</a>
-              <a href="#why">Features</a>
-              <a href="#categories">Pricing</a>
-              <a href="#">Resources</a>
-              <a className="pill" href="#">Updates</a>
-            </div>
-            <a className="brand" href="#hero">
-              <span className="tick" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11" /></svg>
-              </span>
-              FAMEO
-            </a>
-            <div className="nav-right">
-              <a className="pill" href="/search">
-                <svg className="s-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
-                Find a Creator
-              </a>
-              <a className="pill" href="/login">Log in</a>
-              <a className="pill solid" href="/register">Get Started</a>
-            </div>
-          </div>
-        </nav> */}
-
         {/* SLIDES */}
         {SLIDES.map((s, i) => (
           <div key={i} className={`slide${i === cur ? ' active' : ''}`}>
             <div className="media">
               <ChainImg className="bgimg" chain={SLIDE_IMGS[i]} />
-              <video
+              {/* <video
                 ref={el => { slideVids.current[i] = el; }}
                 src={vidSrc(i)}
                 onError={() => bumpVid(i)}
                 muted loop playsInline preload="metadata"
-              />
+              /> */}
             </div>
             <div className="shade" />
             <h1>
@@ -329,7 +327,7 @@ export default function FameoLandingHero() {
         <div className="reveal" ref={revealRef}>
           <div className="media">
             <ChainImg chain={SLIDE_IMGS[next]} />
-            <video ref={revealVidRef} src={vidSrc(next)} muted loop playsInline preload="metadata" />
+            {/* <video ref={revealVidRef} src={vidSrc(next)} muted loop playsInline preload="metadata" /> */}
           </div>
         </div>
 
@@ -350,7 +348,7 @@ export default function FameoLandingHero() {
       <div className="peek" ref={peekRef} aria-hidden="true">
         <div className="win">
           <ChainImg chain={SLIDE_IMGS[next]} />
-          <video ref={peekVidRef} src={vidSrc(next)} muted loop playsInline preload="metadata" />
+          {/* <video ref={peekVidRef} src={vidSrc(next)} muted loop playsInline preload="metadata" /> */}
         </div>
       </div>
       <div className="peek-arrow" ref={peekArrowRef} aria-hidden="true">

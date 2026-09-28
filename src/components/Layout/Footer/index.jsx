@@ -53,12 +53,13 @@ const SOCIALS = [
   { label: "LinkedIn", href: "https://linkedin.com", icon: "in" },
   { label: "YouTube", href: "https://youtube.com", icon: "▶" },
 ];
+const POLICY_BASE_URL = process.env.NEXT_PUBLIC_APP_ORIGIN || 'https://uat-api.fameo.info';
 
 const LEGAL_LINKS = [
-  { label: 'Privacy Policy', href: 'https://uat.fameo.info/privacy-policy.html' },
-  { label: 'Terms of Service', href: 'https://uat.fameo.info/terms-and-conditions.html' },
-  { label: 'Cookie Policy', href: 'https://uat.fameo.info/cookie-policy.html' },
-  { label: 'Refund Policy', href: '/refund-policy' },
+  { label: 'Privacy Policy', href: `${POLICY_BASE_URL}/privacy-policy.html` },
+  { label: 'Terms of Service', href: `${POLICY_BASE_URL}/terms-and-conditions.html` },
+  { label: 'Cookie Policy', href: `${POLICY_BASE_URL}/cookie-policy.html` },
+  { label: 'Refund Policy', href: `${POLICY_BASE_URL}/refund-policy.html` },
 ];
 
 export default function Footer() {

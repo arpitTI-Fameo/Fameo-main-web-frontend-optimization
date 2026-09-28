@@ -37,17 +37,17 @@ import { CSS } from './styles';
    w      : width px  (h optional)
    dx / dy: exit direction multipliers (radially outward)                  */
 const SCATTER = [
-  { src: 'https://res.cloudinary.com/dsvqdtg2t/image/upload/v1783112756/zarah-back_dszkkw.webp', x: -1.5, y: 21, w: 130, h: 220, dx: -1.4, dy: -0.2 },
-  { src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&q=80', x: 7.5, y: 44, w: 100, h: 92, dx: -1.6, dy: 0.1 },
-  { src: 'https://images.unsplash.com/photo-1523398002811-999ca8dec234?w=400&q=80', x: 29, y: 15, w: 180, h: 132, dx: -0.6, dy: -1.3 },
-  { src: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=500&q=80', x: 36, y: 2.5, w: 220, h: 210, dx: 0.1, dy: -1.6 },
-  { src: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&q=80', x: 62.5, y: 10.5, w: 150, h: 168, dx: 0.8, dy: -1.3 },
-  { src: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&q=80', x: 89.5, y: 4.5, w: 125, h: 85, dx: 1.5, dy: -0.9 },
-  { src: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&q=80', x: 80, y: 28, w: 265, h: 285, dx: 1.6, dy: 0 },
-  { src: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=300&q=80', x: 96.5, y: 59, w: 90, h: 100, dx: 1.7, dy: 0.3 },
-  { src: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=80', x: 70, y: 72, w: 300, h: 235, dx: 1.1, dy: 1.2 },
-  { src: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&q=80', x: 29, y: 65.5, w: 118, h: 105, dx: -0.4, dy: 1.5 },
-  { src: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=500&q=80', x: 16, y: 66.5, w: 210, h: 195, dx: -1.2, dy: 1.1 },
+  { src: '/assets/landing/scatter/1.webp', x: -1.5, y: 21, w: 130, h: 220, dx: -1.4, dy: -0.2 },
+  { src: '/assets/landing/scatter/11.webp', x: 7.5, y: 44, w: 100, h: 92, dx: -1.6, dy: 0.1 },
+  { src: '/assets/landing/scatter/7.webp', x: 29, y: 15, w: 180, h: 132, dx: -0.6, dy: -1.3 },
+  { src: '/assets/landing/scatter/8.webp', x: 36, y: 2.5, w: 220, h: 210, dx: 0.1, dy: -1.6 },
+  { src: '/assets/landing/scatter/5.webp', x: 62.5, y: 10.5, w: 150, h: 168, dx: 0.8, dy: -1.3 },
+  { src: '/assets/landing/scatter/6.webp', x: 89.5, y: 4.5, w: 125, h: 85, dx: 1.5, dy: -0.9 },
+  { src: '/assets/landing/scatter/3.webp', x: 80, y: 28, w: 265, h: 285, dx: 1.6, dy: 0 },
+  { src: '/assets/landing/scatter/9.webp', x: 96.5, y: 59, w: 90, h: 100, dx: 1.7, dy: 0.3 },
+  { src: '/assets/landing/scatter/2.webp', x: 70, y: 72, w: 300, h: 235, dx: 1.1, dy: 1.2 },
+  { src: '/assets/landing/scatter/4.webp', x: 29, y: 65.5, w: 118, h: 105, dx: -0.4, dy: 1.5 },
+  { src: '/assets/landing/scatter/10.webp', x: 16, y: 66.5, w: 210, h: 195, dx: -1.2, dy: 1.1 },
   { src: 'https://images.unsplash.com/photo-1526401485004-46910ecc8e51?w=300&q=80', x: 54, y: 87, w: 165, h: 130, dx: 0.2, dy: 1.7 },
 ];
 
@@ -55,7 +55,7 @@ const SCATTER = [
 const CURATORS = [
   {
     name: 'Zarah Khan',
-    image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=2000&q=85',
+    image: '/assets/landing/curators/portrait-01-culinary-curator.png',
     bio: 'Culinary innovator, former executive chef at London Plane, Botanica and Rustic Canyon, student of Ayurvedic healthcare, and chef to everyone\u2019s favorite Hawaiian-born American.',
     categories: ['Food', 'Health', 'Music'],
     thumbs: [
@@ -68,8 +68,8 @@ const CURATORS = [
     ],
   },
   {
-    name: 'Maya Chen',
-    image: 'https://images.unsplash.com/photo-1771837602968-625b78cfb48d?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    name: 'Maya Sharma',
+    image: '/assets/landing/curators/portrait-02-design-curator.png',
     bio: 'Fashion editor turned independent stylist. A decade dressing runway shows in Paris and Milan, now curating slow-fashion labels and the vintage archives no one else can find.',
     categories: ['Fashion', 'Design', 'Travel'],
     thumbs: [
@@ -82,22 +82,8 @@ const CURATORS = [
     ],
   },
   {
-    name: 'Andr\u00e9 Okafor',
-    image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=2000&q=85',
-    bio: 'Record collector, radio host and founder of a Lagos listening bar. Twenty years digging through crates on four continents \u2014 he only recommends what he actually plays.',
-    categories: ['Music', 'Culture', 'Nightlife'],
-    thumbs: [
-      'https://images.unsplash.com/photo-1483412033650-1015ddeb83d1?w=300&q=80',
-      'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=300&q=80',
-      'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80',
-      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&q=80',
-      'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
-      'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=300&q=80',
-    ],
-  },
-  {
-    name: 'Sofia Lindqvist',
-    image: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=2000&q=85',
+    name: 'Sofia Khan',
+    image: '/assets/landing/curators/portrait-04-style-curator.png',
     bio: 'Interior architect and ceramicist based in Copenhagen. Believes a home should be collected, not decorated \u2014 her studio tours have a two-year waiting list.',
     categories: ['Interiors', 'Craft', 'Books'],
     thumbs: [

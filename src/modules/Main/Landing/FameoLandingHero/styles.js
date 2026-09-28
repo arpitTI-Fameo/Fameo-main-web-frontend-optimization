@@ -31,9 +31,9 @@ export const CSS = `
 }
 .flh .slide{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .9s var(--ease)}
 .flh .slide.active{opacity:1;pointer-events:auto}
-.flh .slide .media{position:absolute;inset:0}
+.flh .slide .media{position:absolute;inset:0;background:#111}
 .flh .slide .media .bgimg,
-.flh .slide .media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.flh .slide .media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 15%}
 .flh .slide .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.34),rgba(0,0,0,.1) 40%,rgba(0,0,0,.38))}
 /* giant staggered headline */
 .flh .slide h1{
@@ -73,8 +73,8 @@ export const CSS = `
   clip-path:polygon(0 0,0 0,0 0,0 0,0 0,0 0,0 0,0 0,0 0,0 0);
 }
 .flh .peek.show{opacity:1}
-.flh .peek .win{position:absolute;inset:0}
-.flh .peek .win img,.flh .peek .win video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.flh .peek .win{position:absolute;inset:0;background:#111}
+.flh .peek .win img,.flh .peek .win video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 15%}
 .flh .peek-arrow{
   position:fixed;z-index:61;width:34px;height:34px;left:0;top:0;color:#fff;
   pointer-events:none;opacity:0;transition:opacity .25s;filter:drop-shadow(0 1px 6px rgba(0,0,0,.5));
@@ -84,8 +84,8 @@ export const CSS = `
 /* click reveal overlay */
 .flh .reveal{position:absolute;inset:0;z-index:40;pointer-events:none;visibility:hidden;will-change:clip-path}
 .flh .reveal.go{visibility:visible}
-.flh .reveal .media{position:absolute;inset:0}
-.flh .reveal .media img,.flh .reveal .media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.flh .reveal .media{position:absolute;inset:0;background:#111}
+.flh .reveal .media img,.flh .reveal .media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 15%}
 
 @media (max-width: 900px){
   .flh .nav-left{display:none}

@@ -183,7 +183,7 @@ export const GENDER_OPTIONS = [
   { label: 'Other', value: 'other' },
 ];
 
-const POLICY_BASE_URL = env.NEXT_PUBLIC_APP_ORIGIN || 'https://uat-api.fameo.info';
+const POLICY_BASE_URL = process.env.NEXT_PUBLIC_APP_ORIGIN || 'https://uat-api.fameo.info';
 
 export const POLICY_LINKS = [
   { label: 'Privacy Policy', href: `${POLICY_BASE_URL}/privacy-policy.html`, icon: '🔒' },

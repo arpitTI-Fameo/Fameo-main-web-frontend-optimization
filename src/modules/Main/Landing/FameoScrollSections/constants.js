@@ -1,21 +1,21 @@
-export const SHARED_PRODUCT = { img: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=700&q=80', title: 'Street Camera Kit', label: 'STEADYONE', saved: true };
+export const SHARED_PRODUCT = { img: '/assets/landing/useCases/products.png', title: 'Products', label: 'STEADYONE', saved: true };
 
 export const RAIL_CARDS = [
-  { img: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=600&q=80', title: 'Wedding Reel Preset Pack', label: 'ZOYA F.' },
-  { img: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&q=80', title: 'Rooftop Light Guide',      label: 'ARMAN S.' },
-  { img: 'https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=600&q=80', title: 'Regional Recipe Zine',     label: 'MEHER K.' },
+  { img: '/assets/landing/useCases/resources.jpg', title: 'Resource Kit', label: 'ZOYA F.' },
+  { img: '/assets/landing/useCases/community.jpg', title: 'Community', label: 'ARMAN S.' },
+  { img: '/assets/landing/useCases/podcast.jpg', title: 'Podcasts', label: 'MEHER K.' },
   SHARED_PRODUCT,
 ];
 
 export const GRID_PRODUCTS = [
   SHARED_PRODUCT,
-  { img: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=700&q=80',   title: 'Field Hoodie 02',    label: 'HOUSE OF STITCH' },
-  { img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=700&q=80', title: 'Creator Tee',        label: 'PLAIN LABS' },
-  { img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700&q=80',   title: 'Runner 360',         label: 'STRIDE CO' },
-  { img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=700&q=80',   title: 'Trail Daypack',      label: 'NORTH LOOM' },
-  { img: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=700&q=80', title: 'Studio Mic Kit',     label: 'WAVEFORM' },
-  { img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=700&q=80', title: 'Monitor Headphones', label: 'LUMEN AUDIO', saved: true },
-  { img: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=700&q=80',   title: 'Monsoon Shell',      label: 'MONSOON LAB' },
+  { img: '/assets/landing/products/product-02-tee.png', title: 'Creator Tee', label: 'PLAIN LABS' },
+  { img: '/assets/landing/products/product-03-runner.png', title: 'Runner 360', label: 'STRIDE CO' },
+  { img: '/assets/landing/products/product-05-daypack.png', title: 'Trail Daypack', label: 'NORTH LOOM' },
+  { img: '/assets/landing/products/product-06-microphone.png', title: 'Studio Mic Kit', label: 'WAVEFORM' },
+  { img: '/assets/landing/products/product-07-headphones.png', title: 'Monitor Headphones', label: 'LUMEN AUDIO', saved: true },
+  { img: '/assets/landing/products/product-04-shell.png', title: 'Monsoon Shell', label: 'MONSOON LAB' },
+  { img: '/assets/landing/products/product-08-extra.png', title: 'Field Hoodie 02', label: 'HOUSE OF STITCH' },
 ];
 
 /* intro statement — split into words so each can light up on scroll */
@@ -30,8 +30,8 @@ export const INTRO_WORDS = INTRO_COPY.flatMap(s =>
 
 /* kinetic word bands — "Grow / your / reach" with per-letter scatter */
 export const KINETIC_BANDS = [
-  { word: 'Grow',  band: 'lime' },
-  { word: 'your',  band: '' },
+  { word: 'Grow', band: 'lime' },
+  { word: 'your', band: '' },
   { word: 'reach', band: 'lime alt' },
 ];
 /* star doodle that draws in when the "Grow" band centers (from the HTML) */
