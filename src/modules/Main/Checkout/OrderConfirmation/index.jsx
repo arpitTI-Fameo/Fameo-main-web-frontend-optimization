@@ -3,6 +3,7 @@
 import Link    from 'next/link';
 import { inr } from '@/utils/formatCurrency';
 import { S } from './styles';
+import { ROUTES } from '@/constants/routes';
 
 export default function OrderConfirmation({ order, addr }) {
   const hasSavings = order?.memberDiscount > 0;
@@ -50,8 +51,8 @@ export default function OrderConfirmation({ order, addr }) {
         )}
 
         <div className="oc-ctas">
-          <Link href="/account/orders" className="oc-btn-primary">Track Order →</Link>
-          <Link href="/products"       className="oc-btn-secondary">Continue Shopping</Link>
+          <Link href={ROUTES.ORDERS} className="oc-btn-primary">Track Order →</Link>
+          <Link href={ROUTES.PRODUCTS} className="oc-btn-secondary">Continue Shopping</Link>
         </div>
 
         <div className="oc-delivery">📦 Expected delivery in 5–7 business days</div>

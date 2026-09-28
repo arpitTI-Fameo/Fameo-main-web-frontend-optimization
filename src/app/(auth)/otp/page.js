@@ -1,8 +1,9 @@
 import { buildMetadata } from '@/lib/seo/metadata';
+import { ROUTES } from '@/constants/routes';
 
 export const metadata = buildMetadata({
   title: 'Verify Code',
-  path: '/otp',
+  path: ROUTES.OTP,
   noIndex: true,
 });
 

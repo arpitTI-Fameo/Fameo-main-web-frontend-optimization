@@ -13,6 +13,7 @@
 
 import { toUserMessage } from '@/lib/api/errors';
 import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 
 export function ErrorState({ error, reset, title = 'Something went wrong' }) {
   const message = toUserMessage(error);
@@ -58,7 +59,7 @@ export function ErrorState({ error, reset, title = 'Something went wrong' }) {
           </button>
         )}
         <Link
-          href="/"
+          href={ROUTES.HOME}
           style={{
             padding: '10px 20px',
             borderRadius: 8,

@@ -11,6 +11,7 @@ import {
   SkeletonTiles, Skeleton, ErrorBox, Empty, linkButtonStyle,
   inr, shortDate, GOLD, AMBER, GREEN, INK, MUTED,
 } from '@/modules/Main/Account/AccountUI';
+import { ROUTES } from '@/constants/routes';
 
 export default function Wallet() {
   const walletQuery = useWallet();
@@ -95,7 +96,7 @@ export default function Wallet() {
       )}
 
       {!loading && !error && (
-        <Link href="/account/products" style={linkButtonStyle('primary')}>
+        <Link href={ROUTES.ACCOUNT_PRODUCTS} style={linkButtonStyle('primary')}>
           Browse products to spend your balance
         </Link>
       )}

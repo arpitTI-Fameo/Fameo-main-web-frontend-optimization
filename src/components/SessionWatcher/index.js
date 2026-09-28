@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { authEndpoints } from '@/lib/api/endpoints';
 import { BFF_BASE } from '@/lib/api/config';
+import { ROUTES, withQuery } from '@/constants/routes';
 
 const CHECK_INTERVAL = 10 * 60 * 1000; // 10 minutes
 
@@ -37,7 +38,7 @@ export default function SessionWatcher() {
             data?.error?.code === 'SESSION_EXPIRED' || data?.message === 'SESSION_EXPIRED';
           if (expired) {
             await logout();
-            router.push('/login?reason=session_expired');
+            router.push(withQuery(ROUTES.LOGIN, { reason: 'session_expired' }));
           }
         }
       } catch (_) {

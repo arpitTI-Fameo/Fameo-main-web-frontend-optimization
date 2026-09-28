@@ -3,10 +3,11 @@
 import Cart from '@/modules/Main/Cart';
 
 import { buildMetadata } from '@/lib/seo/metadata';
+import { ROUTES } from '@/constants/routes';
 
 export const metadata = buildMetadata({
   title: 'Cart',
-  path: '/cart',
+  path: ROUTES.CART,
   noIndex: true,
 });
 

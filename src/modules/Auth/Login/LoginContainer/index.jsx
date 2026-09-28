@@ -14,6 +14,7 @@ import { BUBBLES, SPARKLES, PARTICLES } from "../decor";
 import LoginHeader from "../LoginHeader";
 import LoginForm from "../LoginForm";
 import { STORAGE_KEYS } from '@/constants/storageKeys';
+import { ROUTES } from '@/constants/routes';
 
 
 export default function LoginContainer() {
@@ -50,7 +51,7 @@ export default function LoginContainer() {
   }, []);
 
   useEffect(() => {
-    if (user) router.replace("/");
+    if (user) router.replace(ROUTES.HOME);
   }, [user, router]);
 
   const onValid = async ({ username, password }) => {
@@ -174,7 +175,7 @@ export default function LoginContainer() {
         {/* Footer */}
         <div className="lg-footer">
           <p className="lg-hint">Use the same credentials from your Fameo mobile app.</p>
-          <Link href="/" className="lg-back">← Back to Fameo</Link>
+          <Link href={ROUTES.HOME} className="lg-back">← Back to Fameo</Link>
         </div>
       </div>
     </div>

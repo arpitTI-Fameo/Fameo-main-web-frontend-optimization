@@ -10,7 +10,7 @@ import { useAdminAuthStore } from "@/store/adminAuthStore";
 import { ADMIN_ROLES } from "@/constants/roles";
 
 import AdminShell from "@/components/Layout/AdminShell";
-import { ADMIN_ROUTES } from "@/constants/routes";
+import { ADMIN_ROUTES, ROUTES } from '@/constants/routes';
 
 export default function AdminGuard({ children }) {
   const pathname = usePathname();
@@ -36,7 +36,7 @@ export default function AdminGuard({ children }) {
   }
 
   if (!ADMIN_ROLES.includes(user.role)) {
-    if (typeof window !== "undefined") router.replace("/");
+    if (typeof window !== "undefined") router.replace(ROUTES.HOME);
     return null;
   }
 

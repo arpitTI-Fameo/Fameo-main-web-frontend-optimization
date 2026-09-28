@@ -27,6 +27,7 @@ const ACTIVITY_STYLE = {
   share: { icon: '◇', bg: AMBER_BG, fg: AMBER },
   views: { icon: '◉', bg: GOLD + '22', fg: AMBER },
 };
+import { ROUTES } from '@/constants/routes';
 
 const AMOUNT_COLOR = { success: GREEN, warning: AMBER, danger: '#9a3030' };
 
@@ -80,7 +81,7 @@ export default function AccountDashboard() {
         <Card>
           <div style={S.cardHead}>
             <span style={S.cardTitle}>Wallet</span>
-            <Link href="/account/wallet" style={S.link}>View all →</Link>
+            <Link href={ROUTES.WALLET} style={S.link}>View all →</Link>
           </div>
 
           {loading ? (
@@ -104,7 +105,7 @@ export default function AccountDashboard() {
                 </div>
               </div>
 
-              <Link href="/account/products" style={{ ...linkButtonStyle('primary', true), marginTop: 14 }}>
+              <Link href={ROUTES.ACCOUNT_PRODUCTS} style={{ ...linkButtonStyle('primary', true), marginTop: 14 }}>
                 Browse products to spend
               </Link>
             </>
@@ -115,7 +116,7 @@ export default function AccountDashboard() {
         <Card>
           <div style={S.cardHead}>
             <span style={S.cardTitle}>Referral coupons</span>
-            <Link href="/account/referrals" style={S.link}>View all →</Link>
+            <Link href={ROUTES.REFERRALS} style={S.link}>View all →</Link>
           </div>
 
           {loading ? (
@@ -147,7 +148,7 @@ export default function AccountDashboard() {
                 ))}
               </div>
 
-              <Link href="/account/referrals" style={{ ...linkButtonStyle('gold', true), marginTop: 14 }}>
+              <Link href={ROUTES.REFERRALS} style={{ ...linkButtonStyle('gold', true), marginTop: 14 }}>
                 Invite a friend
               </Link>
             </>

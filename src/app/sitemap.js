@@ -14,18 +14,19 @@
 
 import { SITE } from '@/lib/seo/metadata';
 import { GATED_ROUTES, matchesRoute } from '@/lib/auth/gated-routes';
+import { ROUTES } from '@/constants/routes';
 
 const candidates = [
-  { path: '/', changeFrequency: 'daily', priority: 1.0 },
-  { path: '/plans', changeFrequency: 'weekly', priority: 0.8 },
-  { path: '/support', changeFrequency: 'monthly', priority: 0.5 },
-  { path: '/register', changeFrequency: 'monthly', priority: 0.7 },
-  { path: '/login', changeFrequency: 'monthly', priority: 0.3 },
+  { path: ROUTES.HOME, changeFrequency: 'daily', priority: 1.0 },
+  { path: ROUTES.PLANS, changeFrequency: 'weekly', priority: 0.8 },
+  { path: ROUTES.SUPPORT, changeFrequency: 'monthly', priority: 0.5 },
+  { path: ROUTES.REGISTER, changeFrequency: 'monthly', priority: 0.7 },
+  { path: ROUTES.LOGIN, changeFrequency: 'monthly', priority: 0.3 },
   // Listed so the filter below is exercised by real data rather than being
   // dead code: these are gated today and are dropped automatically.
-  { path: '/products', changeFrequency: 'daily', priority: 0.9 },
-  { path: '/resources', changeFrequency: 'daily', priority: 0.9 },
-  { path: '/talent-hire', changeFrequency: 'weekly', priority: 0.7 },
+  { path: ROUTES.PRODUCTS, changeFrequency: 'daily', priority: 0.9 },
+  { path: ROUTES.RESOURCES, changeFrequency: 'daily', priority: 0.9 },
+  { path: ROUTES.TALENT_HIRE, changeFrequency: 'weekly', priority: 0.7 },
 ];
 
 export default function sitemap() {

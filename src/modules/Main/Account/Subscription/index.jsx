@@ -16,6 +16,7 @@ const PLAN_ICONS = { free: '○', pro: '✦', popular: '◈', elite: '★' };
 import { S, printInvoice } from './styles';
 import { fmtINR, fmtDate, fmtShort } from './helpers';
 import { useCurrentSubscription, useSubscriptionHistory, useCancelSubscriptionMutation, useSetAutoRenewMutation } from '@/lib/hooks/main/useSubscription';
+import { ROUTES, withQuery } from '@/constants/routes';
 
 
 export default function Subscription() {
@@ -33,7 +34,7 @@ export default function Subscription() {
   const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
-    if (!user) { router.push('/login?redirect=/account/subscription'); }
+    if (!user) { router.push(withQuery(ROUTES.LOGIN, { redirect: ROUTES.SUBSCRIPTION })); }
   }, [user, router]);
 
   const sub = currentQuery.data || null;
@@ -51,7 +52,7 @@ export default function Subscription() {
     } catch (e) {
       if (e.status === 401) {
         logout();
-        router.push('/login?reason=session_expired&redirect=/account/subscription');
+        router.push(withQuery(ROUTES.LOGIN, { reason: 'session_expired', redirect: ROUTES.SUBSCRIPTION }));
         return;
       }
       setError(e.message);
@@ -66,7 +67,7 @@ export default function Subscription() {
     } catch (e) {
       if (e.status === 401) {
         logout();
-        router.push('/login?reason=session_expired&redirect=/account/subscription');
+        router.push(withQuery(ROUTES.LOGIN, { reason: 'session_expired', redirect: ROUTES.SUBSCRIPTION }));
         return;
       }
       setError(e.message);
@@ -130,7 +131,7 @@ export default function Subscription() {
           <>
             <div className="sb-empty">
               <p>You don’t have an active membership.</p>
-              <button className="btn btn-dark" onClick={() => router.push('/plans')}>Browse plans</button>
+              <button className="btn btn-dark" onClick={() => router.push(ROUTES.PLANS)}>Browse plans</button>
             </div>
 
             {/* Show past invoices even when not currently subscribed. */}
@@ -176,7 +177,7 @@ export default function Subscription() {
                   {willEnd ? 'Ends soon' : 'Active'}
                 </span>
               </div>
-              <button className="sb-row" onClick={() => router.push('/plans')}>
+              <button className="sb-row" onClick={() => router.push(ROUTES.PLANS)}>
                 <span>Change plan</span>
                 <span className="chev">›</span>
               </button>

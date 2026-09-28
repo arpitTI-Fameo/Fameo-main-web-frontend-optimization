@@ -21,7 +21,7 @@ import {
   APP_SESSION_COOKIE,
   AUTH_COOKIE_OPTIONS,
 } from '@/lib/api/config';
-import { ADMIN_ROUTES } from '@/constants/routes';
+import { ADMIN_ROUTES, ROUTES } from '@/constants/routes';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAST C-2 / C-3 / C-4 — rewritten.
@@ -148,11 +148,11 @@ export async function middleware(request) {
   }
 
   // ── Signed-in creator routes ──────────────────────────────────────────────
-  if (matches(pathname, AUTH_ONLY_ROUTES) && !claims) return signIn('/login');
+  if (matches(pathname, AUTH_ONLY_ROUTES) && !claims) return signIn(ROUTES.LOGIN);
 
   // ── Paid-tier routes ──────────────────────────────────────────────────────
   // Plan is checked server-side by the route's layout.js.
-  if (matches(pathname, PAID_ROUTES) && !claims) return signIn('/login');
+  if (matches(pathname, PAID_ROUTES) && !claims) return signIn(ROUTES.LOGIN);
 
   return nextWithContext(request, renewed);
 }

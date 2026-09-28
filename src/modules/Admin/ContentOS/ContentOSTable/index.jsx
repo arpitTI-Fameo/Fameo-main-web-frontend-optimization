@@ -2,7 +2,7 @@ import Link from "next/link";
 import { S } from '../styles';
 import { CONTENT_STATUS, STATUS_CONFIG, MODULES } from '../constants';
 import { timeAgo } from '@/utils/relativeTime';
-import { ROUTES } from "@/constants/routes";
+import { ROUTES, ADMIN_ROUTES } from '@/constants/routes';
 
 export default function ContentOSTable({
     isReadOnly,
@@ -74,7 +74,7 @@ export default function ContentOSTable({
 
                                     {/* Edit — not for supportAgent */}
                                     {canEditThis && (
-                                        <Link href={`/admin/content/${t._id}/edit`} style={S.actionBtn}>Edit</Link>
+                                        <Link href={ADMIN_ROUTES.CONTENT_EDIT(t._id)} style={S.actionBtn}>Edit</Link>
                                     )}
 
                                     {/* Submit for review — moduleMaster only on drafts */}

@@ -16,7 +16,7 @@ import 'server-only';
 import { redirect } from 'next/navigation';
 
 import { ADMIN_ROLES } from '@/constants/roles';
-import { ADMIN_ROUTES } from '@/constants/routes';
+import { ADMIN_ROUTES, ROUTES, withQuery } from '@/constants/routes';
 import { getRequestContext } from '@/lib/api/server/context';
 import { getEntitlementsServerAction } from '@/lib/services/auth/auth.server';
 
@@ -33,8 +33,6 @@ export const hasPaidPlan = (entitlements) =>
   PAID_PLANS.has(String(entitlements?.plan ?? '').trim().toLowerCase());
 
 export const isAdminRole = (role) => ADMIN_ROLES.includes(role);
-
-const withQuery = (path, params) => `${path}?${new URLSearchParams(params)}`;
 
 /**
  * The member's entitlements, or null when they are not signed in. Any other
@@ -53,10 +51,10 @@ async function loadEntitlements() {
 /** Gate a paid-tier page. Redirects; returns the entitlements when allowed. */
 export async function requirePaidPlan() {
   const { path } = await getRequestContext();
-  const from = path || '/';
+  const from = path || ROUTES.HOME;
   const entitlements = await loadEntitlements();
-  if (!entitlements) redirect(withQuery('/login', { redirect: from }));
-  if (!hasPaidPlan(entitlements)) redirect(withQuery('/plans', { upgrade: 'true', from }));
+  if (!entitlements) redirect(withQuery(ROUTES.LOGIN, { redirect: from }));
+  if (!hasPaidPlan(entitlements)) redirect(withQuery(ROUTES.PLANS, { upgrade: 'true', from }));
   return entitlements;
 }
 
@@ -70,6 +68,6 @@ export async function requireAdminRole() {
 
   const entitlements = await loadEntitlements();
   if (!entitlements) redirect(withQuery(ADMIN_ROUTES.LOGIN, { redirect: path || ADMIN_ROUTES.ROOT }));
-  if (!isAdminRole(entitlements.role)) redirect(withQuery('/', { denied: 'admin' }));
+  if (!isAdminRole(entitlements.role)) redirect(withQuery(ROUTES.HOME, { denied: 'admin' }));
   return entitlements;
 }

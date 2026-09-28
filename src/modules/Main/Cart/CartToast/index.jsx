@@ -20,6 +20,7 @@ import { useMembership } from '@/lib/hooks/custome/useMembership';
 import { memberUnitPrice } from '@/utils/planPricing';
 import { S } from './styles';
 import CheckIcon from './CheckIcon';
+import { ROUTES } from '@/constants/routes';
 
 const DURATION = 4600;
 const MAX_STACK = 3;
@@ -141,7 +142,7 @@ export default function CartToast() {
                         View bag ({totalCount})
                       </button>
                       <Link
-                        href="/checkout"
+                        href={ROUTES.CHECKOUT}
                         className="ctx-btn solid"
                         onClick={() => dismiss(t.id)}
                       >

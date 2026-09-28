@@ -16,7 +16,7 @@ import { useUIStore } from '@/store/uiStore';
 
 /* Routes that render a dark hero behind the transparent bar.
    Everything else starts in "light" mode so text stays legible. */
-const DARK_HERO_ROUTES = ['/'];
+const DARK_HERO_ROUTES = [ROUTES.HOME];
 
 const initialsOf = (name = '') => {
   const p = name.trim().split(/\s+/).filter(Boolean);
@@ -151,9 +151,9 @@ export default function MainNav() {
                 {i > 0 && <div className="mn-dot" aria-hidden="true" />}
                 <Link
                   href={href}
-                  prefetch={href === '/' ? undefined : false}
+                  prefetch={href === ROUTES.HOME ? undefined : false}
                   className={`mn-link${pathname === href ||
-                    (pathname.startsWith(href + '/') && href !== '/')
+                    (pathname.startsWith(href + '/') && href !== ROUTES.HOME)
                     ? ' active' : ''
                     }`}
                   aria-current={pathname === href ? 'page' : undefined}
@@ -170,7 +170,7 @@ export default function MainNav() {
               <button
                 className="mn-bag"
                 data-cart-anchor=""
-                onClick={() => (cartCount > 0 ? openCartDrawer() : router.push('/cart'))}
+                onClick={() => (cartCount > 0 ? openCartDrawer() : router.push(ROUTES.CART))}
                 aria-label={`Shopping bag, ${cartCount} items`}
               >
                 <img src="/assets/icons/common/cart.svg" alt="Cart" className="mn-bag-icon" />
@@ -235,7 +235,7 @@ export default function MainNav() {
             <Link
               key={href}
               href={href}
-              prefetch={href === '/' ? undefined : false}
+              prefetch={href === ROUTES.HOME ? undefined : false}
               className={`mn-dr-link${pathname === href ? ' active' : ''}`}
               onClick={() => setMobileOpen(false)}
               aria-current={pathname === href ? 'page' : undefined}

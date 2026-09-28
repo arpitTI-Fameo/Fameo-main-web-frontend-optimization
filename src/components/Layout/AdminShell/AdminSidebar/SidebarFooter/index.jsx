@@ -2,6 +2,7 @@
 // components/Layout/AdminShell/AdminSidebar/SidebarFooter/index.jsx
 
 import { S } from "../../styles";
+import { ROUTES } from '@/constants/routes';
 
 export default function SidebarFooter({ collapsed, user, rc, router, doLogout }) {
   if (collapsed) return null;
@@ -14,7 +15,7 @@ export default function SidebarFooter({ collapsed, user, rc, router, doLogout })
         <span style={S.footName}>{user.name}</span>
         <span style={S.footRole}>{rc.label}</span>
       </div>
-      <button onClick={() => router.push("/")} style={S.footBtn} title="Back to site">↗</button>
+      <button onClick={() => router.push(ROUTES.HOME)} style={S.footBtn} title="Back to site">↗</button>
       <button onClick={doLogout} style={S.footBtn} title="Logout">⏻</button>
     </div>
   );

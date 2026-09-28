@@ -19,6 +19,7 @@ const PREFS = [
   { id: 'product',  label: 'Product news',      sub: 'New features and occasional offers',    on: false },
 ];
 import Toggle from './Toggle';
+import { ROUTES } from '@/constants/routes';
 
 export default function Settings() {
   const [prefs, setPrefs] = useState(
@@ -70,7 +71,7 @@ export default function Settings() {
       <Section title="Account">
         <Card>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Link href="/account/profile" style={S.linkBtn}>Edit profile</Link>
+            <Link href={ROUTES.ACCOUNT_PROFILE} style={S.linkBtn}>Edit profile</Link>
             <Button variant="ghost" onClick={() => flash('Password reset link sent')}>
               Change password
             </Button>

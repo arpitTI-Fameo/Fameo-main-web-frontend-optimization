@@ -27,6 +27,7 @@ import { useSyncCartToServerMutation } from '@/lib/hooks/main/useProduct';
 import { S } from './styles';
 import { BFF_BASE } from '@/lib/api/config';
 import { DEFAULT_LOCALE } from '@/constants/locale';
+import { ROUTES } from '@/constants/routes';
 
 // Same-origin via the BFF; the httpOnly session cookie is attached
 // server-side, so this module no longer builds an Authorization header.
@@ -126,7 +127,7 @@ export default function Checkout({ initialAddresses }) {
   // Redirect if cart empty.
   useEffect(() => {
     if (!mounted) return;
-    if (cartItems.length === 0 && step < 2) router.push('/products');
+    if (cartItems.length === 0 && step < 2) router.push(ROUTES.PRODUCTS);
   }, [cartItems, step, mounted, router]);
 
   // Which bag an unpaid order was created from.
@@ -382,7 +383,7 @@ export default function Checkout({ initialAddresses }) {
                 shippingCost={shippingCost}
                 memberDiscount={dispDiscount}
                 membership={membership}
-                onNext={() => setStep(1)} onBack={() => router.push('/cart')}
+                onNext={() => setStep(1)} onBack={() => router.push(ROUTES.CART)}
               />
             )}
             {step === 1 && (

@@ -142,14 +142,18 @@ export const COLLECTIONS = [
 
 /* ── outro "O" cycle — doodle art and photos alternate inside the O ─────── */
 export const O_MEDIA = [
-  { t: 'd', i: 4 },  // noodle bowl doodle
-  { t: 'i', src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80' },
-  { t: 'd', i: 0 },  // flower burst
-  { t: 'i', src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80' },
-  { t: 'd', i: 1 },  // tangled scribble
-  { t: 'i', src: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80' },
-  { t: 'd', i: 2 },  // swoosh
-  { t: 'i', src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80' },
+  { t: 'd', i: 4 },
+  { t: 'i', src: '/assets/footer/1.webp' },
+  { t: 'd', i: 0 },
+  { t: 'i', src: '/assets/footer/2.webp' },
+  { t: 'd', i: 1 },
+  { t: 'i', src: '/assets/footer/3.webp' },
+  { t: 'd', i: 2 },
+  { t: 'i', src: '/assets/footer/4.webp' },
+  { t: 'd', i: 0 },
+  { t: 'i', src: '/assets/footer/5.webp' },
+  { t: 'd', i: 1 },
+  { t: 'i', src: '/assets/footer/6.webp' },
 ];
 
 /* ── CSS ─────────────────────────────────────────────────────────────────── */

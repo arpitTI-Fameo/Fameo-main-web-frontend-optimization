@@ -1,48 +1,52 @@
 // constants/routes.js
-export const ROUTES = {
-  // Auth
-  LOGIN: '/login',
-  REGISTER: '/register',
-  OTP: '/otp',
+// Every in-app path lives here. Link to a route through these constants —
+// never spell a path as a string literal in a component, hook or module.
 
-  // Main
-  HOME: '/',
+/** `withQuery(ROUTES.LOGIN, { redirect: ROUTES.PLANS })` → `/login?redirect=%2Fplans` */
+export const withQuery = (path, params) => `${path}?${new URLSearchParams(params)}`;
+
+export const UPCOMING_ROUTES = {
+  OTP: '/otp',
   PRODUCTS: '/products',
-  RESOURCES: '/resources',
   COMMUNITY: '/community',
+  COMMUNITY_USER: (id) => `/community/user/${id}`,
+  COMMUNITY_SPACE: (id) => `/community/space/${id}`,
   TALENT_HIRE: '/talent-hire',
   PLANS: '/plans',
-
-  // Products
-  // Detail lives under its category so the URL carries the breadcrumb:
-  // /products/lighting/lumiere-pro. A flat /products/<slug> would collide with
-  // CATEGORY() — both would match the same [category] segment.
   PRODUCT: (category, slug) => `/products/${category}/${slug}`,
   FAVORITES: '/favorites',
   CATEGORY: (cat) => `/products/${cat}`,
-
-  // Resources
-  COURSES: '/resources/courses',
-  COURSE: (slug) => `/resources/courses/${slug}`,
-  ARTICLES: '/resources/articles',
-  ARTICLE: (slug) => `/resources/articles/${slug}`,
-  MY_LEARNINGS: '/resources/my-learnings',
-  SAVED: '/resources/saved',
-
-  // Support
   SUPPORT: '/support',
-
-  // Cart & Checkout
   CART: '/cart',
   CHECKOUT: '/checkout',
-
-  // Account
   ACCOUNT: '/account',
   ACCOUNT_PROFILE: '/account/profile',
   ORDERS: '/account/orders',
   ORDER: (id) => `/account/orders/${id}`,
   TRACK_ORDER: '/account/track-order',
   SETTINGS: '/account/settings',
+  WALLET: '/account/wallet',
+  REFERRALS: '/account/referrals',
+  ACCOUNT_PRODUCTS: '/account/products',
+  SUBSCRIPTION: '/account/subscription',
+};
+
+export const ROUTES = {
+  LOGIN: '/login',
+  REGISTER: '/register',
+  HOME: '/',
+  COURSES: '/resources/courses',
+  COURSE: (slug) => `/resources/courses/${slug}`,
+  ARTICLES: '/resources/articles',
+  ARTICLE: (slug) => `/resources/articles/${slug}`,
+  MY_LEARNINGS: '/resources/my-learnings',
+  SAVED: '/resources/saved',
+  RESOURCES: '/resources',
+  UPCOMING: '/upcoming',
+  // Linked from the course footer; no page exists under app/ yet.
+  PRIVACY: '/privacy',
+  TERMS: '/terms',
+  ...UPCOMING_ROUTES,
 };
 
 /* PROTECTED_ROUTES used to live here, commented "used in middleware.js". It
@@ -76,6 +80,7 @@ export const ADMIN_ROUTES = {
   CONTENT: '/admin/content',
   CONTENT_NEW: '/admin/content/new',
   CONTENT_NEW_EDIT: '/admin/content/new/edit',
+  CONTENT_EDIT: (id) => `/admin/content/${id}/edit`,
   COURSES: '/admin/courses',
   MEDIA_CENTER: '/admin/media-center',
   ARCHIVE: '/admin/archive',

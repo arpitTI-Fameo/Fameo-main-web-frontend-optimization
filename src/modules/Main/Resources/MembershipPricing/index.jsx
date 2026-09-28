@@ -2,6 +2,7 @@
 // modules/Resources/MembershipPricing/index.jsx
 
 import { MEMBER_IMG } from '../constants';
+import { ROUTES } from '@/constants/routes';
 
 export default function MembershipPricing() {
     return (
@@ -14,7 +15,7 @@ export default function MembershipPricing() {
           <div className="rp-tier">Basic <span>Free</span></div>
           <div className="rp-tier hot">Pro <span>₹499/month</span></div>
           <div className="rp-tier">Elite <span>₹999/month</span></div>
-          <a href="/plans"><button className="rp-pc-btn">Unlock Membership</button></a>
+          <a href={ROUTES.PLANS}><button className="rp-pc-btn">Unlock Membership</button></a>
         </div>
       </div>
       <div className="rp-mc">

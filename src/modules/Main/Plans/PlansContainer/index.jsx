@@ -17,6 +17,7 @@ import { IcCheck, IcShield, IcRefresh, IcLock, IcArrow } from '../icons'
 import { PRICES, FROM_LABELS } from '../constants';
 import { inr } from '../helpers';
 import DurationSelector from '../DurationSelector';
+import { ROUTES, withQuery } from '@/constants/routes';
 
 export default function PlansContainer() {
     const router = useRouter();
@@ -107,7 +108,7 @@ export default function PlansContainer() {
 
     useEffect(() => {
         if (curError?.name === 'SessionExpiredError' || curError?.message === 'SESSION_EXPIRED') {
-            logout(); router.push('/login?reason=session_expired');
+            logout(); router.push(withQuery(ROUTES.LOGIN, { reason: 'session_expired' }));
         }
     }, [curError, logout, router]);
 
@@ -127,7 +128,7 @@ export default function PlansContainer() {
     useEffect(() => {
         if (!confirmed) return;
         if (countdown <= 0) {
-            router.push(fromPage || '/cart');
+            router.push(fromPage || ROUTES.CART);
             return;
         }
         const t = setTimeout(() => setCountdown(c => c - 1), 1000);
@@ -139,7 +140,7 @@ export default function PlansContainer() {
 
     // Card button opens the checkout modal (does NOT pay yet).
     const openCheckout = (plan) => {
-        if (!signedIn) { router.push('/login?redirect=/plans'); return; }
+        if (!signedIn) { router.push(withQuery(ROUTES.LOGIN, { redirect: ROUTES.PLANS })); return; }
         if (planCodeOf(plan) === 'free') return;
         if (isCurrentPlan(plan)) return;
         setError('');
@@ -229,7 +230,7 @@ export default function PlansContainer() {
             closeCheckout();
         } catch (err) {
             if (err?.name === 'SessionExpiredError' || err?.message === 'SESSION_EXPIRED') {
-                logout(); router.push('/login?reason=session_expired&redirect=/plans'); return;
+                logout(); router.push(withQuery(ROUTES.LOGIN, { reason: 'session_expired', redirect: ROUTES.PLANS })); return;
             }
             setError(err.message || 'Could not complete the subscription.');
         } finally {
@@ -420,7 +421,7 @@ export default function PlansContainer() {
                         <p className="conf-countdown">
                             Redirecting to {fromPage ? fromLabel : 'cart'} in {countdown}s…
                         </p>
-                        <a href={fromPage || '/cart'} className="conf-btn">
+                        <a href={fromPage || ROUTES.CART} className="conf-btn">
                             Go now <IcArrow />
                         </a>
                     </div>

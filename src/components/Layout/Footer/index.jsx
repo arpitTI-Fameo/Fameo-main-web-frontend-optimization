@@ -6,43 +6,44 @@ import Separator from '@/components/ui/Separator';
 import { TASTE_DOODLES, O_MEDIA } from '../../../modules/Main/Landing/FameoScrollSections/constants';
 import { clamp01, lerp } from '../../../modules/Main/Landing/FameoScrollSections/utils';
 import { S } from './styles';
+import { ROUTES } from '@/constants/routes';
 
 /* ── Link data imported from old MainFooter ── */
 const COLS = [
   {
     heading: "Platform",
     links: [
-      { label: "Home", href: "/" },
-      { label: "Products", href: "/products" },
-      { label: "Resources", href: "/resources" },
-      { label: "Community", href: "/community" },
-      { label: "Talent Hire", href: "/talent-hire" },
+      { label: "Home", href: ROUTES.HOME },
+      { label: "Products", href: ROUTES.PRODUCTS },
+      { label: "Resources", href: ROUTES.RESOURCES },
+      { label: "Community", href: ROUTES.COMMUNITY },
+      { label: "Talent Hire", href: ROUTES.TALENT_HIRE },
     ],
   },
   {
     heading: "Creators",
     links: [
-      { label: "Creator Hub", href: "/resources", badge: "new", badgeClass: "ft-badge-new" },
-      { label: "Learning Center", href: "/resources", badge: "new", badgeClass: "ft-badge-new" },
-      { label: "Brand Deals", href: "/products" },
-      { label: "Fameo Community", href: "/community", badge: "beta", badgeClass: "ft-badge-beta" },
-      { label: "Talent Network", href: "/talent-hire" },
+      { label: "Creator Hub", href: ROUTES.RESOURCES, badge: "new", badgeClass: "ft-badge-new" },
+      { label: "Learning Center", href: ROUTES.RESOURCES, badge: "new", badgeClass: "ft-badge-new" },
+      { label: "Brand Deals", href: ROUTES.PRODUCTS },
+      { label: "Fameo Community", href: ROUTES.COMMUNITY, badge: "beta", badgeClass: "ft-badge-beta" },
+      { label: "Talent Network", href: ROUTES.TALENT_HIRE },
     ],
   },
   {
     heading: "Company",
     links: [
-      { label: "Contact Us", href: "/support" },
+      { label: "Contact Us", href: ROUTES.SUPPORT },
     ],
   },
   {
     heading: "Account",
     links: [
-      { label: "Login", href: "/login" },
-      { label: "Register", href: "/register" },
-      { label: "My Profile", href: "/account/profile" },
-      { label: "My Orders", href: "/account/orders" },
-      { label: "Settings", href: "/account/settings" },
+      { label: "Login", href: ROUTES.LOGIN },
+      { label: "Register", href: ROUTES.REGISTER },
+      { label: "My Profile", href: ROUTES.ACCOUNT_PROFILE },
+      { label: "My Orders", href: ROUTES.ORDERS },
+      { label: "Settings", href: ROUTES.SETTINGS },
     ],
   },
 ];

@@ -11,7 +11,7 @@ import { MODULES, CONTENT_STATUS } from '../constants';
 import TopicEditorTopBar from './TopicEditorTopBar';
 import TopicEditorPane from './TopicEditorPane';
 import TopicPreviewPane from './TopicPreviewPane';
-import { ADMIN_ROUTES } from "@/constants/routes";
+import { ADMIN_ROUTES } from '@/constants/routes';
 import { CONTENT_APPROVER_ROLES } from "@/constants/roles";
 
 const EMPTY = { title: "", shortDesc: "", moduleId: 0, level: "b", readTime: "5 min", body: "", checklist: [""], takeaways: [""], status: CONTENT_STATUS.DRAFT, mediaIds: [], productId: "" };
@@ -82,7 +82,7 @@ export default function TopicEditor({ params }) {
             const savedTopic = saved_?.data?.topic;
             if (savedTopic) setTopic(savedTopic);
             setSaved(true); setTimeout(() => setSaved(false), 2000);
-            if (isNew && savedTopic?._id) router.replace(`/admin/content/${savedTopic._id}/edit`);
+            if (isNew && savedTopic?._id) router.replace(ADMIN_ROUTES.CONTENT_EDIT(savedTopic._id));
             showToast(
                 overrideStatus === CONTENT_STATUS.PUBLISHED ? "Published live ◉ — visible on Learner Hub instantly" :
                     overrideStatus === "review" ? "Submitted for review — awaiting approval" :

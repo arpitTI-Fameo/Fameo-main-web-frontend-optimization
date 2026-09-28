@@ -4,12 +4,13 @@ import { getStates, getCategories } from '@/lib/services/auth/register.server';
 import { registerKeys } from '@/lib/hooks/auth/useRegister';
 
 import { buildMetadata } from '@/lib/seo/metadata';
+import { ROUTES } from '@/constants/routes';
 
 export const metadata = buildMetadata({
   title: 'Create Account',
   description:
     'Join Fameo — the verified community for creators and public figures.',
-  path: '/register',
+  path: ROUTES.REGISTER,
 });
 
 export default async function RegisterPage() {

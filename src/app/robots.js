@@ -8,15 +8,16 @@
 
 import { SITE } from '@/lib/seo/metadata';
 import { GATED_ROUTES } from '@/lib/auth/gated-routes';
+import { ROUTES } from '@/constants/routes';
 
 // Public but worthless to index: no stable content, and per-visitor state.
-const TRANSACTIONAL = ['/cart', '/otp', '/api/'];
+const TRANSACTIONAL = [ROUTES.CART, ROUTES.OTP, '/api/'];
 
 export default function robots() {
   const disallow = [...new Set([...GATED_ROUTES, ...TRANSACTIONAL])].sort();
 
   return {
-    rules: [{ userAgent: '*', allow: '/', disallow }],
+    rules: [{ userAgent: '*', allow: ROUTES.HOME, disallow }],
     sitemap: `${SITE.url}/sitemap.xml`,
     host: SITE.url,
   };

@@ -3,6 +3,25 @@ const isDev = process.env.NODE_ENV !== 'production';
 const nextConfig = {
   productionBrowserSourceMaps: false,
 
+  async redirects() {
+    return [
+      { source: '/products', destination: '/upcoming?source=products', permanent: false },
+      { source: '/products/:path*', destination: '/upcoming?source=products', permanent: false },
+      { source: '/community', destination: '/upcoming?source=community', permanent: false },
+      { source: '/community/:path*', destination: '/upcoming?source=community', permanent: false },
+      { source: '/talent-hire', destination: '/upcoming?source=talent-hire', permanent: false },
+      { source: '/talent-hire/:path*', destination: '/upcoming?source=talent-hire', permanent: false },
+      { source: '/plans', destination: '/upcoming?source=plans', permanent: false },
+      { source: '/plans/:path*', destination: '/upcoming?source=plans', permanent: false },
+      { source: '/favorites', destination: '/upcoming?source=favorites', permanent: false },
+      { source: '/support', destination: '/upcoming?source=support', permanent: false },
+      { source: '/cart', destination: '/upcoming?source=cart', permanent: false },
+      { source: '/checkout', destination: '/upcoming?source=checkout', permanent: false },
+      { source: '/account', destination: '/upcoming?source=account', permanent: false },
+      { source: '/account/:path*', destination: '/upcoming?source=account', permanent: false },
+    ];
+  },
+
   images: {
     remotePatterns: [
       {

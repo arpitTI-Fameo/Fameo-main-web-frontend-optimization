@@ -221,7 +221,7 @@ export default function UserMenu({ onNavigate }) {
                 </div>
               </div>
 
-              <div className="mn-dd-items">
+              {/* <div className="mn-dd-items">
                 {ACCOUNT_MENU_ITEMS.map((item) => (
                   <Link
                     key={item.path}
@@ -234,9 +234,9 @@ export default function UserMenu({ onNavigate }) {
                     {item.label}
                   </Link>
                 ))}
-              </div>
+              </div> */}
 
-              <div className="mn-dd-divider" />
+              {/* <div className="mn-dd-divider" /> */}
               <button type="button" className="mn-dd-signout" onClick={handleLogout} role="menuitem">
                 <span>⎋</span> Sign out
               </button>

@@ -1,3 +1,4 @@
+import { ROUTES } from '@/constants/routes';
 
 // NOTE: DISPLAY FALLBACKS only, used when the backend hasn't supplied
 // billing_options. Real prices + billing_id come from Plan.billing_options.
@@ -14,9 +15,9 @@ export const BILLING_IDS = {
     elite: { 1: 9, 3: 8, 6: 7 /* , 12: ? */ },
 };
 export const FROM_LABELS = {
-    '/products': 'the Creator Store',
-    '/community': 'the Community',
-    '/talent-hire': 'Talent Hire',
+    [ROUTES.PRODUCTS]: 'the Creator Store',
+    [ROUTES.COMMUNITY]: 'the Community',
+    [ROUTES.TALENT_HIRE]: 'Talent Hire',
 };
 
 

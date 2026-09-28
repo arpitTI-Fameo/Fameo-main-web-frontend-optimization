@@ -7,14 +7,15 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { INK, GOLD, LINE, MUTED, FONT_BODY } from '../AccountUI';
+import { ROUTES } from '@/constants/routes';
 
 const ITEMS = [
-  { href: '/account/profile',      label: 'Profile',      icon: '◐' },
-  { href: '/account/wallet',       label: 'Wallet',       icon: '◈' },
-  { href: '/account/referrals',    label: 'Referrals',    icon: '◇' },
-  { href: '/account/products',     label: 'Products',     icon: '◎' },
-  { href: '/account/subscription', label: 'Subscription', icon: '★' },
-  { href: '/account/settings',     label: 'Settings',     icon: '⚙' },
+  { href: ROUTES.ACCOUNT_PROFILE,  label: 'Profile',      icon: '◐' },
+  { href: ROUTES.WALLET,           label: 'Wallet',       icon: '◈' },
+  { href: ROUTES.REFERRALS,        label: 'Referrals',    icon: '◇' },
+  { href: ROUTES.ACCOUNT_PRODUCTS, label: 'Products',     icon: '◎' },
+  { href: ROUTES.SUBSCRIPTION,     label: 'Subscription', icon: '★' },
+  { href: ROUTES.SETTINGS,         label: 'Settings',     icon: '⚙' },
 ];
 
 export default function AccountNav() {

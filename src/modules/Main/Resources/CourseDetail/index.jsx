@@ -11,6 +11,7 @@ import CourseOverview from './CourseOverview';
 import LessonView from './LessonView';
 import { normalizeCourse } from './helpers';
 import { CSS } from './styles';
+import { ROUTES } from '@/constants/routes';
 
 export default function CourseDetail({ params }) {
   const { courseSlug } = use(params);
@@ -56,7 +57,7 @@ export default function CourseDetail({ params }) {
       <><style>{CSS}</style>
         <div className="cx-state">
           <p>Course not found or not yet published.</p>
-          <button onClick={() => router.push("/resources")}>← Back to Learning Center</button>
+          <button onClick={() => router.push(ROUTES.RESOURCES)}>← Back to Learning Center</button>
         </div></>
     );
   }
@@ -73,14 +74,14 @@ export default function CourseDetail({ params }) {
           allLessons={allLessons}
           onNav={setLessonId}
           onBackToCourse={() => setLessonId(null)}
-          onHome={() => router.push("/resources")}
+          onHome={() => router.push(ROUTES.RESOURCES)}
         />
       ) : (
         <CourseOverview
           course={course}
           allLessons={allLessons}
           onOpenLesson={setLessonId}
-          onHome={() => router.push("/resources")}
+          onHome={() => router.push(ROUTES.RESOURCES)}
         />
       )}
     </>

@@ -2,10 +2,11 @@ import Checkout from '@/modules/Main/Checkout';
 import { getAddressesServerAction } from '@/lib/services/main/user.server';
 
 import { buildMetadata } from '@/lib/seo/metadata';
+import { ROUTES } from '@/constants/routes';
 
 export const metadata = buildMetadata({
   title: 'Checkout',
-  path: '/checkout',
+  path: ROUTES.CHECKOUT,
   noIndex: true,
 });
 

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuthCta } from '@/lib/hooks/custome/useAuthCta';
 import { CSS } from './styles';
+import { ROUTES } from '@/constants/routes';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    FAMEO SCROLL HERO — Telescope-style scroll-driven intro
@@ -402,7 +403,7 @@ export default function FameoScrollHero() {
         {/* <span className="tsc-beta">CURRENTLY IN BETA</span> */}
 
         <nav className="tsc-navbar">
-          <Link href="/" className="tsc-navbar-brand">Fameo</Link>
+          <Link href={ROUTES.HOME} className="tsc-navbar-brand">Fameo</Link>
 
           {!auth.hydrated ? (
             /* store not read yet — reserve the space instead of flashing

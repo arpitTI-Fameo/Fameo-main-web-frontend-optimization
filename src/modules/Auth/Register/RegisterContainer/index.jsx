@@ -29,6 +29,7 @@ import {
 import {
   REGISTER_DEFAULT_VALUES, stepSchema, firstInvalidField,
 } from '../schema';
+import { ROUTES } from '@/constants/routes';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    FAMEO REGISTER FLOW — Doc 1 design system + Doc 2 API-driven steps
@@ -862,7 +863,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
 
         {/* brand header */}
         <div className="frg-brand">
-          <Link className="frg-brand-mark" href="/" aria-label="Fameo home">
+          <Link className="frg-brand-mark" href={ROUTES.HOME} aria-label="Fameo home">
             {brandLogo ? (
               <img src={typeof brandLogo === 'string' ? brandLogo : brandLogo.src} alt="Fameo" />
             ) : (
@@ -871,7 +872,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
             <span className="frg-brand-rule" aria-hidden="true" />
             <span className="frg-brand-sub">Creator Network</span>
           </Link>
-          <a className="frg-brand-back" href="/login">ALREADY A MEMBER? LOG IN →</a>
+          <a className="frg-brand-back" href={ROUTES.LOGIN}>ALREADY A MEMBER? LOG IN →</a>
         </div>
 
         {success ? (

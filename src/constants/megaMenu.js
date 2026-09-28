@@ -2,24 +2,27 @@
 // Single source of truth for all navigation data.
 // Used by: MainNav (top bar) and ProductsNav (products page category bar).
 
+import { ROUTES } from '@/constants/routes';
+
 export const MAIN_NAV_LINKS = [
-  { href: '/', label: 'Home' },
-  { href: '/products', label: 'Products' },
-  { href: '/resources', label: 'Resources' },
-  // { href: '/community',   label: 'Community'    },
-  { href: '/plans', label: 'Plans' },
-  // { href: '/talent-hire', label: 'Talent Hire'  },
+  { href: ROUTES.HOME, label: 'Home' },
+  // { href: ROUTES.PRODUCTS, label: 'Products' },
+  { href: ROUTES.UPCOMING, label: 'Labs' },
+  { href: ROUTES.RESOURCES, label: 'Resources' },
+  // { href: ROUTES.COMMUNITY,   label: 'Community'    },
+  // { href: ROUTES.PLANS, label: 'Plans' },
+  // { href: ROUTES.TALENT_HIRE, label: 'Talent Hire'  },
 ];
 
 // Shown only when user is signed in (in profile dropdown menu)
 export const ACCOUNT_MENU_ITEMS = [
-  { icon: '👤', label: 'My Profile', path: '/account/profile' },
-  { icon: '📦', label: 'My Orders', path: '/account/orders' },
-  { icon: '❤️', label: 'Favourites', path: '/favorites' },
-  { icon: '◈', label: 'Subscription', path: '/account/subscription' },
-  // { icon: '🚚', label: 'Track Order',   path: '/account/track-order'},
-  // { icon: '🎓', label: 'My Learnings',  path: '/resources/my-learnings' },
-  { icon: '⚙️', label: 'Settings', path: '/account/settings' },
+  { icon: '👤', label: 'My Profile', path: ROUTES.ACCOUNT_PROFILE },
+  { icon: '📦', label: 'My Orders', path: ROUTES.ORDERS },
+  { icon: '❤️', label: 'Favourites', path: ROUTES.FAVORITES },
+  { icon: '◈', label: 'Subscription', path: ROUTES.SUBSCRIPTION },
+  // { icon: '🚚', label: 'Track Order',   path: ROUTES.TRACK_ORDER },
+  // { icon: '🎓', label: 'My Learnings',  path: ROUTES.MY_LEARNINGS },
+  { icon: '⚙️', label: 'Settings', path: ROUTES.SETTINGS },
 ];
 
 // Products page — category strip

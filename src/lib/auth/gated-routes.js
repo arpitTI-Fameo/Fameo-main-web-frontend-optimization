@@ -8,22 +8,22 @@
 //
 // middleware.js remains the ENFORCEMENT point. This file is only the data.
 
-import { ADMIN_ROUTES } from '@/constants/routes';
+import { ADMIN_ROUTES, ROUTES } from '@/constants/routes';
 
 /** Signed-in creators only. */
 export const AUTH_ONLY_ROUTES = [
-  '/products',
-  '/account',
-  '/checkout',
-  '/resources',
-  '/resources/my-learnings',
-  '/resources/saved',
+  ROUTES.PRODUCTS,
+  ROUTES.ACCOUNT,
+  ROUTES.CHECKOUT,
+  ROUTES.RESOURCES,
+  ROUTES.MY_LEARNINGS,
+  ROUTES.SAVED,
 ];
 
 /** Signed in AND on a paid tier. */
 export const PAID_ROUTES = [
-  '/community',
-  '/talent-hire',
+  ROUTES.COMMUNITY,
+  ROUTES.TALENT_HIRE,
 ];
 
 /** Admin panel. Never public. */

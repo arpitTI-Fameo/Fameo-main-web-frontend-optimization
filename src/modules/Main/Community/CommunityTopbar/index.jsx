@@ -9,6 +9,7 @@ import { useLiveEvent } from '@/lib/hooks/main/useEvent';
 import { showToast } from '../Toast';
 // SAST H-3 — notification bodies come from the backend and were rendered raw.
 import { sanitizeInline } from '@/lib/security/sanitize';
+import { ROUTES } from '@/constants/routes';
 
 const PAGE_TITLES = {
   home: 'Community', spaces: 'Spaces', feedback: 'Feedback & Reviews',
@@ -87,7 +88,7 @@ export default function CommunityTopbar({ activePage, onNavigate, onOpenPost, on
               ) : debouncedQ.length > 1 && (searchResults?.data?.length > 0 || searchResults?.length > 0) ? (
                 <div>
                   {(searchResults?.data || searchResults).map(r => (
-                    <Link key={r.id} href={r.type === 'user' ? `/community/user/${r.id}` : `/community/space/${r.id}`} style={{ textDecoration: 'none' }} onClick={() => setSearchOpen(false)}>
+                    <Link key={r.id} href={r.type === 'user' ? ROUTES.COMMUNITY_USER(r.id) : ROUTES.COMMUNITY_SPACE(r.id)} style={{ textDecoration: 'none' }} onClick={() => setSearchOpen(false)}>
                       <div className="cm-search-result" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <span style={{ fontSize: 14, width: 18 }}>{r.type === 'user' ? '👤' : '◫'}</span>
                         <div>

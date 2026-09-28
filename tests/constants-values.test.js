@@ -29,6 +29,7 @@ describe('admin route paths', () => {
       CONTENT: '/admin/content',
       CONTENT_NEW: '/admin/content/new',
       CONTENT_NEW_EDIT: '/admin/content/new/edit',
+      CONTENT_EDIT: expect.any(Function),
       COURSES: '/admin/courses',
       MEDIA_CENTER: '/admin/media-center',
       ARCHIVE: '/admin/archive',
@@ -42,10 +43,12 @@ describe('admin route paths', () => {
       NOTIFICATIONS: '/admin/notifications',
       SETTINGS: '/admin/settings',
     });
+    expect(ADMIN_ROUTES.CONTENT_EDIT('abc')).toBe('/admin/content/abc/edit');
   });
 
   it('every admin path sits under the root, so the middleware prefix test holds', () => {
-    for (const path of Object.values(ADMIN_ROUTES)) {
+    for (const route of Object.values(ADMIN_ROUTES)) {
+      const path = typeof route === 'function' ? route('id') : route;
       expect(path.startsWith(ADMIN_ROUTES.ROOT)).toBe(true);
     }
   });

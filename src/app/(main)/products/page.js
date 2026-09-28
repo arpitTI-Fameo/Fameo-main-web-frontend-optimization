@@ -3,12 +3,13 @@ import ProductsLanding from '@/modules/Main/Products/ProductLanding';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { fameoProductsKeys } from '@/lib/hooks/main/useProduct';
 import { getStorefrontProductsServer } from '@/lib/services/main/prefetch.server';
+import { ROUTES } from '@/constants/routes';
 
 export const metadata = buildMetadata({
   title: 'Products',
   description:
     'Premium gear and equipment curated for creators — cameras, audio, lighting and studio essentials.',
-  path: '/products',
+  path: ROUTES.PRODUCTS,
 });
 
 export default async function ProductsPage() {
