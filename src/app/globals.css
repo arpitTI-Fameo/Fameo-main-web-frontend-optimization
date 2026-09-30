@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+/* Fameo shadcn theme. Scoped to `.fameo-theme`; see the header of the file. */
+@import "./fameo-theme.css";
 
 :root {
   --background: #ffffff;

@@ -69,8 +69,6 @@ export default function Footer() {
   const raf = useRef(0);
   const [mIdx, setMIdx] = useState(0);
 
-  const auth = useAuthCta();
-
   useEffect(() => {
     const t = setInterval(() => setMIdx(i => (i + 1) % O_MEDIA.length), 2000);
     return () => clearInterval(t);
@@ -124,18 +122,38 @@ export default function Footer() {
   return (
     <>
       <style>{S}</style>
-      <section className="tss-outro" ref={ref}>
+      <section
+        className="fameo-theme relative z-[3] flex min-h-[100vh] flex-col bg-background px-[18px] pt-5 pb-6 shadow-[0_-18px_50px_rgba(20,15,10,0.08)] supports-[min-height:100svh]:min-h-svh min-[901px]:px-[34px] min-[901px]:pt-[26px] min-[901px]:pb-[30px]"
+        ref={ref}
+      >
 
         {/* top area: main navigation links from old footer */}
-        <div className="tss-outro-grid">
+        {/* Same 1200px column as the bottom row: the first column lines up with
+            the legal links, the last one ends where the social icons end. */}
+        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-2 gap-x-5 gap-y-8 pt-10 pb-5 min-[901px]:flex min-[901px]:justify-between min-[901px]:gap-10">
           {COLS.map((col, i) => (
-            <div key={i} className="tss-outro-col">
-              <h4 className="tss-outro-col-head">{col.heading}</h4>
-              <div className="tss-outro-col-links">
+            <div key={i} className="flex flex-col">
+              <h4 className="mb-5 font-['Syne',sans-serif] text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground">
+                {col.heading}
+              </h4>
+              <div className="flex flex-col gap-2">
                 {col.links.map((link) => (
-                  <a key={link.label} href={link.href} className="tss-outro-col-link">
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className="inline-flex items-center font-sans text-[13px] text-foreground transition-colors hover:text-muted-foreground"
+                  >
                     {link.label}
-                    {link.badge && <span className={`tss-badge ${link.badgeClass}`}>{link.badge}</span>}
+                    {link.badge && (
+                      <span
+                        className={`ml-2 rounded px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.1em] ${link.badgeClass === 'ft-badge-new'
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-brand-text/10 text-brand-text'
+                          }`}
+                      >
+                        {link.badge}
+                      </span>
+                    )}
                   </a>
                 ))}
               </div>
@@ -144,19 +162,19 @@ export default function Footer() {
         </div>
 
         {/* Curved separator 1 */}
-        <Separator className="tss-outro-curve" />
+        <Separator className="block flex-none pointer-events-none w-[calc(100%+36px)] -ml-[18px] h-[clamp(30px,6vw,60px)] min-[901px]:w-[calc(100%+68px)] min-[901px]:-ml-[34px]" />
 
         {/* giant wordmark — "Fame" + living O */}
-        <div className="tss-outro-stage">
-          <h2 className="tss-outro-word" ref={wordRef} aria-label="Fameo">
+        <div className="flex-1 grid place-items-center">
+          <h2 className="flex items-center whitespace-nowrap font-bold leading-none tracking-[-0.045em] text-foreground will-change-transform text-[clamp(76px,15vw,260px)]" ref={wordRef} aria-label="Fameo">
             Fame
-            <span className="tss-outro-o" aria-hidden="true">
+            <span className="relative inline-flex items-center justify-center rounded-full w-[0.64em] h-[0.64em] ml-[0.035em]" aria-hidden="true">
               {m.t === 'i' ? (
-                <img key={mIdx} src={m.src} alt="" draggable={false} />
+                <img key={mIdx} src={m.src} alt="" draggable={false} className="block w-full h-full rounded-full object-cover animate-[tssOPop_.55s_cubic-bezier(.3,1.45,.4,1)]" />
               ) : (
-                <svg key={mIdx} viewBox={doodle.viewBox} preserveAspectRatio="xMidYMid meet">
+                <svg key={mIdx} viewBox={doodle.viewBox} preserveAspectRatio="xMidYMid meet" className="h-[116%] w-[116%] overflow-visible">
                   {doodle.paths.map((d, pi) => (
-                    <path key={pi} d={d} pathLength={1} style={{ animationDelay: `${pi * 0.2}s` }} />
+                    <path key={pi} d={d} pathLength={1} style={{ animationDelay: `${pi * 0.2}s` }} className="fill-none stroke-foreground stroke-[3px] [stroke-dasharray:1] [stroke-dashoffset:1] [stroke-linecap:round] [stroke-linejoin:round] [vector-effect:non-scaling-stroke] animate-[tssODraw_1.9s_cubic-bezier(.45,0,.2,1)_forwards]" />
                   ))}
                 </svg>
               )}
@@ -166,17 +184,30 @@ export default function Footer() {
 
 
         {/* bottom row: legal · socials */}
-        <div className="tss-outro-bottom">
-          <div className="tss-outro-legal">
+        <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start gap-5 pt-5 min-[901px]:flex-row min-[901px]:items-center min-[901px]:justify-between">
+          <div className="flex flex-wrap gap-4 min-[901px]:gap-6">
             {LEGAL_LINKS.map(link => (
-              <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer">
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-['Space_Mono',monospace] text-[11px] tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
+              >
                 {link.label}
               </a>
             ))}
           </div>
-          <div className="tss-outro-social">
+          <div className="flex gap-[22px] justify-start min-[901px]:gap-6">
             {SOCIALS.map(s => (
-              <a key={s.label} href={s.href} aria-label={s.label} target="_blank" rel="noopener noreferrer">
+              <a
+                key={s.label}
+                href={s.href}
+                aria-label={s.label}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex text-muted-foreground transition-colors hover:text-foreground text-lg"
+              >
                 {s.icon}
               </a>
             ))}

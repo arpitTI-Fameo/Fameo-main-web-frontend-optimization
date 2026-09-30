@@ -1,0 +1,233 @@
+/* Fameo / light theme / Tailwind CSS v4.
+   Source: Fameo-Shadcn-Theme/styles/fameo-theme.css.
+
+   One deliberate change from the kit: the color tokens live on `.fameo-theme`,
+   not on `:root`. Legacy CSS-in-JS components read `var(--card, …)` and
+   `var(--muted, …)` with their own fallbacks (Common/Modal, Common/SelectPicker),
+   and `--muted` means a text color there but a surface color here. Declaring the
+   kit on `:root` would silently restyle those on every route.
+
+   A page opts in by wrapping its content in `className="fameo-theme"`. Every
+   shadcn component in `@/components/ui/shadcn` reads these tokens, so it must
+   render inside that wrapper. */
+
+@font-face {
+  font-family: "Fameo DM Sans";
+  src: url("/fonts/fameo/DMSans-400.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fameo DM Sans";
+  src: url("/fonts/fameo/DMSans-500.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fameo DM Sans";
+  src: url("/fonts/fameo/DMSans-600.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fameo DM Sans";
+  src: url("/fonts/fameo/DMSans-700.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fameo DM Serif Display";
+  src: url("/fonts/fameo/DMSerifDisplay-400.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fameo DM Serif Display";
+  src: url("/fonts/fameo/DMSerifDisplay-400-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Font families and radius back the `font-serif` and `rounded-*` utilities, which
+   resolve wherever they are used, so they stay on the root. Prefixed because
+   community.css already declares a root `--radius` of its own. */
+:root {
+  --fameo-radius: 0.9375rem;
+  --fameo-font-sans: "Fameo DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --fameo-font-serif: "Fameo DM Serif Display", Georgia, serif;
+}
+
+.fameo-theme {
+  color-scheme: light;
+  --background: #FFFFFF;
+  --foreground: #28252C;
+  --card: #FFFFFF;
+  --card-foreground: #28252C;
+  --popover: #FFFFFF;
+  --popover-foreground: #28252C;
+  --primary: #E91E63;
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #D01756;
+  --secondary: #F2F3F5;
+  --secondary-foreground: #514958;
+  --muted: #F7F6F9;
+  --muted-foreground: #706B76;
+  --accent: #FFF0F5;
+  --accent-foreground: #A52152;
+  --destructive: #C62828;
+  --destructive-foreground: #FFFFFF;
+  --border: #E6E4E9;
+  --input: #D5D0DA;
+  --ring: #A32154;
+  --brand-text: #A02755;
+  /* Quieter labels: eyebrows, kickers and icon strips on editorial pages. */
+  --brand-muted: #8C6175;
+  --silver: #F2F3F5;
+  --silver-foreground: #514958;
+  --chart-1: #E91E63;
+  --chart-2: #806699;
+  --chart-3: #477F80;
+  --chart-4: #AB7440;
+  --chart-5: #5879A7;
+  --sidebar: #F9F8FB;
+  --sidebar-foreground: #28252C;
+  --sidebar-primary: #E91E63;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #FFF0F5;
+  --sidebar-accent-foreground: #A52152;
+  --sidebar-border: #E6E4E9;
+  --sidebar-ring: #A32154;
+  --radius: var(--fameo-radius);
+
+  /* Page scale. The approved design was drawn in a ~1024px-wide frame. Up to
+     1024px it renders 1:1; above that --spacing grows with the viewport
+     (×1.4375 by ~1470px, the width it was reviewed at) and then holds, so a
+     wide screen shows the same proportions instead of a zoomed-out page.
+     Tailwind's numeric utilities (p-4, h-9, max-w-295 …), the type tokens and
+     the radius scale are all multiples of --spacing, so they follow it. */
+  --spacing: clamp(0.25rem, 0.390625vw, 0.359375rem);
+  --fameo-radius: calc(var(--spacing) * 3.75);
+  --fameo-silver-sheen: linear-gradient(120deg, #FFFFFF 0%, #E1DDE7 39%, #F9F7FA 64%, #DED6E3 100%);
+  --fameo-shadow-soft: 0 8px 20px rgb(57 46 69 / 0.06);
+  --fameo-shadow-rose: 0 7px 15px rgb(233 30 99 / 0.09);
+}
+
+/* Opt-out of the page scale for a page designed at its full width rather
+   than in the 1024px frame (e.g. /upcoming, drawn at ~1446px): 1:1 at every
+   width. --fameo-radius is declared on this same element, so it follows. */
+.fameo-theme.fameo-fixed-scale {
+  --spacing: 0.25rem;
+}
+
+/* --color-background / --color-foreground are already mapped in globals.css.
+   --font-sans is left alone: globals.css points it at Geist for the rest of the
+   app, and the wrapper below sets the Fameo family directly. */
+@theme inline {
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand-text: var(--brand-text);
+  --color-brand-muted: var(--brand-muted);
+  --color-silver: var(--silver);
+  --color-silver-foreground: var(--silver-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-serif: var(--fameo-font-serif);
+
+  /* Type scale as multiples of --spacing: `text-13` is 13px at base scale and
+     grows with the page scale inside `.fameo-theme`. Outside the wrapper
+     --spacing is Tailwind's 0.25rem, so text-xs/sm/base keep their defaults. */
+  --text-xs: calc(var(--spacing) * 3);
+  --text-sm: calc(var(--spacing) * 3.5);
+  --text-base: calc(var(--spacing) * 4);
+  --text-10: calc(var(--spacing) * 2.5);
+  --text-11: calc(var(--spacing) * 2.75);
+  --text-13: calc(var(--spacing) * 3.25);
+  --text-17: calc(var(--spacing) * 4.25);
+  --text-22: calc(var(--spacing) * 5.5);
+  --text-25: calc(var(--spacing) * 6.25);
+  --text-27: calc(var(--spacing) * 6.75);
+  --text-30: calc(var(--spacing) * 7.5);
+  --text-34: calc(var(--spacing) * 8.5);
+  --radius-sm: calc(var(--fameo-radius) - var(--spacing));
+  --radius-md: calc(var(--fameo-radius) - var(--spacing) * 0.5);
+  --radius-lg: var(--fameo-radius);
+  --radius-xl: calc(var(--fameo-radius) + var(--spacing) * 1.75);
+  --radius-2xl: calc(var(--fameo-radius) + var(--spacing) * 2.25);
+  --radius-3xl: calc(var(--fameo-radius) + var(--spacing) * 4.25);
+  --radius-4xl: calc(var(--fameo-radius) + var(--spacing) * 6.25);
+  --shadow-fameo-soft: var(--fameo-shadow-soft);
+  --shadow-fameo-rose: var(--fameo-shadow-rose);
+}
+
+@utility bg-silver-sheen {
+  background-color: var(--silver);
+  background-image: var(--fameo-silver-sheen);
+}
+
+/* globals.css turns the body #0a0a0a / #ededed under prefers-color-scheme:
+   dark. Fameo is light-only, so a page that opts in keeps the light body too;
+   otherwise that black shows at the overscroll edges, behind the transparent
+   nav and before hydration. These are globals.css's own light values, so the
+   shared nav and footer look exactly as they do in light mode. The site
+   footer carries `.fameo-theme` too but is on every page, so it doesn't count:
+   only a Fameo page opts the whole document into light. */
+:root:has(.fameo-theme:not(footer)) {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+/* The kit's `body` and `*` base rules, scoped to the wrapper. Kept inside
+   `@layer base` so a `border-primary` utility still wins over the default. */
+@layer base {
+  .fameo-theme {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--fameo-font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .fameo-theme *,
+  .fameo-theme ::before,
+  .fameo-theme ::after {
+    border-color: var(--border);
+  }
+}

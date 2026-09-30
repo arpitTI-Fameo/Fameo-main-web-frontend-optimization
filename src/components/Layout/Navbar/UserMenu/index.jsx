@@ -15,11 +15,10 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { useAuthHydrated } from '@/lib/hooks/custome/useAuthHydrated';
 import { useProfilePhoto, clearProfilePhoto } from '@/lib/hooks/custome/useProfilePhoto';
-import { ACCOUNT_MENU_ITEMS } from '@/constants/megaMenu';
 import { ROUTES } from '@/constants/routes';
 
 /* ── helpers ──────────────────────────────────────────────────────────────── */
-const firstNameOf = (name = '') => (name.trim().split(/\s+/)[0] || 'there');
+const firstNameOf = (name = '') => (name.trim().split(/\s+/)[0] || 'You');
 
 const initialsOf = (name = '') => {
   const parts = name.trim().split(/\s+/).filter(Boolean);

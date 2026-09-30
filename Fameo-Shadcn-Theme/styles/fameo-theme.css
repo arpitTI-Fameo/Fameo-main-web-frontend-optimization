@@ -1,0 +1,163 @@
+/* Fameo / light theme / Tailwind CSS v4. See README before merging. */
+
+@font-face {
+  font-family: "Fameo DM Sans";
+  src: url("/fonts/fameo/DMSans-400.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fameo DM Sans";
+  src: url("/fonts/fameo/DMSans-500.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fameo DM Sans";
+  src: url("/fonts/fameo/DMSans-600.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fameo DM Sans";
+  src: url("/fonts/fameo/DMSans-700.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fameo DM Serif Display";
+  src: url("/fonts/fameo/DMSerifDisplay-400.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fameo DM Serif Display";
+  src: url("/fonts/fameo/DMSerifDisplay-400-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root, :root.light {
+  color-scheme: light;
+  --background: #FFFFFF;
+  --foreground: #28252C;
+  --card: #FFFFFF;
+  --card-foreground: #28252C;
+  --popover: #FFFFFF;
+  --popover-foreground: #28252C;
+  --primary: #E91E63;
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #D01756;
+  --secondary: #F2F3F5;
+  --secondary-foreground: #514958;
+  --muted: #F7F6F9;
+  --muted-foreground: #706B76;
+  --accent: #FFF0F5;
+  --accent-foreground: #A52152;
+  --destructive: #C62828;
+  --destructive-foreground: #FFFFFF;
+  --border: #E6E4E9;
+  --input: #D5D0DA;
+  --ring: #A32154;
+  --brand-text: #A02755;
+  --silver: #F2F3F5;
+  --silver-foreground: #514958;
+  --chart-1: #E91E63;
+  --chart-2: #806699;
+  --chart-3: #477F80;
+  --chart-4: #AB7440;
+  --chart-5: #5879A7;
+  --sidebar: #F9F8FB;
+  --sidebar-foreground: #28252C;
+  --sidebar-primary: #E91E63;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #FFF0F5;
+  --sidebar-accent-foreground: #A52152;
+  --sidebar-border: #E6E4E9;
+  --sidebar-ring: #A32154;
+  --radius: 0.9375rem;
+  --fameo-font-sans: "Fameo DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --fameo-font-serif: "Fameo DM Serif Display", Georgia, serif;
+  --fameo-silver-sheen: linear-gradient(120deg, #FFFFFF 0%, #E1DDE7 39%, #F9F7FA 64%, #DED6E3 100%);
+  --fameo-shadow-soft: 0 8px 20px rgb(57 46 69 / 0.06);
+  --fameo-shadow-rose: 0 7px 15px rgb(233 30 99 / 0.09);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand-text: var(--brand-text);
+  --color-silver: var(--silver);
+  --color-silver-foreground: var(--silver-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-sans: var(--fameo-font-sans);
+  --font-serif: var(--fameo-font-serif);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 7px);
+  --radius-2xl: calc(var(--radius) + 9px);
+  --radius-3xl: calc(var(--radius) + 17px);
+  --radius-4xl: calc(var(--radius) + 25px);
+  --shadow-fameo-soft: var(--fameo-shadow-soft);
+  --shadow-fameo-rose: var(--fameo-shadow-rose);
+}
+
+@utility bg-silver-sheen {
+  background-color: var(--silver);
+  background-image: var(--fameo-silver-sheen);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--fameo-font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}

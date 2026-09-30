@@ -1,4 +1,4 @@
-import Courses from '@/modules/Main/Resources/Courses';
+import Courses from '@/modules/Main/Resources/CourseLanding/Courses';
 
 import { buildMetadata } from '@/lib/seo/metadata';
 import { ROUTES } from '@/constants/routes';

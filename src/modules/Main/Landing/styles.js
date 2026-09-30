@@ -16,7 +16,11 @@ export const CSS = `
   --muted:#7a507e;
   --muted2:#b090b8;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+/* In Tailwind's base layer (it repeats Tailwind's own preflight). Unlayered, it
+   beat every Tailwind margin/padding utility on the page — the shared footer
+   lost its padding, mx-auto and the curve's negative margin, and the page
+   scrolled sideways. */
+@layer base{*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}}
 html{scroll-behavior:smooth;}
 body{font-family:'DM Sans',sans-serif;background:var(--ivory);}
 `;
