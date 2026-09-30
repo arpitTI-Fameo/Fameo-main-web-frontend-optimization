@@ -123,7 +123,6 @@ export default defineConfig([
       // ── Hygiene ─────────────────────────────────────────────────────────
       'no-debugger': 'error',
       // console.error/warn are used deliberately for diagnostics in this
-      // codebase; only bare console.log is discouraged.
       'no-console': 'off',
       eqeqeq: ['warn', 'smart'],
       'prefer-const': 'warn',

@@ -62,7 +62,6 @@ export async function identityLogin({ username, password }) {
 
       body: { username, password, firebase_token: 'NULL' },
     });
-    console.log(res, "res")
     body = await res.json().catch(() => ({}));
   } catch {
     return { ok: false, status: 502, message: 'Cannot reach the authentication server' };

@@ -29,7 +29,6 @@ export async function POST(request) {
   }
 
   let credentials;
-  console.log(credentials, "credential")
   try {
     credentials = await request.json();
   } catch {
@@ -50,7 +49,6 @@ export async function POST(request) {
       }),
       cache: 'no-store',
     });
-    console.log(loginRes, "loginRes")
     body = await loginRes.json().catch(() => ({}));
   } catch (err) {
     return NextResponse.json(

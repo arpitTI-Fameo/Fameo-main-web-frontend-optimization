@@ -355,7 +355,6 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
       setOtpSent(true);
       setMobileOtp(Array(OTP_LENGTH).fill('')); setEmailOtp(Array(OTP_LENGTH).fill(''));
       setResendIn(RESEND_SECONDS);
-      if (data?.mobile_otp) console.log('[DEV] Mobile OTP:', data.mobile_otp, '| Email OTP:', data.email_otp);
       setTimeout(() => mobileRefs.current[0]?.focus(), 60);
     } catch (err) {
       // Raw server/network detail stays in the console; the user sees clean copy.
@@ -441,9 +440,7 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
     setUsernameStatus('checking');
     const promise = (async () => {
       try {
-        console.log("username", username)
         const data = await checkUsernameMutation.mutateAsync(username);
-        console.log(data)
         const available = data?.available === true;
         setUsernameStatus(available ? 'available' : 'taken');
         if (available) clearErr('username');
@@ -463,7 +460,6 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
 
   const ensureUsernameChecked = async () => {
     const name = form.username.trim();
-    console.log("username", name)
     if (!name) return null;
     const inflight = usernameCheckRef.current;
     if (inflight && inflight.username === name) return inflight.promise;
@@ -560,7 +556,6 @@ export default function RegisterContainer({ onComplete, logo: logoProp }) {
           liveForm.append('blink_frames', frame);
         }
       });
-      console.log(`[fameoselfie] sending selfie + ${blinkFrames.length} blink_frames (string data URLs)`);
 
       let liveData;
       try {
