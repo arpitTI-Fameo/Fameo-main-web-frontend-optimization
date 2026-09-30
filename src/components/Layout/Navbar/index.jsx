@@ -1,51 +1,66 @@
 "use client";
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, ShoppingBag } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
-import { useAuthHydrated } from '@/lib/hooks/custome/useAuthHydrated';
-import { clearProfilePhoto } from '@/lib/hooks/custome/useProfilePhoto';
-import { MAIN_NAV_LINKS, ACCOUNT_MENU_ITEMS } from '@/constants/megaMenu';
+import { usePathname } from 'next/navigation';
+import { Menu } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import AppLogo from '@/components/Common/AppLogo';
+import { cn } from '@/utils/cn';
 import UserMenu from './UserMenu';
-import { S } from './style';
-import { useCartStore, useHydratedCart } from '@/store/cartStore';
-import { useUIStore } from '@/store/uiStore';
+import MobileDrawer from './MobileDrawer';
+import CartButton from './CartButton';
+import DesktopNavLinks from './DesktopNavLinks';
+import { FOCUS_RING, PILL, PILL_CLEAR, PILL_SOLID } from './classes';
 
-/* Routes that render a dark hero behind the transparent bar.
-   Everything else starts in "light" mode so text stays legible. */
+const S = `
+  @keyframes mnUnderline { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes mnDrop { from { opacity:0; transform:translateY(-8px) scale(.98);} to { opacity:1; transform:translateY(0) scale(1);} }
+  @keyframes mnFadeIn { from{opacity:0;} to{opacity:1;} }
+  /* the notch drops from above the viewport, then stretches and fades as the
+     three capsules pull out of it — and the exact reverse on the way back */
+  @keyframes mnNotchOpen {
+    0%   { opacity:1; width:44px;  transform:translate(-50%,-84px); }
+    28%  { opacity:1; width:64px;  transform:translate(-50%,0); }
+    55%  { opacity:1; width:180px; transform:translate(-50%,0); }
+    100% { opacity:0; width:360px; transform:translate(-50%,0); }
+  }
+  @keyframes mnNotchClose {
+    0%, 30% { opacity:0; width:140px; transform:translate(-50%,0); }
+    50%  { opacity:1; width:110px; transform:translate(-50%,0); }
+    70%  { opacity:1; width:64px;  transform:translate(-50%,0); }
+    100% { opacity:1; width:44px;  transform:translate(-50%,-84px); }
+  }
+  @keyframes mnBump {
+    0%   { transform: scale(1);   }
+    35%  { transform: scale(1.5); }
+    100% { transform: scale(1);   }
+  }
+`;
+
 const DARK_HERO_ROUTES = [ROUTES.HOME];
 
-const initialsOf = (name = '') => {
-  const p = name.trim().split(/\s+/).filter(Boolean);
-  return p.length ? (p[0][0] + (p[1]?.[0] || '')).toUpperCase() : 'F';
-};
+const VDIV = 'h-[22px] w-px shrink-0 min-[901px]:hidden max-[480px]:hidden';
+
+// Shown: each cluster springs out from the top-center notch to its place.
+// Hidden: pinched back to the center line (--fx, measured below) and gone.
+// Before the first measure there is no transition, so nothing slides on load.
+// Class strings stay literal so Tailwind can see them.
+const clusterMotion = (ready, shown) => cn(
+  'motion-reduce:transition-none',
+  ready ? '[transition-property:translate,scale,opacity]' : 'transition-none',
+  shown
+    ? 'pointer-events-auto [translate:0_0] scale-100 opacity-100 [transition-duration:.7s,.7s,.35s] [transition-delay:.18s] [transition-timing-function:cubic-bezier(.34,1.25,.64,1),cubic-bezier(.34,1.25,.64,1),ease-out]'
+    : 'pointer-events-none [translate:var(--fx,0px)_0] scale-x-[35%] scale-y-[70%] opacity-0 [transition-duration:.42s,.42s,.22s] [transition-delay:0s,0s,.2s] [transition-timing-function:cubic-bezier(.55,0,.7,.2),cubic-bezier(.55,0,.7,.2),ease-in]'
+);
 
 // ─── Component ────────────────────────────────────────────────────────────────
-// Navbar automatically hides when scrolling down, reappears when scrolling up.
-// It remains transparent over hero sections until the user scrolls past 24px.
+// Navbar pinches into a top-center notch when scrolling down and springs back
+// out when scrolling up (and on first load). At rest it is bare text over the
+// hero; past 24px each cluster (logo, links, account) becomes its own floating
+// dark-glass capsule.
 export default function MainNav() {
   const pathname = usePathname();
-  const router = useRouter();
-
-  const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
-  const hydrated = useAuthHydrated();
-
-  const { count: cartCount } = useHydratedCart();
-  const openCartDrawer = useUIStore((s) => s.openCartDrawer);
-  const lastAdded = useCartStore((s) => s.lastAdded);
-
-  const [bump, setBump] = useState(false);
-  useEffect(() => {
-    if (!lastAdded?.at) return;
-    setBump(true);
-    const t = setTimeout(() => setBump(false), 520);
-    return () => clearTimeout(t);
-  }, [lastAdded?.at]);
-
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -55,6 +70,38 @@ export default function MainNav() {
   // Refs for scroll direction detection
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
+
+  // Refs for the notch animation
+  const rowRef = useRef(null);
+  const logoRef = useRef(null);
+  const linksRef = useRef(null);
+  const rightRef = useRef(null);
+  const [ready, setReady] = useState(false);
+
+  // ── Measure how far each cluster sits from the center line ────────────────
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    const clusters = [logoRef.current, linksRef.current, rightRef.current];
+
+    const measure = () => {
+      const mid = row.clientWidth / 2;
+      clusters.forEach((el) => {
+        el.style.setProperty('--fx', `${mid - (el.offsetLeft + el.offsetWidth / 2)}px`);
+      });
+    };
+
+    measure();
+    void row.offsetWidth; // commit the pinched pose before the first spring
+    const raf = requestAnimationFrame(() => setReady(true));
+
+    const ro = new ResizeObserver(measure);
+    [row, ...clusters].forEach((el) => ro.observe(el));
+
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, []);
 
   // ── Scroll handler: hides on scroll down, shows on scroll up ──────────────
   useEffect(() => {
@@ -90,105 +137,134 @@ export default function MainNav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // ── Close the drawer on route change ─────────────────────────
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
-
-  // ── Lock body scroll when mobile drawer is open ───────────────
-  useEffect(() => {
-    document.body.style.overflow = mobileOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [mobileOpen]);
-
-  // ── Escape closes the drawer ──────────────────────────────────
-  useEffect(() => {
-    if (!mobileOpen) return;
-    const onKey = (e) => { if (e.key === 'Escape') setMobileOpen(false); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [mobileOpen]);
-
   // ── Keep the bar visible while the drawer is open ─────────────
   useEffect(() => {
     if (mobileOpen) setIsVisible(true);
   }, [mobileOpen]);
 
-  const handleLogout = async () => {
-    setMobileOpen(false);
-    await logout();
-    clearProfilePhoto();
-    router.push(ROUTES.HOME);
-    router.refresh(); // invalidate Router Cache so middleware re-runs and protected routes lock again
-  };
-
-  const barClass = [
-    'mn-bar',
-    scrolled ? 'solid' : '',
-    !scrolled && isLightPage ? 'light' : '',
-  ].filter(Boolean).join(' ');
+  // Scrolled: dark capsules with white text on any page. At rest, light pages
+  // switch the text to ink.
+  const solid = scrolled;
+  const ink = isLightPage && !solid;
+  const shown = ready && isVisible;
 
   return (
     <>
       <style>{S}</style>
 
-      <div className={`mn-wrap ${!isVisible ? 'hide' : ''}`} role="banner">
-        <div className={barClass}>
-          <div className="mn-topbar" aria-hidden="true" />
-          <div className="mn-bottomline" aria-hidden="true" />
+      <div
+        className={cn(
+          'pointer-events-none fixed inset-x-0 top-0 z-[999] [--ease:cubic-bezier(.22,1,.36,1)]'
+        )}
+        role="banner"
+      >
+        {/* 1fr | auto | 1fr keeps the links on the true center line */}
+        <div
+          ref={rowRef}
+          className={cn(
+            'relative mx-auto grid max-w-[1500px] grid-cols-[1fr_auto_1fr] items-center pt-5 pr-[max(40px,env(safe-area-inset-right))] pl-[max(40px,env(safe-area-inset-left))]',
+            '[transition:translate_.5s_var(--ease)] motion-reduce:transition-none',
+            'max-[1100px]:px-5 max-[480px]:px-3 max-[480px]:pt-3',
+            solid && '-translate-y-1'
+          )}
+        >
+          {/* ── Notch ───────────────────────────────────────────── */}
+          {/* Keyed on direction so each change replays its keyframes. Not
+              rendered before the first measure, so a load only plays "open". */}
+          {ready && (
+            <span
+              key={shown ? 'open' : 'close'}
+              className={cn(
+                'absolute top-5 left-1/2 -z-10 h-12 rounded-full border max-[480px]:top-3 motion-reduce:hidden',
+                PILL_SOLID,
+                shown
+                  ? 'animate-[mnNotchOpen_.75s_var(--ease)_both]'
+                  : 'animate-[mnNotchClose_.6s_var(--ease)_both]'
+              )}
+              aria-hidden="true"
+            />
+          )}
 
           {/* ── Logo ────────────────────────────────────────────── */}
-          <Link href={ROUTES.HOME} className="mn-logo" aria-label="Fameo home">
-            <AppLogo className="mn-logo-img" darkClassName="mn-logo-dark" />
-            <span className="mn-logo-rule" aria-hidden="true" />
-            <span className="mn-logo-sub">Creator Network</span>
-          </Link>
+          {/* Rests 14px left so the bare logo lines up with the gutter, then
+              slides into its capsule as the capsule fills in. */}
+          <div ref={logoRef} className={cn('col-start-1 justify-self-start', clusterMotion(ready, shown))}>
+            <Link
+              href={ROUTES.HOME}
+              className={cn(
+                PILL,
+                'flex h-12 shrink-0 items-center pr-[21px] pl-[11px] no-underline',
+                FOCUS_RING,
+                solid ? PILL_SOLID : cn(PILL_CLEAR, '-translate-x-3.5')
+              )}
+              aria-label="Fameo home"
+            >
+              <AppLogo mark alt="" className="block size-7 shrink-0 object-contain" />
+              <span
+                className={cn(
+                  'ml-[11px] font-sans text-[10px] leading-[20px] font-semibold tracking-[.06em] [transition:color_.45s_var(--ease)]',
+                  ink ? 'text-[#16130F]' : 'text-white'
+                )}
+              >
+                FAMEO
+              </span>
+              <span
+                className={cn(
+                  'mr-[14px] ml-[15px] h-[18px] w-px shrink-0 [transition:background-color_.45s_var(--ease)] max-[900px]:hidden',
+                  ink ? 'bg-[rgba(20,15,10,0.15)]' : 'bg-white/25'
+                )}
+                aria-hidden="true"
+              />
+              <span
+                className={cn(
+                  'font-mono text-[10px] leading-none font-light tracking-[.3em] whitespace-nowrap uppercase [transition:color_.45s_var(--ease)] max-[900px]:hidden',
+                  ink ? 'text-[#8B8781]' : 'text-white/72'
+                )}
+              >
+                Creator Network
+              </span>
+            </Link>
+          </div>
 
           {/* ── Center links ────────────────────────────────────── */}
-          <nav className="mn-links" aria-label="Main navigation">
-            {MAIN_NAV_LINKS.map(({ href, label }, i) => (
-              <React.Fragment key={href}>
-                {i > 0 && <div className="mn-dot" aria-hidden="true" />}
-                <Link
-                  href={href}
-                  prefetch={href === ROUTES.HOME ? undefined : false}
-                  className={`mn-link${pathname === href ||
-                    (pathname.startsWith(href + '/') && href !== ROUTES.HOME)
-                    ? ' active' : ''
-                    }`}
-                  aria-current={pathname === href ? 'page' : undefined}
-                >
-                  {label}
-                </Link>
-              </React.Fragment>
-            ))}
-          </nav>
+          <div ref={linksRef} className={cn('col-start-2', clusterMotion(ready, shown))}>
+            <DesktopNavLinks ink={ink} solid={solid} />
+          </div>
 
           {/* ── Right cluster ───────────────────────────────────── */}
-          <div className="mn-right">
-            {pathname.startsWith(ROUTES.PRODUCTS) && (
-              <button
-                className="mn-bag"
-                data-cart-anchor=""
-                onClick={() => (cartCount > 0 ? openCartDrawer() : router.push(ROUTES.CART))}
-                aria-label={`Shopping bag, ${cartCount} items`}
-              >
-                <img src="/assets/icons/common/cart.svg" alt="Cart" className="mn-bag-icon" />
-                <span className={`mn-bag-badge${bump ? ' bump' : ''}`}>{cartCount}</span>
-              </button>
+          <div
+            ref={rightRef}
+            className={cn(
+              'col-start-3 flex shrink-0 items-center gap-3 justify-self-end max-[480px]:gap-2',
+              clusterMotion(ready, shown)
             )}
-            <div className="mn-vdiv" aria-hidden="true" />
-
-
+          >
+            {pathname.startsWith(ROUTES.PRODUCTS) && (
+              <span className={cn(PILL, 'flex size-12 items-center justify-center', solid ? PILL_SOLID : PILL_CLEAR)}>
+                <CartButton ink={ink} />
+              </span>
+            )}
+            {!solid && <div className={cn(VDIV, ink ? 'bg-[rgba(20,15,10,0.12)]' : 'bg-white/20')} aria-hidden="true" />}
 
             {/* skeleton → Login/Register → avatar + name pill, all inside */}
-            <UserMenu />
+            <UserMenu ink={ink} solid={solid} />
 
-            <div className="mn-vdiv" aria-hidden="true" />
+            {!solid && <div className={cn(VDIV, ink ? 'bg-[rgba(20,15,10,0.12)]' : 'bg-white/20')} aria-hidden="true" />}
 
+            {/* Hamburger — mobile only, but ALWAYS mounted. Below 900px the
+                center links are gone, so it is the only route to the pages. */}
             <button
               type="button"
-              className="mn-hbg"
+              className={cn(
+                'hidden size-[38px] shrink-0 cursor-pointer items-center justify-center rounded-[4px] border-[1.5px] bg-transparent max-[900px]:flex max-[480px]:size-10',
+                '[transition:border-color_.25s,background-color_.25s,color_.25s,scale_.12s_var(--ease)] active:scale-92 motion-reduce:transition-none',
+                FOCUS_RING,
+                solid
+                  ? cn(PILL_SOLID, 'text-white hover:border-white/60')
+                  : ink
+                    ? 'border-[rgba(20,15,10,0.12)] text-[#16130F] hover:border-[#16130F] hover:bg-[rgba(20,15,10,0.05)]'
+                    : 'border-white/32 text-white/90 hover:border-white/85 hover:bg-white/10 hover:text-white'
+              )}
               onClick={() => setMobileOpen(true)}
               aria-label="Open navigation"
               aria-expanded={mobileOpen}
@@ -200,87 +276,8 @@ export default function MainNav() {
         </div>
       </div>
 
-      {/* ── Backdrop ──────────────────────────────────────────────── */}
-      <div
-        className={`mn-backdrop${mobileOpen ? ' open' : ''}`}
-        onClick={() => setMobileOpen(false)}
-        aria-hidden="true"
-      />
-
-      {/* ── Drawer ────────────────────────────────────────────────── */}
-      <div
-        id="mn-drawer"
-        className={`mn-drawer${mobileOpen ? ' open' : ''}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Navigation"
-        inert={!mobileOpen}
-      >
-        <div className="mn-dr-head">
-          <Link href={ROUTES.HOME} onClick={() => setMobileOpen(false)} aria-label="Fameo home">
-            <AppLogo className="mn-dr-logo-img" darkClassName="mn-dr-logo-dark" />
-          </Link>
-          <button
-            type="button"
-            className="mn-dr-close"
-            onClick={() => setMobileOpen(false)}
-            aria-label="Close navigation"
-          >
-            <X size={14} strokeWidth={1.5} />
-          </button>
-        </div>
-
-        <div className="mn-dr-links">
-          {MAIN_NAV_LINKS.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              prefetch={href === ROUTES.HOME ? undefined : false}
-              className={`mn-dr-link${pathname === href ? ' active' : ''}`}
-              onClick={() => setMobileOpen(false)}
-              aria-current={pathname === href ? 'page' : undefined}
-            >
-              {label}
-            </Link>
-          ))}
-
-          <div className="mn-dr-divider" />
-
-          {/* nothing auth-related renders until the store has rehydrated,
-              so the drawer never flashes "Login" at a signed-in user */}
-          {hydrated && (user ? (
-            ACCOUNT_MENU_ITEMS.map((item) => (
-              <Link
-                key={item.path}
-                href={item.path}
-                className="mn-dr-link"
-                onClick={() => setMobileOpen(false)}
-              >
-                <span style={{ fontSize: 14 }}>{item.icon}</span>
-                {item.label}
-              </Link>
-            ))
-          ) : (
-            <>
-              <Link href={ROUTES.LOGIN} className="mn-dr-link" onClick={() => setMobileOpen(false)}>Login</Link>
-              <Link href={ROUTES.REGISTER} className="mn-dr-link" onClick={() => setMobileOpen(false)}>Join Fameo</Link>
-            </>
-          ))}
-        </div>
-
-        {hydrated && user && (
-          <div className="mn-dr-foot">
-            <div className="mn-dr-foot-id">
-              <span className="mn-dr-foot-av" aria-hidden="true">{initialsOf(user.name)}</span>
-              <div style={{ minWidth: 0 }}>
-                <div className="mn-dr-foot-name">{user.name}</div>
-                <div className="mn-dr-foot-email">{user.email}</div>
-              </div>
-            </div>
-            <button type="button" className="mn-dr-signout" onClick={handleLogout}>Sign out</button>
-          </div>
-        )}
-      </div>
+      {/* ── Mobile Drawer ────────────────────────────────────────── */}
+      <MobileDrawer mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
     </>
   );
 }
