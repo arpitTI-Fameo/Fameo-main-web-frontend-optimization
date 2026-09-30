@@ -12,11 +12,10 @@
 // Decorative: render it inside an `aria-hidden` wrapper.
 // Needs a `.fameo-theme` ancestor for its colors.
 
-import Wordmark from '@/components/Common/Wordmark';
 import { cn } from '@/utils/cn';
 
 export default function FameoPass({
-  logo = <Wordmark className="text-[2em]" />,
+  logo,
   icon: Icon,
   kicker,
   title,

@@ -1,17 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import { useLoginMutation } from '@/lib/hooks/auth/useAuth';
 import { toUserMessage } from "@/lib/api/errors";
 import { safeRedirect } from "@/lib/security/safeRedirect";
 import { loginSchema, LOGIN_DEFAULT_VALUES } from "../schema";
-import { CSS } from "../styles";
-import { BUBBLES, SPARKLES, PARTICLES } from "../decor";
-import LoginHeader from "../LoginHeader";
+import AuthShell from "@/components/Layout/AuthShell";
+import LoginStory from "../LoginStory";
 import LoginForm from "../LoginForm";
 import { STORAGE_KEYS } from '@/constants/storageKeys';
 import { ROUTES } from '@/constants/routes';
@@ -27,7 +25,7 @@ export default function LoginContainer() {
      both modes keeps the old timing exactly — nothing goes red while you type,
      and a message stays put until the next submit attempt. */
   /** @type {import('react-hook-form').UseFormReturn<import('../schema').LoginValues>} */
-  const { register, handleSubmit, formState: { errors: fieldErrors } } = useForm({
+  const { register, handleSubmit, control, formState: { errors: fieldErrors } } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: LOGIN_DEFAULT_VALUES,
     mode: "onSubmit",
@@ -38,6 +36,11 @@ export default function LoginContainer() {
   // One line, one message — the required-field rule and the server error can
   // never both be live, because submit resets the mutation before validating.
   const validationError = fieldErrors.username?.message || fieldErrors.password?.message || "";
+  const invalid = { username: Boolean(fieldErrors.username), password: Boolean(fieldErrors.password) };
+
+  // Display only: Sign in lights up (one shine) once both fields have text.
+  const [usernameValue, passwordValue] = useWatch({ control, name: ["username", "password"] });
+  const ready = Boolean(usernameValue && passwordValue);
   const error = validationError || (loginMutation.error ? toUserMessage(loginMutation.error) : "");
 
   // Compute this AFTER mount so server and first client render agree (both
@@ -90,94 +93,25 @@ export default function LoginContainer() {
   };
 
   return (
-    <div className="lg-root">
-      <style>{CSS}</style>
+    <AuthShell prompt="New to Fameo?" linkLabel="Join the circle" href={ROUTES.REGISTER} footer>
+      <div className="mx-auto grid max-w-275 grid-cols-2 items-center gap-20 px-16.25 pt-17.5 pb-15 min-[1100px]:gap-23.75 min-[1100px]:pt-22.5 min-[1100px]:pb-21.25 max-[851px]:grid-cols-[minmax(0,.9fr)_minmax(0,1fr)] max-[851px]:gap-8.75 max-[851px]:px-8.5 max-[851px]:py-12.5 max-[651px]:block max-[651px]:px-6.25 max-[651px]:pt-6.75 max-[651px]:pb-9">
+        <LoginStory />
 
-      {/* Ambient blurred orbs */}
-      <div className="lg-orb lg-orb-1" />
-      <div className="lg-orb lg-orb-2" />
-      <div className="lg-orb lg-orb-3" />
-      <div className="lg-orb lg-orb-4" />
-      <div className="lg-orb lg-orb-5" />
-
-      {/* Noise grain */}
-      <div className="lg-noise" />
-
-      {/* 7 concentric pulsing rings */}
-      <div className="lg-rings-wrap">
-        {[1, 2, 3, 4, 5, 6, 7].map(i => <div key={i} className="lg-ring-c" />)}
+        <section
+          aria-label="Account access"
+          className="min-w-0 border-l border-border/70 pl-11 max-[851px]:pl-7 max-[651px]:mx-auto max-[651px]:max-w-97.5 max-[651px]:border-t max-[651px]:border-l-0 max-[651px]:pt-6.5 max-[651px]:pl-0"
+        >
+          <LoginForm
+            register={register}
+            loading={isPending}
+            error={error}
+            invalid={invalid}
+            ready={ready}
+            isSessionExpired={isSessionExpired}
+            handleLogin={handleLogin}
+          />
+        </section>
       </div>
-
-      {/* Spinning corner arc circles */}
-      <div className="lg-corner lg-corner-tl" />
-      <div className="lg-corner lg-corner-br" />
-      <div className="lg-corner lg-corner-tr" />
-      <div className="lg-corner lg-corner-bl" />
-
-      {/* ── BUBBLES ─────────────────────────────────────────────────────── */}
-      {BUBBLES.map((b, i) => (
-        <div
-          key={i}
-          className="lg-bubble"
-          style={{
-            left: b.left,
-            top: b.top,
-            width: b.size + 'px',
-            height: b.size + 'px',
-            '--bop': b.opacity,
-            animationDuration: b.dur + 's',
-            animationDelay: b.delay + 's',
-          }}
-        />
-      ))}
-
-      {/* Sparkle twinkle dots */}
-      {SPARKLES.map((s, i) => (
-        <div key={i} className="lg-sparkle" style={{
-          top: s.top, left: s.left,
-          width: s.size + 'px', height: s.size + 'px',
-          background: i % 2 === 0 ? 'rgba(255,255,255,0.9)' : 'rgba(212,90,121,0.85)',
-          boxShadow: i % 2 === 0
-            ? `0 0 ${s.size * 4}px rgba(255,255,255,0.75)`
-            : `0 0 ${s.size * 4}px rgba(212,90,121,0.75)`,
-          animationDelay: s.delay + 's',
-          animationDuration: s.dur + 's',
-        }} />
-      ))}
-
-      {/* Rising particles */}
-      {PARTICLES.map((p, i) => (
-        <div key={i} className="lg-particle" style={{
-          left: p.left,
-          width: p.size + 'px', height: p.size + 'px',
-          background: p.color,
-          boxShadow: `0 0 ${p.size * 3}px ${p.color}`,
-          animationDelay: p.delay + 's',
-          animationDuration: p.dur + 's',
-        }} />
-      ))}
-
-      {/* ── Card ──────────────────────────────────────────────────────── */}
-      <div className="lg-card">
-
-        <LoginHeader />
-
-        <div className="lg-divider" />
-
-        <LoginForm
-          register={register}
-          loading={isPending}
-          error={error}
-          isSessionExpired={isSessionExpired}
-          handleLogin={handleLogin}
-        />
-
-        {/* Footer */}
-        <div className="lg-footer">
-          <p className="lg-hint">Use the same credentials from your Fameo mobile app.</p>
-          <Link href={ROUTES.HOME} className="lg-back">← Back to Fameo</Link>
-        </div>
-      </div>
-    </div>
+    </AuthShell>
   );
 }

@@ -40,7 +40,6 @@ vi.mock('@/lib/auth/session', () => ({
 
 vi.mock('@/lib/api/server/origins', () => ({
   API_ORIGIN: 'https://upstream.test',
-  PRODUCTS_ORIGIN: 'https://products.test',
   APP_ORIGIN: 'https://app.test',
 }));
 

@@ -22,7 +22,6 @@ import 'server-only';
 // shape it does not recognise.
 
 import { privateFetch } from '@/lib/api/server/fetcher';
-import { PRODUCTS_ORIGIN } from '@/lib/api/server/origins';
 import { PRODUCTS_PAGE_SIZE } from '@/lib/api/config';
 import {
   subscriptionEndpoints,
@@ -66,7 +65,7 @@ export const getPlansServer = () =>
 export const getStorefrontProductsServer = (params = {}) => {
   const qs = new URLSearchParams({ limit: PRODUCTS_PAGE_SIZE, ...params });
   return envelope(() =>
-    privateFetch(`${PRODUCTS_ORIGIN}${fameoProductEndpoints.publicProducts()}?${qs}`),
+    privateFetch(`${API_ORIGIN}${fameoProductEndpoints.publicProducts()}?${qs}`),
   );
 };
 

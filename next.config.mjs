@@ -67,7 +67,8 @@ const nextConfig = {
 
               script-src
                 'self'
-                ${isDev ? "'unsafe-inline' 'unsafe-eval'" : ''}
+                'unsafe-inline'
+                ${isDev ? "'unsafe-eval'" : ''}
                 https://checkout.razorpay.com
                 https://cdn.razorpay.com
                 https://www.google.com

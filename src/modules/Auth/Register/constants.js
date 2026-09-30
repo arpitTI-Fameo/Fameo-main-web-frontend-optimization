@@ -1,3 +1,7 @@
+import {
+  BriefcaseBusiness, Compass, Drama, Gamepad2, GraduationCap, HeartPulse, Megaphone,
+  Microscope, Music2, Newspaper, Palette, Scale, Shirt, Sparkles, Sun, Trophy, Utensils,
+} from 'lucide-react';
 import { env } from '@/env';
 import { BFF_APP_BASE } from '@/lib/api/config';
 
@@ -152,30 +156,43 @@ export async function lookupPincode(pin) {
   return null;
 }
 
-export const CATEGORY_ICON_MAP = {
-  A: '🎭', B: '💼', C: '😂', D: '🎓', E: '🌿', F: '👗',
-  G: '🍽️', H: '💊', I: '🌍', J: '⚖️', K: '🎵', L: '🏅',
-  M: '🔬', N: '✈️', O: '🌟', P: '➕',
-};
-
 /* Pick the icon from the category NAME, not the position-based single-letter
-   code (which the API doesn't order predictably, so Music was getting Acting's
-   mask). Code map stays as a last-resort fallback. */
+   code (which the API doesn't order predictably). The description is only a
+   fallback, so a stray word in it can't beat the name. Order matters:
+   "Activism" must reach Politics before the acting rule sees "act". */
 export const CATEGORY_KEYWORDS = [
-  [/act|drama|theat|film|movie|cinema/i, '🎭'], [/business|entrepreneur|financ|market/i, '💼'],
-  [/comed|humou?r|funny|meme/i, '😂'], [/edu|learn|teach|academ|study/i, '🎓'],
-  [/health|wellness|fitness|yoga|nutrition/i, '🌿'], [/fashion|style|beauty|makeup|model/i, '👗'],
-  [/food|cook|chef|recipe|culinary/i, '🍽️'], [/medic|doctor|pharma|clinic/i, '💊'],
-  [/travel|tourism|adventure|explor/i, '✈️'], [/law|legal|advocate|justice/i, '⚖️'],
-  [/music|singer|song|dj|audio/i, '🎵'], [/sport|athlet|gaming|esport/i, '🏅'],
-  [/scien|tech|research|engineer/i, '🔬'], [/lifestyle|vlog|daily/i, '🌍'],
-  [/art|design|paint|craft|photo/i, '🎨'], [/danc|choreo/i, '💃'],
+  [/politic|activis|campaign/i, Megaphone],
+  [/comed|humou?r|funny|meme|entertain|\bact(ing|or)?\b|drama|theat|film|movie|cinema/i, Drama],
+  [/\bart|culture|design|paint|craft|photo/i, Palette],
+  [/business|entrepreneur|financ|market/i, BriefcaseBusiness],
+  [/edu|learn|teach|academ|study/i, GraduationCap],
+  [/fashion|style|beauty|makeup|model/i, Shirt],
+  [/food|cook|chef|recipe|culinary|hospitality/i, Utensils],
+  [/\blaw|legal|advocate|justice|govern/i, Scale],
+  [/health|medic|doctor|pharma|clinic|wellness|fitness|yoga|nutrition/i, HeartPulse],
+  [/journal|media|news|press/i, Newspaper],
+  [/music|singer|song|\bdj\b|audio/i, Music2],
+  [/relig|spirit|faith/i, Sun],
+  [/scien|research|innovat/i, Microscope],
+  [/sport|athlet/i, Trophy],
+  [/tech|gaming|game|esport|engineer/i, Gamepad2],
+  [/travel|tourism|adventure|explor/i, Compass],
 ];
 export function pickCategoryIcon(cat) {
-  const hay = `${cat.category_name || ''} ${cat.description || ''}`;
-  for (const [re, icon] of CATEGORY_KEYWORDS) if (re.test(hay)) return icon;
-  return CATEGORY_ICON_MAP[cat.category_code] || '🌟';
+  for (const hay of [cat.category_name, cat.description]) {
+    if (!hay) continue;
+    for (const [re, Icon] of CATEGORY_KEYWORDS) if (re.test(hay)) return Icon;
+  }
+  return Sparkles;
 }
+
+/* Category icon tiles cycle through four soft tones. */
+export const CATEGORY_TONES = [
+  { bg: '#F3E8F0', ink: '#BB7B9F' },
+  { bg: '#EEE9F4', ink: '#9983B5' },
+  { bg: '#F2EDE6', ink: '#B29774' },
+  { bg: '#E9EEF2', ink: '#7B9AAA' },
+];
 
 export const GENDER_OPTIONS = [
   { label: 'Male', value: 'male' },
@@ -186,32 +203,51 @@ export const GENDER_OPTIONS = [
 const POLICY_BASE_URL = process.env.NEXT_PUBLIC_APP_ORIGIN || 'https://uat-api.fameo.info';
 
 export const POLICY_LINKS = [
-  { label: 'Privacy Policy', href: `${POLICY_BASE_URL}/privacy-policy.html`, icon: '🔒' },
-  { label: 'Terms of Service', href: `${POLICY_BASE_URL}/terms-and-conditions.html`, icon: '📋' },
-  { label: 'Cookie Policy', href: `${POLICY_BASE_URL}/cookie-policy.html`, icon: '🍪' },
+  { label: 'Privacy Policy', href: `${POLICY_BASE_URL}/privacy-policy.html` },
+  { label: 'Terms of Service', href: `${POLICY_BASE_URL}/terms-and-conditions.html` },
+  { label: 'Cookie Policy', href: `${POLICY_BASE_URL}/cookie-policy.html` },
 ];
 
+/* Copy per step. `story` is the left column: `lead` on the first line, then
+   `pre` and the serif `accent` on the second. `title`/`sub` head the form. */
 export const STEPS = [
   {
-    kicker: 'STEP 01 — IDENTITY', lead: 'Your', accent: 'identity',
-    sub: 'Enter your legal name, verify your mobile and email, and confirm your age. This stays private — used only by our verification team.'
+    label: 'Identity',
+    story: { lead: 'Your next circle', pre: 'starts', accent: 'with you.', sub: 'A place to be known for who you are. Let’s begin with the essentials.' },
+    title: 'Let’s make it official.',
+    sub: 'Your details stay private. Your connections start here.',
   },
   {
-    kicker: 'STEP 02 — PROFILE', lead: 'Your', accent: 'profile',
-    sub: 'Pick a unique username and tell us a little about where you are. Your username is public — everything else stays private.'
+    label: 'Profile',
+    story: { lead: 'A little context.', accent: 'A lot in common.', sub: 'Give your future connections a place to start.' },
+    title: 'A name they’ll remember.',
+    sub: 'Your username is public. Your location helps us find people nearby.',
   },
   {
-    kicker: 'STEP 03 — SOCIALS', lead: 'Your', accent: 'socials',
-    sub: 'Link your public profiles. At least one platform is required — followers are never combined.'
+    label: 'Socials',
+    story: { lead: 'Your work.', accent: 'Your world.', sub: 'Bring your public presence. Your audience stays where it is.' },
+    title: 'Bring your public side.',
+    sub: 'Add at least one profile where you share your work.',
   },
   {
-    kicker: 'STEP 04 — CATEGORY', lead: 'Your', accent: 'category',
-    sub: 'Select the category and profession that best describe your public profile.'
+    label: 'Category',
+    story: { lead: 'Make room for', accent: 'your kind of people.', sub: 'From everyday interests to extraordinary expertise, there’s a place for you.' },
+    title: 'What’s your world?',
+    sub: 'Choose the category that best represents your public work.',
   },
   {
-    kicker: 'STEP 05 — PROOF', lead: 'Almost', accent: 'famous',
-    sub: 'Complete a live blink check and upload supporting documents to finish your application.'
+    label: 'Verification',
+    story: { lead: 'Real people.', accent: 'Real possibility.', sub: 'A thoughtful final step toward a network built on trust.' },
+    title: 'A little trust goes a long way.',
+    sub: 'One quick identity check, and you’re ready for review.',
   },
+];
+
+/* Primary platform choices on the Socials step. Values are what the API takes. */
+export const PLATFORMS = [
+  { value: 'Instagram', label: 'Instagram' },
+  { value: 'YouTube', label: 'YouTube' },
+  { value: 'Both', label: 'Both' },
 ];
 
 export const OTP_LENGTH = 6;

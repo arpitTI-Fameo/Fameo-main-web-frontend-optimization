@@ -8,14 +8,14 @@ import 'server-only';
 
 import { privateFetch } from '@/lib/api/server/fetcher';
 import { authEndpoints } from '@/lib/api/endpoints';
-import { PRODUCTS_ORIGIN } from '@/lib/api/server/origins';
+import { API_ORIGIN } from '@/lib/api/server/origins';
 
 /**
  * GET /api/auth/me. Pass `token` straight after sign-in, before the new
  * cookie is readable; otherwise the session cookie is used.
  */
 export const getMeServerAction = ({ token, isAdmin } = {}) => {
-  const url = isAdmin ? `${PRODUCTS_ORIGIN}/api/users/me` : authEndpoints.me();
+  const url = isAdmin ? `${API_ORIGIN}/api/users/me` : authEndpoints.me();
   return privateFetch(url, token ? { headers: { Authorization: `Bearer ${token}` } } : {});
 };
 

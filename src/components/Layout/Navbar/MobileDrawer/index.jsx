@@ -82,7 +82,7 @@ export default function MobileDrawer({ mobileOpen, setMobileOpen }) {
         role="dialog"
         aria-modal="true"
         aria-label="Navigation"
-        inert={mobileOpen ? undefined : "true"}
+        inert={mobileOpen ? undefined : true}
       >
         <div className="relative flex h-[62px] shrink-0 items-center justify-between border-b border-[rgba(20,15,10,0.12)] px-[22px] after:absolute after:inset-x-0 after:top-0 after:h-0.5 after:bg-[#D45A79] after:content-['']">
           <Link href={ROUTES.HOME} onClick={() => setMobileOpen(false)} aria-label="Fameo home">

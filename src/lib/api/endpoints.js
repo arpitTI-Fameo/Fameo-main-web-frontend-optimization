@@ -116,7 +116,6 @@ export const userEndpoints = {
 
 // ── Products (catalog, cart, fulfillment orders, support) ─────────────────────
 // Reached through the products BFF (BFF_PRODUCTS_BASE), which forwards the
-// path as-is to PRODUCTS_ORIGIN — the same backend as API_ORIGIN. Product
 // purchases go through customerOrderEndpoints below.
 export const fameoProductEndpoints = {
   products: () => '/api/products',
@@ -428,28 +427,28 @@ export const adminEndpoints = {
   // Approvals
   approvalsList: (status) => `/admin/approvals?status=${status}`,
   approval: (id) => `/admin/approvals/${id}`,
-  
+
   // Archive
   archiveList: () => "/admin/archive",
   archiveRestore: (id) => `/admin/archive/${id}/restore`,
-  
+
   // Content
   contentList: (params) => `/admin/content?${params}`,
   contentStatus: (id) => `/admin/content/${id}/status`,
   content: (id) => `/admin/content/${id}`,
   contentCreate: () => `/admin/content`,
   contentRollback: (id) => `/admin/content/${id}/rollback`,
-  
+
   // Media
   mediaList: () => "/admin/media",
   mediaListPagination: (limit) => `/media?limit=${limit}`,
   mediaUpload: () => "/media/upload",
   media: (id) => `/media/${id}`,
-  
+
   // Analytics
   analyticsOverview: () => "/admin/analytics/overview",
   analyticsTopics: () => "/admin/analytics/topics",
-  
+
   // Courses
   coursesList: () => "/courses/admin/list",
   course: (id) => `/courses/admin/${id}`,
@@ -469,31 +468,31 @@ export const adminEndpoints = {
   learners: () => "/admin/learners",
   learner: (id) => `/admin/learners/${id}`,
   contacts: () => "/admin/contacts",
-  
+
   // Notifications
   notificationsAdmin: () => "/admin/notifications",
   notifications: () => "/notifications",
-  
+
   // Roles
   rolesUsers: () => "/admin/roles/users",
   role: (id) => `/admin/roles/${id}`,
   roleAccess: (id) => `/admin/roles/${id}/access`,
   rolePassword: (id) => `/admin/roles/${id}/password`,
   roleCreateUser: () => "/admin/roles/create-user",
-  
+
   // Products
   productsList: () => "/admin/products",
   product: (id) => `/admin/products/${id}`,
   productStatus: (id) => `/admin/products/${id}/status`,
-  
+
   // Module Masters
   moduleMastersList: () => "/admin/module-masters",
   moduleMasterModules: (id) => `/admin/module-masters/${id}/modules`,
   moduleMaster: (id) => `/admin/module-masters/${id}`,
-  
+
   // Revenue
   revenue: () => "/admin/revenue",
-  
+
   // Support
   supportTickets: (status) => `/admin/support/tickets?status=${status}`,
   supportFaqs: () => "/admin/support/faqs",
@@ -501,7 +500,7 @@ export const adminEndpoints = {
   supportTicket: (id) => `/admin/support/tickets/${id}`,
   supportTicketCreate: () => "/admin/support/tickets",
   supportFaq: (id) => `/admin/support/faqs/${id}`,
-  
+
   // Overview
   stats: () => "/admin/stats",
   activity: (limit) => `/admin/activity?limit=${limit}`,

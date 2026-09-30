@@ -84,9 +84,10 @@ export default function MainNav() {
     const clusters = [logoRef.current, linksRef.current, rightRef.current];
 
     const measure = () => {
+      if (!row) return;
       const mid = row.clientWidth / 2;
       clusters.forEach((el) => {
-        el.style.setProperty('--fx', `${mid - (el.offsetLeft + el.offsetWidth / 2)}px`);
+        if (el) el.style.setProperty('--fx', `${mid - (el.offsetLeft + el.offsetWidth / 2)}px`);
       });
     };
 

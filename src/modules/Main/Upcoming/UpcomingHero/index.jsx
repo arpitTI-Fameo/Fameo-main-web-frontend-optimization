@@ -7,7 +7,6 @@ import { ArrowDown, ArrowUpRight } from 'lucide-react';
 import ArrowButton from '@/components/Common/ArrowButton';
 import FameoPass from '@/components/Common/FameoPass';
 import Polaroid from '@/components/Common/Polaroid';
-import Wordmark from '@/components/Common/Wordmark';
 import SectionHeading from '@/components/Common/SectionHeading';
 
 import { FIRST_LOOK_ID, UPCOMING_HERO as HERO } from '../constants';
@@ -40,7 +39,7 @@ function HeroArt() {
       <FameoPass
         title={HERO.pass.title}
         caption={HERO.pass.caption}
-        logo={<Wordmark className="text-[2.5em]" />}
+        logo=''
         stack="top"
         titleClassName="leading-[1.02]"
         className={`absolute top-[66.3%] left-[47.1%] h-[25.9cqw] w-[42cqw] -rotate-8 px-[2em] pt-[1.6em] pb-[1.8em] text-[1.85cqw] ${CENTER}`}

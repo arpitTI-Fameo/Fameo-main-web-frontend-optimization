@@ -14,15 +14,12 @@ import { env } from '@/env';
 // imports this file, the build fails with a clear message.
 //
 // Set these in the environment WITHOUT a NEXT_PUBLIC_ prefix:
-//   API_ORIGIN, PRODUCTS_ORIGIN, APP_ORIGIN
+//   API_ORIGIN, APP_ORIGIN
 
 const trim = (v) => v.replace(/\/+$/, '');
 
 /** Main API (auth, community, orders, resources…). */
 export const API_ORIGIN = trim(env.API_ORIGIN);
-
-/** Products backend. Shares JWT_SECRET with the main API. */
-export const PRODUCTS_ORIGIN = trim(env.PRODUCTS_ORIGIN);
 
 /** The "app" backend the registration flow talks to. */
 export const APP_ORIGIN = trim(env.APP_ORIGIN);
@@ -52,7 +49,6 @@ const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
 if (process.env.NODE_ENV === 'production' && !isBuildPhase) {
   const missing = [
     !process.env.API_ORIGIN && 'API_ORIGIN',
-    !process.env.PRODUCTS_ORIGIN && 'PRODUCTS_ORIGIN',
     !process.env.APP_ORIGIN && 'APP_ORIGIN',
   ].filter(Boolean);
 

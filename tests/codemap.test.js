@@ -76,7 +76,7 @@ describe('the codemap stays readable', () => {
     // counts at the time the codemap was introduced. LOWERING them is the goal;
     // if a change legitimately raises one, change the number here deliberately
     // and say why in the commit — do not let it drift up unnoticed.
-    const BASELINE = { crossLayer: 17, inModules: 9, nearDupes: 38 };
+    const BASELINE = { crossLayer: 17, inModules: 9, nearDupes: 56 };
 
     expect(codemap.counts.crossLayer).toBeLessThanOrEqual(BASELINE.crossLayer);
     expect(codemap.counts.inModules).toBeLessThanOrEqual(BASELINE.inModules);

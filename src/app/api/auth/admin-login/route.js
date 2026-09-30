@@ -17,7 +17,7 @@ import { NextResponse } from 'next/server';
 import { hit, clientKey, limitHeaders, LIMITS } from '@/lib/api/server/rate-limit';
 import { setSessionTokens } from '@/lib/auth/session';
 import { ADMIN_ROLES } from '@/constants/roles';
-import { PRODUCTS_ORIGIN } from '@/lib/api/server/origins';
+import { API_ORIGIN } from '@/lib/api/server/origins';
 
 export async function POST(request) {
   const gate = hit(`admin-login:${clientKey(request)}`, LIMITS.auth.limit, LIMITS.auth.windowMs);
@@ -40,7 +40,7 @@ export async function POST(request) {
 
   let loginRes, body;
   try {
-    loginRes = await fetch(`${PRODUCTS_ORIGIN}/api/users/login`, {
+    loginRes = await fetch(`${API_ORIGIN}/api/users/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

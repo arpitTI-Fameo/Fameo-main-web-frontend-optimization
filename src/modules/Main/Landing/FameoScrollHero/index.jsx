@@ -397,49 +397,6 @@ export default function FameoScrollHero() {
           </div>
         </div>
       </div>
-
-      {/* ── fixed chrome ──────────────────────────────────────── */}
-      <div className="tsc-fixed">
-        {/* <span className="tsc-beta">CURRENTLY IN BETA</span> */}
-
-        <nav className="tsc-navbar">
-          <Link href={ROUTES.HOME} className="tsc-navbar-brand">Fameo</Link>
-
-          {!auth.hydrated ? (
-            /* store not read yet — reserve the space instead of flashing
-               LOGIN / SIGN UP at someone who is already signed in */
-            <span className="tsc-navbar-skel" aria-hidden="true" />
-          ) : auth.isLoggedIn ? (
-            <>
-              <Link href={auth.profileHref} className="tsc-navbar-me">
-                <span className="tsc-navbar-av">
-                  {auth.photo
-                    ? <img src={auth.photo} alt="" />
-                    : auth.initials}
-                </span>
-                <span className="tsc-navbar-name">{auth.firstName}</span>
-              </Link>
-              <Link href={auth.cta.href} className="tsc-navbar-signup">
-                {auth.cta.label}
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link href={auth.loginHref} className="tsc-navbar-login">LOGIN</Link>
-              <Link href={auth.cta.href} className="tsc-navbar-signup">{auth.cta.label}</Link>
-            </>
-          )}
-        </nav>
-
-        <div className="tsc-scroll-cue">
-          <span>SCROLL</span>
-          <button className="tsc-scroll-btn" aria-label="Scroll down" onClick={scrollNudge}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" strokeWidth="2">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
