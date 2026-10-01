@@ -1,0 +1,94 @@
+# Validation for every change. Never deploys and never touches AWS.
+#
+#   pull_request → main, dev    lint (zero warnings) + tests + audit, then build
+#                               the production image (next build) and boot it
+#                               (deploy/smoke-test.sh)
+#   push → dev                  lint + tests + audit
+#   workflow_call               lint + tests + audit, called by production.yml
+#                               before it builds the image it deploys
+#
+# Third-party actions are pinned to commit SHAs (tag in the trailing comment).
+name: CI
+
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [dev]
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  # A new push to a pull request supersedes the run in progress.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NODE_VERSION: '24'
+
+jobs:
+  validate:
+    name: Lint and test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      # The repo's own bar (`npm run verify`): no errors, no warnings.
+      - run: npm run lint:ci
+
+      # Vitest: architecture/security invariants, codemap freshness, units.
+      - run: npm test
+
+      # Blocks on critical advisories in production dependencies. Lower-severity
+      # findings are reported, not fatal.
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=critical
+
+  image:
+    name: Build and boot production image
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # The production build (next build runs inside it), with the same public
+      # NEXT_PUBLIC_* values as production. Reads the layer cache written by
+      # production builds on main; pull requests never write to it.
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          push: false
+          provenance: false
+          sbom: false
+          tags: fameo-web:ci
+          build-args: |
+            NEXT_PUBLIC_SITE_URL=${{ vars.NEXT_PUBLIC_SITE_URL }}
+            NEXT_PUBLIC_APP_ORIGIN=${{ vars.NEXT_PUBLIC_APP_ORIGIN }}
+            NEXT_PUBLIC_SOCKET_URL=${{ vars.NEXT_PUBLIC_SOCKET_URL }}
+            NEXT_PUBLIC_APP_NAME=${{ vars.NEXT_PUBLIC_APP_NAME }}
+            NEXT_PUBLIC_RAZORPAY_KEY_ID=${{ vars.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
+            NEXT_PUBLIC_MAX_ORDER_INR=${{ vars.NEXT_PUBLIC_MAX_ORDER_INR }}
+            NEXT_PUBLIC_LIVEKIT_URL=${{ vars.NEXT_PUBLIC_LIVEKIT_URL }}
+            NEXT_PUBLIC_PORTAL_MOCK=${{ vars.NEXT_PUBLIC_PORTAL_MOCK }}
+          cache-from: type=gha,scope=production
+
+      - run: deploy/smoke-test.sh fameo-web:ci

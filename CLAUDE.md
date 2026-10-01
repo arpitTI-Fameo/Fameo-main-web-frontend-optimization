@@ -171,3 +171,14 @@ Security invariants, enforced by `tests/architecture.test.js`:
 - [ ] `npm run build` passes
 
 `npm run verify` runs lint + test + build in one go.
+
+---
+
+## 6. Deployment
+
+A merge to `main` is the only thing that deploys production (CI → Docker image tagged with the
+commit SHA → ECR → SSM → EC2). See `DEPLOYMENT.md`.
+
+- A new top-level file the build needs must be added to the `.dockerignore` allowlist.
+- A new `NEXT_PUBLIC_*` variable needs a `build-args` line in both workflows and an `ARG` in the
+  `Dockerfile`; a new server variable must be in SSM Parameter Store before the merge that needs it.

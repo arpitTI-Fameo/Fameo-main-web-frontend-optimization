@@ -1,0 +1,246 @@
+# Production delivery. The only workflow that pushes images or deploys.
+#
+#   push → main (a merged PR)
+#     ci        lint + tests + audit (ci.yml)
+#     image     next build in Docker → boot-test → push <ecr>/<repo>:<commit sha>
+#     deploy    SSM Run Command → EC2 runs deploy/deploy.sh <sha> → /health
+#
+#   workflow_dispatch on main, image_tag = <sha>
+#     deploy    redeploys an image already in ECR (rollback) — no rebuild
+#
+# AWS access is GitHub OIDC only: `image` assumes the ECR push role (trusted
+# for refs/heads/main), `deploy` assumes the deploy role (trusted for the
+# `production` environment only). See DEPLOYMENT.md.
+name: Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: >-
+          Redeploy an image already in ECR: its full 40-character commit SHA.
+          Leave empty to build and deploy the current main.
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+# One production run at a time, in order. A run that is waiting is replaced by
+# a newer one (latest main wins); a running deployment is never cancelled.
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+
+jobs:
+  ci:
+    name: CI
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.image_tag == '')
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  image:
+    name: Build and push image
+    needs: ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
+          role-session-name: fameo-web-image-${{ github.run_id }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Log in to ECR
+        id: ecr
+        run: |
+          registry="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
+          aws ecr get-login-password --region "$AWS_REGION" |
+            docker login --username AWS --password-stdin "$registry" >/dev/null 2>&1
+          echo "image=$registry/$ECR_REPOSITORY:$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+
+      # Tags are immutable in ECR: a re-run of this workflow reuses the image
+      # already pushed for this commit instead of failing to overwrite it.
+      - name: Check whether this commit is already in ECR
+        id: existing
+        run: |
+          if out=$(aws ecr describe-images --repository-name "$ECR_REPOSITORY" \
+                     --image-ids imageTag="$GITHUB_SHA" 2>&1); then
+            echo "Image for $GITHUB_SHA is already in ECR; not rebuilding."
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          elif grep -q ImageNotFoundException <<<"$out"; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "$out" >&2
+            exit 1
+          fi
+
+      - if: steps.existing.outputs.found == 'false'
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # Built into the local daemon (load), boot-tested, and only then pushed:
+      # the image in ECR is byte-for-byte the one that passed the smoke test.
+      # Single-platform, no attestations → one plain manifest per tag, which
+      # the ECR lifecycle policy can count and expire safely.
+      - if: steps.existing.outputs.found == 'false'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          push: false
+          provenance: false
+          sbom: false
+          tags: ${{ steps.ecr.outputs.image }}
+          # Public values inlined into the JavaScript by next build (Dockerfile).
+          build-args: |
+            NEXT_PUBLIC_SITE_URL=${{ vars.NEXT_PUBLIC_SITE_URL }}
+            NEXT_PUBLIC_APP_ORIGIN=${{ vars.NEXT_PUBLIC_APP_ORIGIN }}
+            NEXT_PUBLIC_SOCKET_URL=${{ vars.NEXT_PUBLIC_SOCKET_URL }}
+            NEXT_PUBLIC_APP_NAME=${{ vars.NEXT_PUBLIC_APP_NAME }}
+            NEXT_PUBLIC_RAZORPAY_KEY_ID=${{ vars.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
+            NEXT_PUBLIC_MAX_ORDER_INR=${{ vars.NEXT_PUBLIC_MAX_ORDER_INR }}
+            NEXT_PUBLIC_LIVEKIT_URL=${{ vars.NEXT_PUBLIC_LIVEKIT_URL }}
+            NEXT_PUBLIC_PORTAL_MOCK=${{ vars.NEXT_PUBLIC_PORTAL_MOCK }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha,scope=production
+          cache-to: type=gha,scope=production,mode=max
+
+      - if: steps.existing.outputs.found == 'false'
+        name: Boot the image (smoke test)
+        run: deploy/smoke-test.sh "${{ steps.ecr.outputs.image }}"
+
+      - if: steps.existing.outputs.found == 'false'
+        name: Push to ECR
+        run: docker push --quiet "${{ steps.ecr.outputs.image }}"
+
+      - name: Summary
+        run: echo "Image \`$ECR_REPOSITORY:$GITHUB_SHA\` is in ECR." >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: Deploy to production EC2
+    needs: image
+    # After a successful image job, or on its own for a manual redeploy of an
+    # existing image (then `ci` and `image` are skipped by their conditions).
+    if: >-
+      !cancelled() && github.ref == 'refs/heads/main' &&
+      (needs.image.result == 'success' ||
+       (github.event_name == 'workflow_dispatch' && inputs.image_tag != '' && needs.image.result == 'skipped'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
+      EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+      APP_DIR: /opt/fameo-web
+    steps:
+      # deploy/deploy.sh is taken from this commit of main and installed on the
+      # host by the SSM command below, so the host never runs a stale copy.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate inputs
+        run: |
+          [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]] ||
+            { echo "::error::image_tag must be a full 40-character commit SHA"; exit 1; }
+          [[ "$EC2_INSTANCE_ID" =~ ^i-[0-9a-f]{8,17}$ ]] ||
+            { echo "::error::environment variable EC2_INSTANCE_ID is missing or invalid"; exit 1; }
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: fameo-web-deploy-${{ github.run_id }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Check the image exists in ECR
+        run: |
+          aws ecr describe-images --repository-name "$ECR_REPOSITORY" \
+            --image-ids imageTag="$IMAGE_TAG" >/dev/null ||
+            { echo "::error::$ECR_REPOSITORY:$IMAGE_TAG is not in ECR"; exit 1; }
+
+      - name: Run deploy.sh on EC2 through SSM
+        run: |
+          set -euo pipefail
+
+          # The command installs this commit's deploy.sh (base64, in chunks well
+          # under any per-line limit, checksum-verified) and runs it. Base64 is
+          # [A-Za-z0-9+/=] only, so the chunks need no shell quoting.
+          script_sha=$(sha256sum deploy/deploy.sh | cut -d' ' -f1)
+          script_b64=$(base64 -w0 deploy/deploy.sh)
+          commands=$(jq -n --arg dir "$APP_DIR" --arg tag "$IMAGE_TAG" \
+                           --arg sha "$script_sha" --arg b64 "$script_b64" '
+            ["set -e",
+             "install -d -m 700 \($dir)",
+             "rm -f \($dir)/deploy.sh.b64"]
+            + [range(0; ($b64 | length); 3000) as $i
+               | "printf %s \($b64[$i:$i + 3000]) >> \($dir)/deploy.sh.b64"]
+            + ["base64 -d \($dir)/deploy.sh.b64 > \($dir)/deploy.sh.new",
+               "rm -f \($dir)/deploy.sh.b64",
+               "echo \"\($sha)  \($dir)/deploy.sh.new\" | sha256sum -c --quiet",
+               "install -m 700 \($dir)/deploy.sh.new \($dir)/deploy.sh",
+               "rm -f \($dir)/deploy.sh.new",
+               "\($dir)/deploy.sh \($tag)"]')
+
+          command_id=$(aws ssm send-command \
+            --instance-ids "$EC2_INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --comment "fameo-web ${IMAGE_TAG:0:12} (run ${GITHUB_RUN_ID})" \
+            --timeout-seconds 120 \
+            --parameters "$(jq -n --argjson c "$commands" '{commands: $c, executionTimeout: ["900"]}')" \
+            --query Command.CommandId --output text)
+          echo "SSM command: $command_id"
+
+          deadline=$((SECONDS + 1200))
+          status=Pending
+          while ((SECONDS < deadline)); do
+            status=$(aws ssm get-command-invocation --command-id "$command_id" \
+                       --instance-id "$EC2_INSTANCE_ID" --query Status --output text 2>/dev/null || echo Pending)
+            case "$status" in
+              Pending | InProgress | Delayed) sleep 5 ;;
+              *) break ;;
+            esac
+          done
+
+          echo "::group::deploy.sh output"
+          aws ssm get-command-invocation --command-id "$command_id" --instance-id "$EC2_INSTANCE_ID" \
+            --query StandardOutputContent --output text
+          aws ssm get-command-invocation --command-id "$command_id" --instance-id "$EC2_INSTANCE_ID" \
+            --query StandardErrorContent --output text >&2
+          echo "::endgroup::"
+
+          if [[ "$status" != Success ]]; then
+            echo "::error::Deployment of $IMAGE_TAG failed (SSM status: $status). See deploy.sh output above."
+            exit 1
+          fi
+
+      # Optional end-to-end check through DNS, TLS and nginx.
+      - name: Check public /health
+        if: vars.PRODUCTION_HEALTH_URL != ''
+        env:
+          HEALTH_URL: ${{ vars.PRODUCTION_HEALTH_URL }}
+        run: curl -fsS --retry 5 --retry-delay 3 --retry-all-errors --max-time 10 "$HEALTH_URL"
+
+      - name: Summary
+        run: echo "Production is running \`$IMAGE_TAG\`." >> "$GITHUB_STEP_SUMMARY"

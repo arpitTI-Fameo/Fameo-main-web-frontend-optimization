@@ -22,6 +22,7 @@ import 'server-only';
 // shape it does not recognise.
 
 import { privateFetch } from '@/lib/api/server/fetcher';
+import { API_ORIGIN } from '@/lib/api/server/origins';
 import { PRODUCTS_PAGE_SIZE } from '@/lib/api/config';
 import {
   subscriptionEndpoints,

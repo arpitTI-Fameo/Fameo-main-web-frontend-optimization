@@ -28,7 +28,7 @@ export default function RangeSlider({
     if (isDragging.current === null || !trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
     const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    let newValue = Math.round((percent * (max - min) + min) / step) * step;
+    const newValue = Math.round((percent * (max - min) + min) / step) * step;
 
     setLocalValue((prev) => {
       const next = [...prev];

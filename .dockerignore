@@ -1,0 +1,14 @@
+# Allowlist: the build context is only what `next build` needs. Everything
+# else (.env*, .git, node_modules, .next, tests, docs) never reaches Docker.
+# Add a path here only if the build needs it.
+*
+
+!package.json
+!package-lock.json
+!next.config.mjs
+!postcss.config.mjs
+!jsconfig.json
+!src/
+!public/
+
+**/.DS_Store

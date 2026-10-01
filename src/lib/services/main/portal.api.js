@@ -39,6 +39,8 @@ async function uatFetch(path, { method = 'GET', body } = {}) {
 
     if (expired && typeof window !== 'undefined') {
       const here = window.location.pathname + window.location.search;
+      // A service has no router, and a full reload to /login is intended here.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = `/login?reason=session_expired&redirect=${encodeURIComponent(here)}`;
       throw new Error('SESSION_EXPIRED');
     }

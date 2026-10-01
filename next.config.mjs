@@ -1,6 +1,9 @@
 const isDev = process.env.NODE_ENV !== 'production';
 
 const nextConfig = {
+  // Self-contained server in .next/standalone (only the node_modules it traces),
+  // which the production Docker image runs. See Dockerfile / DEPLOYMENT.md.
+  output: 'standalone',
   productionBrowserSourceMaps: false,
 
   async redirects() {

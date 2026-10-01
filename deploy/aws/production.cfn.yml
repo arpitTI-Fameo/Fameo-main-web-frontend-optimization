@@ -1,0 +1,194 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  fameo-web (Next.js) production delivery: ECR repository (immutable tags,
+  lifecycle), GitHub OIDC roles (image push from main; deploy from the
+  production environment), and the permissions the shared production host
+  needs to run it. The host, its role, the OIDC provider and the instance
+  profile come from the backend stack (fameo-backend-production), which must
+  be deployed first.
+
+Parameters:
+  GitHubOrg:
+    Type: String
+    Default: Trendlance-Innovations
+  GitHubRepo:
+    Type: String
+    AllowedPattern: ^[A-Za-z0-9_.-]+$
+    Description: Repository name only (no org). The only repository whose workflows can push or deploy.
+  RepositoryName:
+    Type: String
+    Default: fameo-web
+    Description: ECR repository (also the GitHub variable ECR_REPOSITORY).
+  ParameterPath:
+    Type: String
+    Default: /fameo-web/production
+    AllowedPattern: ^/[A-Za-z0-9_./-]+[^/]$
+    Description: >-
+      SSM Parameter Store path holding the runtime environment (no trailing
+      slash). Must equal the backend stack's WebParameterPath.
+  HostRoleName:
+    Type: String
+    Default: fameo-backend-production-ec2
+    Description: The shared host's role (backend stack output InstanceRoleName).
+  ImagesToKeep:
+    Type: Number
+    Default: 30
+    MinValue: 10
+    Description: >-
+      Images kept in ECR. Every main deploy adds one, so this is the rollback
+      window measured in deploys.
+
+Resources:
+  # ── ECR ─────────────────────────────────────────────────────────────────────
+  Repository:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RepositoryName: !Ref RepositoryName
+      # A commit SHA tag can never be overwritten: what was tested is what runs.
+      ImageTagMutability: IMMUTABLE
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      EncryptionConfiguration:
+        EncryptionType: AES256
+      LifecyclePolicy:
+        LifecyclePolicyText: !Sub |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Drop untagged images (interrupted pushes) after 7 days",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 7
+                },
+                "action": { "type": "expire" }
+              },
+              {
+                "rulePriority": 2,
+                "description": "Keep the ${ImagesToKeep} most recent images (rollback window)",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": ${ImagesToKeep}
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
+
+  # ── GitHub Actions: build and push (job `image`, branch main) ───────────────
+  GitHubImagePushRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${RepositoryName}-github-image-push
+      Description: Assumed by GitHub Actions on refs/heads/main to push images to ECR.
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/main
+      Policies:
+        - PolicyName: ecr-push
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:InitiateLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:CompleteLayerUpload
+                  - ecr:PutImage
+                  - ecr:DescribeImages
+                Resource: !GetAtt Repository.Arn
+
+  # ── GitHub Actions: deploy (job `deploy`, environment production) ───────────
+  GitHubDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${RepositoryName}-github-deploy
+      Description: Assumed by GitHub Actions in the production environment to run deploy.sh through SSM.
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:environment:production
+      Policies:
+        - PolicyName: ssm-deploy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Only the AWS-RunShellScript document...
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
+              # ...and only on the production host (tag FameoHost=production).
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+                Condition:
+                  StringEquals:
+                    ssm:resourceTag/FameoHost: production
+              # No resource-level permissions exist for these two.
+              - Effect: Allow
+                Action:
+                  - ssm:GetCommandInvocation
+                  - ssm:ListCommandInvocations
+                Resource: '*'
+              - Effect: Allow
+                Action: ecr:DescribeImages
+                Resource: !GetAtt Repository.Arn
+
+  # ── Shared production host: pull this image, read this app's parameters ────
+  HostAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${RepositoryName}-production-host
+      Description: Lets the shared production host pull fameo-web and read its runtime parameters.
+      Roles: [!Ref HostRoleName]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - ecr:BatchGetImage
+              - ecr:GetDownloadUrlForLayer
+              - ecr:BatchCheckLayerAvailability
+            Resource: !GetAtt Repository.Arn
+          - Effect: Allow
+            Action: ssm:GetParametersByPath
+            Resource:
+              - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPath}
+              - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPath}/*
+
+Outputs:
+  RepositoryUri:
+    Description: ECR registry/repository (deploy.conf ECR_REGISTRY is the part before the slash).
+    Value: !GetAtt Repository.RepositoryUri
+  ImagePushRoleArn:
+    Description: GitHub repository variable AWS_ECR_PUSH_ROLE_ARN
+    Value: !GetAtt GitHubImagePushRole.Arn
+  DeployRoleArn:
+    Description: GitHub production environment variable AWS_DEPLOY_ROLE_ARN
+    Value: !GetAtt GitHubDeployRole.Arn
